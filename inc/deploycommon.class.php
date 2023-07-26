@@ -158,37 +158,43 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
                             if ($this->definitionFiltered("PluginGlpiinventoryDeployGroupStatic", $definitions_filter)) {
                                 break;
                             }
-                             $query = "SELECT items_id
-                     FROM glpi_plugin_glpiinventory_deploygroups_staticdatas
-                     WHERE groups_id = '$items_id'
-                     AND itemtype = 'Computer'";
-                             $res = $DB->query($query);
-                            while ($row = $DB->fetchAssoc($res)) {
+                            $iterator = $DB->request([
+                                'SELECT' => 'items_id',
+                                'FROM'   => 'glpi_plugin_glpiinventory_deploygroups_staticdatas',
+                                'WHERE'  => [
+                                    'groups_id' => $items_id,
+                                    'itemtype'  => 'Computer'
+                                ]
+                            ]);
+                            foreach ($iterator as $row) {
                                 $computers[] = $row['items_id'];
                             }
                             break;
-
                         case 'DYNAMIC':
                             if ($this->definitionFiltered("PluginGlpiinventoryDeployGroupDynamic", $definitions_filter)) {
                                 break;
                             }
 
-                           //$definitions_filter is NULL = update by crontask !
+                            //$definitions_filter is NULL = update by crontask !
+                            $where = [];
                             if ($definitions_filter != null) {
-                                $where = " AND `can_update_group`='1'";
-                            } else {
-                                $where = "";
+                                $where['can_update_group'] = 1;
                             }
-                            $query = "SELECT fields_array
-                     FROM glpi_plugin_glpiinventory_deploygroups_dynamicdatas
-                     WHERE groups_id = '$items_id' $where
-                     LIMIT 1";
-                            $res = $DB->query($query);
-                            $row = $DB->fetchAssoc($res);
-                         //No dynamic groups have been found : break
-                            if ($DB->numrows($res) == 0) {
-                                  break;
+
+                            $iterator = $DB->request([
+                                'SELECT' => 'fields_array',
+                                'FROM'   => 'glpi_plugin_glpiinventory_deploygroups_dynamicdatas',
+                                'WHERE'  => [
+                                    'groups_id' => $items_id
+                                ] + $where,
+                                'LIMIT'  => 1
+                            ]);
+
+                            //No dynamic groups have been found : break
+                            if (count($iterator) == 0) {
+                                break;
                             }
+                            $row = $iterator->current();
 
                             if (isset($_GET)) {
                                 $get_tmp = $_GET;

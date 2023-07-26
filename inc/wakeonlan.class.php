@@ -83,23 +83,30 @@ class PluginGlpiinventoryWakeonlan extends PluginGlpiinventoryCommunication
 
                     switch ($group->getField('type')) {
                         case 'STATIC':
-                              $query = "SELECT items_id
-                     FROM glpi_plugin_glpiinventory_deploygroups_staticdatas
-                     WHERE groups_id = '$items_id'
-                     AND itemtype = 'Computer'";
-                              $res = $DB->query($query);
-                            while ($row = $DB->fetchAssoc($res)) {
+                            $iterator = $DB->request([
+                                'SELECT' => 'items_id',
+                                'FROM'   => 'glpi_plugin_glpiinventory_deploygroups_staticdatas',
+                                'WHERE'  => [
+                                    'groups_id' => $items_id,
+                                    'itemtype'  => 'Computer'
+                                ]
+                            ]);
+                            foreach ($iterator as $row) {
                                 $a_computers_to_wake[] = $row['items_id'];
                             }
                             break;
 
                         case 'DYNAMIC':
-                             $query = "SELECT fields_array
-                     FROM glpi_plugin_glpiinventory_deploygroups_dynamicdatas
-                     WHERE groups_id = '$items_id'
-                     LIMIT 1";
-                             $res = $DB->query($query);
-                             $row = $DB->fetchAssoc($res);
+                            $iterator = $DB->request([
+                                'SELECT' => 'fields_array',
+                                'FROM'   => 'glpi_plugin_glpiinventory_deploygroups_dynamicdatas',
+                                'WHERE'  => [
+                                    'groups_id' => $items_id
+                                ],
+                                'LIMIT' => 1
+                            ]);
+
+                            $row = $iterator->current();
 
                             if (isset($_GET)) {
                                 $get_tmp = $_GET;
@@ -173,15 +180,17 @@ class PluginGlpiinventoryWakeonlan extends PluginGlpiinventoryCommunication
             */
             $subnet = '';
             foreach ($a_computers_to_wake as $items_id) {
-                $sql = "SELECT * FROM `glpi_networkports`
-               WHERE `items_id`='" . $items_id . "'
-                  AND `itemtype`='Computer'
-                  AND `mac`!='' ";
-                $result = $DB->query($sql);
-                if ($result) {
-                    while ($data = $DB->fetchArray($result)) {
-                        $subnet = $data['subnet'];
-                    }
+                $iterator = $DB->request([
+                    'FROM'   => 'glpi_networkports',
+                    'WHERE'  => [
+                        'items_id'  => $items_id,
+                        'itemtype'  => 'Computer',
+                        'mac'       => ['!=', '']
+                    ]
+                ]);
+
+                foreach ($iterator as $data) {
+                    $subnet = $data['subnet'];
                 }
             }
             if ($subnet != '') {
@@ -336,45 +345,32 @@ class PluginGlpiinventoryWakeonlan extends PluginGlpiinventoryCommunication
         $pfAgentmodule = new PluginGlpiinventoryAgentmodule();
         $OperatingSystem = new OperatingSystem();
 
-       // Number of computers min by agent
+        // Number of computers min by agent
         $nb_computerByAgentMin = 20;
         $nb_agentsMax = ceil($nb_computers / $nb_computerByAgentMin);
 
-       // Get ids of operating systems which can make real wakeonlan
+        // Get ids of operating systems which can make real wakeonlan
         $a_os = $OperatingSystem->find(['name' => ['LIKE', '%Linux%']]);
-        $osfind = '(';
-        $i = 0;
-        foreach ($a_os as $os_id => $data) {
-            $comma = '';
-            if ($i > 0) {
-                $comma = ', ';
-            }
-            $osfind .= $comma . $os_id;
-            $i++;
-        }
-        $osfind .= ')';
+        $os_where = [];
         $pass_count = 1;
-        if ($osfind == '()') {
-            $osfind = '';
-        } else {
+
+        if (count($a_os)) {
             $pass_count++;
-            $osfind = 'AND operatingsystems_id IN ' . $osfind;
+            $os_where = ['operatingsystems_id' => array_keys($a_os)];
         }
 
         $a_agentList = [];
         for ($pass = 0; $pass < $pass_count; $pass++) {
             if ($pass == "1") {
-               // It's not linux
-                $osfind = str_replace(
-                    'AND operatingsystems_id IN ',
-                    'AND operatingsystems_id NOT IN ',
-                    $osfind
-                );
+                // It's not linux
+                $os_where = ['NOT' => $os_where];
             }
 
+            $subnet_where = [];
             if ($subnet != '') {
-                $subnet = " AND subnet='" . $subnet . "' ";
+                $subnet_where = ['subnet' => $subnet];
             }
+
             $a_agents = $pfAgentmodule->getAgentsCanDo('WAKEONLAN');
             $a_agentsid = [];
             foreach ($a_agents as $a_agent) {
@@ -384,24 +380,46 @@ class PluginGlpiinventoryWakeonlan extends PluginGlpiinventoryCommunication
                 return $a_agentList;
             }
 
-            $where = " AND `glpi_agents`.`ID` IN (";
-            $where .= implode(', ', $a_agentsid);
-            $where .= ")
-            AND `ip` != '127.0.0.1' ";
+            $where = [
+                'glpi_agents.id' => $a_agentsid,
+                'ip' => ['!=', '127.0.0.1']
+            ];
 
-            $query = "SELECT `glpi_agents`.`id` as `a_id`, ip, subnet, token
-            FROM `glpi_agents`
-            LEFT JOIN `glpi_networkports` ON `glpi_networkports`.`items_id` =
-               `glpi_agents`.`items_id`
-            LEFT JOIN `glpi_computers` ON `glpi_computers`.`id` =
-               `glpi_agents`.`items_id`
-            WHERE `glpi_agents`.`itemtype`='Computer'
-               AND `glpi_networkports`.`itemtype`='Computer'
-               " . $subnet . "
-               " . $osfind . "
-               " . $where . " ";
-            if ($result = $DB->query($query)) {
-                while ($data = $DB->fetchArray($result)) {
+            $iterator = $DB->request([
+                'SELECT' => [
+                    'glpi_agents.id as a_id',
+                    'ip',
+                    'subnet',
+                    'token'
+                ],
+                'FROM' => 'glpi_agents',
+                'LEFT JOIN' => [
+                    'glpi_networkports' => [
+                        'FKEY' => [
+                            'glpi_networkports' => 'items_id',
+                            'glpi_agents' => 'items_id'
+                        ],
+                    ],
+                    'glpi_computers' => [
+                        'FKEY' => [
+                            'glpi_computers' => 'id',
+                            'glpi_agents' => 'items_id'
+                        ],
+                    ]
+                ],
+                'WHERE' => array_merge(
+                    [
+                        'glpi_agents.itemtype' => 'Computer',
+                        'glpi_networkports.itemtype' => 'Computer',
+                    ],
+                    $os_where,
+                    $subnet_where,
+                    $where
+                )
+            ]);
+
+            if (count($iterator)) {
+                foreach ($iterator as $data) {
                     if ($communication == 'push') {
                         if ($pfTaskjob->isAgentAlive(1, $data['a_id'])) {
                             if (!in_array($a_agentList, $data['a_id'])) {

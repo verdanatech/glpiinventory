@@ -235,107 +235,6 @@ class PluginGlpiinventoryTaskjobstate extends CommonDBTM
 
 
    /**
-    * Display state of an item of a taskjob
-    *
-    * @global object $DB
-    * @global array $CFG_GLPI
-    * @param integer $items_id id of the item
-    * @param string $itemtype type of the item
-    * @param string $state (all or each state : running, finished, nostarted)
-    */
-    public function stateTaskjobItem($items_id, $itemtype, $state = 'all')
-    {
-        global $DB;
-
-        $fi_path = Plugin::getWebDir('glpiinventory');
-
-        $pfTaskjoblog = new PluginGlpiinventoryTaskjoblog();
-        $icon         = "";
-        $title        = "";
-        $fields       = false;
-
-        $pfTaskjoblog->javascriptHistory();
-
-        switch ($state) {
-            case 'running':
-                $fields['state'] = ['NOT', self::FINISHED];
-                $title = __('Running tasks', 'glpiinventory');
-                $icon  = "<img src='" . $fi_path . "/pics/task_running.png'/>";
-                break;
-
-            case 'finished':
-                $fields['state'] = self::FINISHED;
-                $title = __('Finished tasks', 'glpiinventory');
-                $icon  = "<img src='" . $fi_path . "/pics/task_finished.png'/>";
-                break;
-
-            case 'all':
-                $fields = [];
-                $title  = _n('Task', 'Tasks', 2);
-                $icon   = "";
-                break;
-        }
-        if (!$fields) {
-            return;
-        }
-
-        $a_taskjobs         = [];
-        $fields['items_id'] = $items_id;
-        $fields['itemtype'] = $itemtype;
-
-        $params = ['FROM'  => $this->getTable(),
-                 'WHERE' => $fields,
-                 'ORDER' => 'id DESC'
-                ];
-        foreach ($DB->request($params) as $data) {
-            $a_taskjobs[] = $data;
-        }
-
-        echo "<div align='center'>";
-        echo "<table  class='tab_cadre' width='950'>";
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<th  width='32'>";
-        echo $icon;
-        echo "</th>";
-        echo "<td>";
-        if (count($a_taskjobs) > 0) {
-            echo "<table class='tab_cadre' width='950'>";
-            echo "<tr>";
-            echo "<th></th>";
-            echo "<th>" . __('Unique id', 'glpiinventory') . "</th>";
-            echo "<th>" . __('Job', 'glpiinventory') . "</th>";
-            echo "<th>" . __('Agent', 'glpiinventory') . "</th>";
-            echo "<th>";
-            echo _n('Date', 'Dates', 1);
-            echo "</th>";
-            echo "<th>";
-            echo __('Status');
-            echo "</th>";
-            $nb_td = 6;
-            if ($state == 'running') {
-                $nb_td++;
-                echo "<th>";
-                echo __('Comments');
-                echo "</th>";
-            }
-            echo "</tr>";
-            foreach ($a_taskjobs as $data) {
-                $pfTaskjoblog->showHistoryLines($data['id'], 0, 1, $nb_td);
-            }
-            echo "</table>";
-        }
-        echo "</td>";
-        echo "</tr>";
-
-        echo "</table>";
-        echo "<br/>";
-
-        echo "</div>";
-    }
-
-
-   /**
     * Change the state
     *
     * @todo There is no need to pass $id since we should use this method with
@@ -419,35 +318,41 @@ class PluginGlpiinventoryTaskjobstate extends CommonDBTM
     public function getLogs($id, $last_date)
     {
         global $DB;
-        $fields = [
-        'log.id'      => 0,
-        'log.date'    => 1,
-        'log.comment' => 2,
-        'log.state'   => 3,
-        'run.id'      => 4,
-        ];
-        $query = "SELECT log.`id` AS 'log.id',
-                  log.`date` AS 'log.date',
-                  log.`comment` AS 'log.comment',
-                  log.`state` AS 'log.state',
-                  run.`uniqid` AS 'run.id'
-                FROM `glpi_plugin_glpiinventory_taskjoblogs` AS log
-                LEFT JOIN `glpi_plugin_glpiinventory_taskjobstates` AS run
-                  ON run.`id` = log.`plugin_glpiinventory_taskjobstates_id`
-                WHERE run.`id` = $id
-                  AND log.`date` <= '$last_date'
-               ORDER BY log.`id` DESC";
-        $res = $DB->query($query);
+
+        $iterator = $DB->request([
+            'SELECT' => [
+                'log.id',
+                'log.date',
+                'log.comment',
+                'log.state',
+                'run.uniqid AS runid'
+            ],
+            'FROM'   => 'glpi_plugin_glpiinventory_taskjoblogs AS log',
+            'LEFT JOIN' => [
+                'glpi_plugin_glpiinventory_taskjobstates AS run' => [
+                    'ON' => [
+                        'run' => 'id',
+                        'log' => 'plugin_glpiinventory_taskjobstates_id'
+                    ]
+                ]
+            ],
+            'WHERE'  => [
+                'run.id' => $id,
+                'log.date' => ['<=', $last_date]
+            ],
+            'ORDER'  => 'log.id DESC'
+        ]);
+
         $logs = [];
-        while ($result = $res->fetch_row()) {
-            $run_id = $result[$fields['run.id']];
+        foreach ($iterator as $result) {
+            $run_id = $result['runid'];
             $logs['run']    = $run_id;
             $logs['logs'][] = [
-            'log.id'      => $result[$fields['log.id']],
-            'log.comment' => PluginGlpiinventoryTaskjoblog::convertComment($result[$fields['log.comment']]),
-            'log.date'    => $result[$fields['log.date']],
-            'log.f_date'  => Html::convDateTime($result[$fields['log.date']]),
-            'log.state'   => $result[$fields['log.state']]
+            'log.id'      => $result['id'],
+            'log.comment' => PluginGlpiinventoryTaskjoblog::convertComment($result['comment']),
+            'log.date'    => $result['date'],
+            'log.f_date'  => Html::convDateTime($result['date']),
+            'log.state'   => $result['state']
             ];
         }
 
@@ -659,12 +564,15 @@ class PluginGlpiinventoryTaskjobstate extends CommonDBTM
         $retentiontime  = $config->getValue('delete_task');
         $pfTaskjobstate = new PluginGlpiinventoryTaskjobstate();
 
-        $sql = "SELECT *
-              FROM `glpi_plugin_glpiinventory_taskjoblogs`
-              WHERE  `date` < date_add(now(), interval -" . $retentiontime . " day)
-              GROUP BY `plugin_glpiinventory_taskjobstates_id`";
-        $result = $DB->query($sql);
-        if ($result) {
+        $iterator = $DB->request([
+            'FROM'   => 'glpi_plugin_glpiinventory_taskjoblogs',
+            'WHERE'  => [
+                'date'  => ['<', new \QueryExpression('DATE_ADD(NOW(), INTERVAL -' . $retentiontime . ' DAY)')]
+            ],
+            'GROUPBY' => 'plugin_glpiinventory_taskjobstates_id'
+        ]);
+
+        if (count($iterator)) {
             $delete = $DB->buildDelete(
                 'glpi_plugin_glpiinventory_taskjoblogs',
                 [
@@ -672,7 +580,7 @@ class PluginGlpiinventoryTaskjobstate extends CommonDBTM
                 ]
             );
             $stmt = $DB->prepare($delete);
-            while ($data = $DB->fetchArray($result)) {
+            foreach ($iterator as $data) {
                  $pfTaskjobstate->getFromDB($data['plugin_glpiinventory_taskjobstates_id']);
                  $pfTaskjobstate->delete($pfTaskjobstate->fields, 1);
 

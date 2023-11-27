@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit9141f04856edfad35c5961be3dd79f1f
+class ComposerStaticInit8c4f646ec46b285116418a67d64cf687
 {
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
@@ -60,7 +60,6 @@ class ComposerStaticInit9141f04856edfad35c5961be3dd79f1f
         'PluginGlpiinventoryNetworkdiscovery' => __DIR__ . '/../..' . '/inc/networkdiscovery.class.php',
         'PluginGlpiinventoryNetworkinventory' => __DIR__ . '/../..' . '/inc/networkinventory.class.php',
         'PluginGlpiinventoryProfile' => __DIR__ . '/../..' . '/inc/profile.class.php',
-        'PluginGlpiinventorySearch' => __DIR__ . '/../..' . '/inc/search.class.php',
         'PluginGlpiinventorySetup' => __DIR__ . '/../..' . '/inc/setup.class.php',
         'PluginGlpiinventoryStateDiscovery' => __DIR__ . '/../..' . '/inc/statediscovery.class.php',
         'PluginGlpiinventoryStateInventory' => __DIR__ . '/../..' . '/inc/stateinventory.class.php',
@@ -74,13 +73,12 @@ class ComposerStaticInit9141f04856edfad35c5961be3dd79f1f
         'PluginGlpiinventoryTimeslot' => __DIR__ . '/../..' . '/inc/timeslot.class.php',
         'PluginGlpiinventoryTimeslotEntry' => __DIR__ . '/../..' . '/inc/timeslotentry.class.php',
         'PluginGlpiinventoryToolbox' => __DIR__ . '/../..' . '/inc/toolbox.class.php',
-        'PluginGlpiinventoryWakeonlan' => __DIR__ . '/../..' . '/inc/wakeonlan.class.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->classMap = ComposerStaticInit9141f04856edfad35c5961be3dd79f1f::$classMap;
+            $loader->classMap = ComposerStaticInit8c4f646ec46b285116418a67d64cf687::$classMap;
 
         }, null, ClassLoader::class);
     }

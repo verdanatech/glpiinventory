@@ -386,7 +386,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
     $migration->displayMessage("Use core printer logs");
     if ($DB->tableExists('glpi_plugin_glpiinventory_printerlogs')) {
         $DB->queryOrDie(
-            "INSERT INTO `glpi_printerlogs` (
+            "INSERT IGNORE INTO `glpi_printerlogs` (
                 `printers_id`,
                 `date`,
                 `total_pages`,
@@ -431,7 +431,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
     $migration->displayMessage("Use core networkports logs");
     if ($DB->tableExists('glpi_plugin_glpiinventory_networkportconnectionlogs')) {
         $DB->queryOrDie(
-            "INSERT INTO `glpi_networkportconnectionlogs` (
+            "INSERT IGNORE INTO `glpi_networkportconnectionlogs` (
                 `date`,
                 `connected`,
                 `networkports_id_source`,
@@ -540,7 +540,8 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
         [
             'OR' => [
                 ['sub_type'  => 'PluginFusioninventoryInventoryRuleImport'],
-                ['sub_type'  => 'PluginGlpiinventoryInventoryRuleImport']
+                ['sub_type'  => 'PluginGlpiinventoryInventoryRuleImport'],
+                ['sub_type'  => 'PluginFusioninventoryInventoryRuleRemotework']
             ]
         ]
     );
@@ -584,7 +585,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
     if ($DB->tableExists('glpi_plugin_glpiinventory_rulematchedlogs')) {
         // agents must be migrated before that one
         $DB->queryOrDie(
-            "INSERT INTO `glpi_rulematchedlogs` (
+            "INSERT IGNORE INTO `glpi_rulematchedlogs` (
                `date`,
                `items_id`,
                `itemtype`,
@@ -608,7 +609,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
     if ($DB->tableExists('glpi_plugin_glpiinventory_computerremotemanagements')) {
         // agents must be migrated before that one
         $DB->queryOrDie(
-            "INSERT INTO `glpi_items_remotemanagements` (
+            "INSERT IGNORE INTO `glpi_items_remotemanagements` (
                 `itemtype`,
                 `items_id`,
                 `remoteid`,
@@ -861,6 +862,25 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
             );
         }
     }
+
+    $DB->queryOrDie(
+        $DB->buildDelete(
+            'glpi_plugin_glpiinventory_agentmodules',
+            [
+                'modulename' => 'WAKEONLAN'
+            ]
+        )
+    );
+
+    $DB->queryOrDie(
+        $DB->buildDelete(
+            'glpi_displaypreferences',
+            [
+                'itemtype' => 'Computer',
+                'num' => 5165
+            ]
+        )
+    );
 
     // /!\ Keep it at the end
     $migration->executeMigration();

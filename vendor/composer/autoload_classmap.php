@@ -59,7 +59,6 @@ return array(
     'PluginGlpiinventoryNetworkdiscovery' => $baseDir . '/inc/networkdiscovery.class.php',
     'PluginGlpiinventoryNetworkinventory' => $baseDir . '/inc/networkinventory.class.php',
     'PluginGlpiinventoryProfile' => $baseDir . '/inc/profile.class.php',
-    'PluginGlpiinventorySearch' => $baseDir . '/inc/search.class.php',
     'PluginGlpiinventorySetup' => $baseDir . '/inc/setup.class.php',
     'PluginGlpiinventoryStateDiscovery' => $baseDir . '/inc/statediscovery.class.php',
     'PluginGlpiinventoryStateInventory' => $baseDir . '/inc/stateinventory.class.php',
@@ -73,5 +72,4 @@ return array(
     'PluginGlpiinventoryTimeslot' => $baseDir . '/inc/timeslot.class.php',
     'PluginGlpiinventoryTimeslotEntry' => $baseDir . '/inc/timeslotentry.class.php',
     'PluginGlpiinventoryToolbox' => $baseDir . '/inc/toolbox.class.php',
-    'PluginGlpiinventoryWakeonlan' => $baseDir . '/inc/wakeonlan.class.php',
 );

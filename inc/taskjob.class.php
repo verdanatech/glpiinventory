@@ -156,18 +156,6 @@ class PluginGlpiinventoryTaskjob extends PluginGlpiinventoryTaskjobView
     }
 
 
-   /**
-    * get task of this task job
-    *
-    * @return object PluginGlpiinventoryTask instance
-    */
-    public function getTask()
-    {
-        $pfTask = new PluginGlpiinventoryTask();
-        $pfTask->getFromDB($this->fields['plugin_glpiinventory_tasks_id']);
-        return $pfTask;
-    }
-
     /**
     * get task with job using IPRange
     *
@@ -259,51 +247,6 @@ class PluginGlpiinventoryTaskjob extends PluginGlpiinventoryTaskjobView
 
 
    /**
-    * Get Itemtypes list for the selected method
-    *
-    * @param string $method
-    * @param string $moduletype
-    * @return array
-    */
-    public function getTypesForModule($method, $moduletype)
-    {
-
-        $available_methods = PluginGlpiinventoryStaticmisc::getmethods();
-        $types = [];
-        if ($moduletype === 'actors') {
-            $types['Agent'] = Agent::getTypeName();
-        }
-
-       /**
-        * TODO: move staticmisc actors and targets related methods to the relevant Module classes
-        * ( I don't have time for this yet and this is why i can live with a simple mapping string
-        * table)
-        */
-        switch ($moduletype) {
-            case 'actors':
-                $moduletype_tmp = 'action';
-                break;
-
-            case 'targets':
-                $moduletype_tmp = 'definition';
-                break;
-        }
-
-        foreach ($available_methods as $available_method) {
-            if ($method == $available_method['method']) {
-                $module = $available_method['module'];
-                $class = PluginGlpiinventoryStaticmisc::getStaticMiscClass($module);
-                $class_method = [$class, "task_" . $moduletype_tmp . "type_" . $method];
-                if (is_callable($class_method)) {
-                    $types = call_user_func($class_method, $types);
-                }
-            }
-        }
-        return $types;
-    }
-
-
-   /**
     * Display definitions value with preselection of definition type
     *
     * @global array $CFG_GLPI
@@ -315,7 +258,7 @@ class PluginGlpiinventoryTaskjob extends PluginGlpiinventoryTaskjobView
     * @param integer $value name of the definition (used for edit taskjob)
     * @param string $entity_restrict restriction of entity if required
     * @param integer $title
-    * @return string unique id of html element
+    * @return void
     */
     public function dropdownvalue(
         $myname,
@@ -490,7 +433,7 @@ class PluginGlpiinventoryTaskjob extends PluginGlpiinventoryTaskjobView
                     'actionselectadd'  => 'dropdown_actionselectiontoadd' . $rand,
                     'actiontypeid'     => $actiontypeid];
 
-        Ajax::updateItemOnEvent(
+        return Ajax::updateItemOnEvent(
             'addAObject',
             'show_ActionListEmpty',
             Plugin::getWebDir('glpiinventory') . "/ajax/dropdownactionselection.php",
@@ -782,102 +725,6 @@ class PluginGlpiinventoryTaskjob extends PluginGlpiinventoryTaskjobView
                             );
                         }
                     }
-                } elseif ($task['communication'] == 'push') {
-                    $a_valid = $pfTaskjoblog->find(
-                        ['plugin_glpiinventory_taskjobstates_id' => $data['id'],
-                        'ADDTIME(date, "00:10:00")' => ['<',  'NOW()']],
-                        ['id DESC'],
-                        1
-                    );
-
-                    if (count($a_valid) == '1') {
-                         // Get agent status
-                         $agentreturn = $this->getRealStateAgent(
-                             $data['agents_id']
-                         );
-
-                        switch ($agentreturn) {
-                            case 'waiting':
-                              // token is bad and must force cancel task in server
-                                $a_statetmp = $pfTaskjobstate->find(
-                                    ['uniqid' => $data['uniqid'],
-                                    'agents_id' => $data['agents_id'],
-                                    'state'  => [0,
-                                    1,
-                                    2]]
-                                );
-                                foreach ($a_statetmp as $datatmp) {
-                                           $pfTaskjobstate->changeStatusFinish(
-                                               $datatmp['id'],
-                                               0,
-                                               '',
-                                               1,
-                                               "==badtoken=="
-                                           );
-                                }
-                                break;
-
-                            case 'running':
-                          // just wait and do nothing
-                                break;
-
-                            case 'noanswer':
-                                   // agent crash or computer is shutdown and force cancel task in server
-                                   $a_statetmp = $pfTaskjobstate->find(
-                                       ['uniqid' => $data['uniqid'],
-                                       'agents_id' => $data['agents_id'],
-                                       'state'  => [1,
-                                       2]]
-                                   );
-                                foreach ($a_statetmp as $datatmp) {
-                                        $pfTaskjobstate->changeStatusFinish(
-                                            $datatmp['id'],
-                                            0,
-                                            '',
-                                            1,
-                                            "==agentcrashed=="
-                                        );
-                                }
-                                  $a_valid4h = $pfTaskjoblog->find(
-                                      ['plugin_glpiinventory_taskjobstates_id' => $data['id']],
-                                      ['id DESC'],
-                                      1
-                                  );
-                                  $finish = false;
-                                if (count($a_valid4h) == 1) {
-                                        $datajs = current($a_valid4h);
-                                        $date = strtotime($datajs['date']);
-                                        $date += (4 * 3600);
-                                    if ($date < date('U')) {
-                                        $finish = true;
-                                    }
-                                } else {
-                                    $finish = true;
-                                }
-
-                                if ($finish) {
-                                    $a_statetmp = $pfTaskjobstate->find(
-                                        ['uniqid' => $data['uniqid'],
-                                        'agents_id' => $data['agents_id'],
-                                        'state' => 0]
-                                    );
-                                    foreach ($a_statetmp as $datatmp) {
-                                         $pfTaskjobstate->changeStatusFinish(
-                                             $datatmp['id'],
-                                             0,
-                                             '',
-                                             1,
-                                             "==agentcrashed=="
-                                         );
-                                    }
-                                }
-                                break;
-
-                            case 'noip':
-                                 // just wait and do nothing
-                                break;
-                        }
-                    }
                 }
             }
         }
@@ -902,59 +749,6 @@ class PluginGlpiinventoryTaskjob extends PluginGlpiinventoryTaskjobView
         foreach ($iterator as $data) {
             $this->reinitializeTaskjobs($data['plugin_glpiinventory_tasks_id'], '1');
         }
-    }
-
-
-   /**
-    * Check for configuration consistency.
-    * Remove items targets or actors that have been deleted.
-    *
-    * @return boolean ( What does this return value mean ? -- Kevin Roy <kiniou@gmail.com> )
-    */
-    public function checkConfiguration()
-    {
-
-        $return = true;
-        $input = [];
-        $input['id'] = $this->fields['id'];
-        $targets = importArrayFromDB($this->fields['targets']);
-        foreach ($targets as $num => $data) {
-            $classname = key($data);
-            if ($classname == '') {
-                unset($targets[$num]);
-            } else {
-                $Class = new $classname();
-                if (!$Class->getFromDB(current($data))) {
-                    unset($targets[$num]);
-                }
-            }
-        }
-        if (count($targets) == '0') {
-            $input['targets'] = '';
-            $return = false;
-        } else {
-            $input['targets'] = exportArrayToDB($targets);
-        }
-        $actors = importArrayFromDB($this->fields['actors']);
-        foreach ($actors as $num => $data) {
-            $classname = key($data);
-            $Class = new $classname();
-            if (
-                !$Class->getFromDB(current($data))
-                 and (current($data) != ".1")
-                 and (current($data) != ".2")
-            ) {
-                unset($actors[$num]);
-            }
-        }
-        if (count($actors) == '0') {
-            $input['actors'] = '';
-            $return = false;
-        } else {
-            $input['actors'] = exportArrayToDB($actors);
-        }
-        $this->update($input);
-        return $return;
     }
 
 
@@ -1087,9 +881,9 @@ class PluginGlpiinventoryTaskjob extends PluginGlpiinventoryTaskjobView
                     $itemname = $class->getTypeName();
                     $class->getFromDB($items_id);
                     if ($items_id == '.1') {
-                        $name = __('Auto managenement dynamic of agents', 'glpiinventory');
+                        $name = __('Auto management dynamic of agents', 'glpiinventory');
                     } elseif ($items_id == '.2') {
-                        $name =  __('Auto managenement dynamic of agents (same subnet)', 'glpiinventory');
+                        $name =  __('Auto management dynamic of agents (same subnet)', 'glpiinventory');
                     } else {
                         $name = $class->getLink(1);
                     }
@@ -1519,7 +1313,7 @@ function new_subtype(id) {
    * Duplicate all taskjobs for a task to another one
    * @param $source_tasks_id the ID of the task to clone
    * @param $target_task_id the ID of the cloned task
-   * @return void
+   * @return boolean
    */
     public static function duplicate($source_tasks_id, $target_tasks_id)
     {

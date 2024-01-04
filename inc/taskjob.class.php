@@ -661,74 +661,6 @@ class PluginGlpiinventoryTaskjob extends PluginGlpiinventoryTaskjobView
     {
         global $DB;
 
-       // Get all taskjobstate running
-        $pfTaskjobstate = new PluginGlpiinventoryTaskjobstate();
-        $pfTaskjoblog   = new PluginGlpiinventoryTaskjoblog();
-
-        $a_taskjobstate = $DB->request([
-         'FROM'    => 'glpi_plugin_glpiinventory_taskjobstates',
-         'WHERE'   => ['state' => [0, 1, 2]],
-         'GROUPBY' => ['uniqid', 'agents_id']]);
-        foreach ($a_taskjobstate as $data) {
-            $iterator = $DB->request([
-                'FROM' => 'glpi_plugin_glpiinventory_tasks',
-                'LEFT JOIN' => [
-                    'glpi_plugin_glpiinventory_taskjobs' => [
-                        'ON' => [
-                            'glpi_plugin_glpiinventory_tasks' => 'id',
-                            'glpi_plugin_glpiinventory_taskjobs' => 'plugin_glpiinventory_tasks_id'
-                        ]
-                    ]
-                ],
-                'WHERE' => [
-                    'glpi_plugin_glpiinventory_taskjobs.id' => $data['plugin_glpiinventory_taskjobs_id']
-                ],
-                'LIMIT' => 1
-            ]);
-
-            if (count($iterator) != 0) {
-                $task = $iterator->current();
-                if ($task['communication'] == 'pull') {
-                    $has_recent_log_entries = $pfTaskjoblog->find(
-                        ['plugin_glpiinventory_taskjobstates_id' => $data['id']],
-                        ['id DESC'],
-                        1
-                    );
-                    $finish = false;
-                    if (count($has_recent_log_entries) == 1) {
-                          $data2 = current($has_recent_log_entries);
-                          $date = strtotime($data2['date']);
-                          $date += (4 * 3600);
-                        if ($date < date('U')) {
-                            $finish = true;
-                        }
-                    } else {
-                        $finish = true;
-                    }
-
-                    // No news from the agent since 4 hour. The agent is probably crached.
-                    //Let's cancel the task
-                    if ($finish) {
-                        $a_statustmp = $pfTaskjobstate->find(
-                            ['uniqid' => $data['uniqid'],
-                            'agents_id' => $data['agents_id'],
-                            'state'  => [1,
-                            2]]
-                        );
-                        foreach ($a_statustmp as $datatmp) {
-                            $pfTaskjobstate->changeStatusFinish(
-                                $datatmp['id'],
-                                0,
-                                '',
-                                1,
-                                "==agentcrashed=="
-                            );
-                        }
-                    }
-                }
-            }
-        }
-
        // If taskjob.status = 1 and all taskjobstates are finished, so reinitializeTaskjobs()
         $sub_query = new \QuerySubQuery([
             'COUNT' => 'cpt',
@@ -742,7 +674,7 @@ class PluginGlpiinventoryTaskjob extends PluginGlpiinventoryTaskjobView
             'FROM' => 'glpi_plugin_glpiinventory_taskjobs',
             'WHERE' => [
                 'status' => 1,
-                new \QueryExpression($sub_query->getSQL() . ' = 0')
+                new \QueryExpression($sub_query->getQuery() . ' = 0')
             ]
         ]);
 
@@ -957,7 +889,7 @@ class PluginGlpiinventoryTaskjob extends PluginGlpiinventoryTaskjobView
     *
     * @global array $CFG_GLPI
     * @param string $type
-    * @param string $items_id
+    * @param string $a_items_id
     * @param integer $taskjobs_id
     */
     public function deleteitemtodefatc($type, $a_items_id, $taskjobs_id)
@@ -1283,8 +1215,8 @@ function new_subtype(id) {
    /**
     * Execution code for massive action
     *
-    * @param object $ma MassiveAction instance
-    * @param object $item item on which execute the code
+    * @param MassiveAction $ma MassiveAction instance
+    * @param CommonDBTM $item item on which execute the code
     * @param array $ids list of ID on which execute the code
     */
     public static function processMassiveActionsForOneItemtype(

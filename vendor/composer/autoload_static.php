@@ -13,8 +13,6 @@ class ComposerStaticInit8c4f646ec46b285116418a67d64cf687
         'PluginGlpiinventoryCollect' => __DIR__ . '/../..' . '/inc/collect.class.php',
         'PluginGlpiinventoryCollectCommon' => __DIR__ . '/../..' . '/inc/collectcommon.class.php',
         'PluginGlpiinventoryCollectContentCommon' => __DIR__ . '/../..' . '/inc/collectcontentcommon.class.php',
-        'PluginGlpiinventoryCollectRule' => __DIR__ . '/../..' . '/inc/collectrule.class.php',
-        'PluginGlpiinventoryCollectRuleCollection' => __DIR__ . '/../..' . '/inc/collectrulecollection.class.php',
         'PluginGlpiinventoryCollect_File' => __DIR__ . '/../..' . '/inc/collect_file.class.php',
         'PluginGlpiinventoryCollect_File_Content' => __DIR__ . '/../..' . '/inc/collect_file_content.class.php',
         'PluginGlpiinventoryCollect_Registry' => __DIR__ . '/../..' . '/inc/collect_registry.class.php',

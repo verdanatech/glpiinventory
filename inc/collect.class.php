@@ -63,12 +63,13 @@ class PluginGlpiinventoryCollect extends CommonDBTM
    /**
     * Get the tab name used for item
     *
-    * @param object $item the item object
+    * @param CommonGLPI $item the item object
     * @param integer $withtemplate 1 if is a template form
     * @return string name of the tab
     */
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
+        /** @var CommonDBTM $item */
         if ($item->fields['id'] > 0) {
             $index = self::getNumberOfCollectsForAComputer($item->fields['id']);
             $nb    = 0;
@@ -86,14 +87,14 @@ class PluginGlpiinventoryCollect extends CommonDBTM
    /**
     * Display the content of the tab
     *
-    * @param object $item
+    * @param CommonGLPI $item
     * @param integer $tabnum number of the tab to display
     * @param integer $withtemplate 1 if is a template form
     * @return boolean
     */
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
-        if ($item->getType() != 'Computer') {
+        if (!$item instanceof Computer) {
             return false;
         }
 
@@ -121,7 +122,7 @@ class PluginGlpiinventoryCollect extends CommonDBTM
    * @since 9.2
    *
    * @param integer $computers_id the computer ID
-   * @return the number of collects for this computer
+   * @return integer the number of collects for this computer
    */
     public static function getNumberOfCollectsForAComputer($computers_id)
     {
@@ -340,7 +341,6 @@ class PluginGlpiinventoryCollect extends CommonDBTM
         $job->getFromDB($taskjobs_id);
         $task->getFromDB($job->fields['plugin_glpiinventory_tasks_id']);
 
-        $communication = $task->fields['communication'];
         $actions       = importArrayFromDB($job->fields['action']);
         $definitions   = importArrayFromDB($job->fields['definition']);
         $taskvalid     = 0;
@@ -490,11 +490,6 @@ class PluginGlpiinventoryCollect extends CommonDBTM
 
                                   $c_input['agents_id'] = $agents_id;
 
-                                  // Push the agent, in the stack of agent to awake
-                                if ($communication == "push") {
-                                    $_SESSION['glpi_plugin_glpiinventory']['agents'][$agents_id] = 1;
-                                }
-
                                   $jobstates_id = $jobstate->add($c_input);
 
                                   //Add log of taskjob
@@ -521,11 +516,6 @@ class PluginGlpiinventoryCollect extends CommonDBTM
 
                                    $c_input['agents_id'] = $agents_id;
 
-                                   // Push the agent, in the stack of agent to awake
-                                if ($communication == "push") {
-                                    $_SESSION['glpi_plugin_glpiinventory']['agents'][$agents_id] = 1;
-                                }
-
                                   $jobstates_id = $jobstate->add($c_input);
 
                                   //Add log of taskjob
@@ -551,11 +541,6 @@ class PluginGlpiinventoryCollect extends CommonDBTM
                                   $c_input['uniqid'] = $uniqid;
 
                                   $c_input['agents_id'] = $agents_id;
-
-                                  // Push the agent, in the stack of agent to awake
-                                if ($communication == "push") {
-                                    $_SESSION['glpi_plugin_glpiinventory']['agents'][$agents_id] = 1;
-                                }
 
                                 $jobstates_id = $jobstate->add($c_input);
 

@@ -12,8 +12,6 @@ return array(
     'PluginGlpiinventoryCollect' => $baseDir . '/inc/collect.class.php',
     'PluginGlpiinventoryCollectCommon' => $baseDir . '/inc/collectcommon.class.php',
     'PluginGlpiinventoryCollectContentCommon' => $baseDir . '/inc/collectcontentcommon.class.php',
-    'PluginGlpiinventoryCollectRule' => $baseDir . '/inc/collectrule.class.php',
-    'PluginGlpiinventoryCollectRuleCollection' => $baseDir . '/inc/collectrulecollection.class.php',
     'PluginGlpiinventoryCollect_File' => $baseDir . '/inc/collect_file.class.php',
     'PluginGlpiinventoryCollect_File_Content' => $baseDir . '/inc/collect_file_content.class.php',
     'PluginGlpiinventoryCollect_Registry' => $baseDir . '/inc/collect_registry.class.php',

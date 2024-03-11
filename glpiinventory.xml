@@ -86,11 +86,16 @@
    <homepage>httpis://glpi-project.org</homepage>
    <download>https://github.com/glpi-project/glpi-inventory-plugin/releases</download>
    <issues>https://github.com/glpi-project/glpi-inventory-plugin/issues</issues>
-   <readme>https://raw.githubusercontent.com/glpi-project/glpi-inventory-plugin/master/README.md</readme>
+   <readme>https://raw.githubusercontent.com/glpi-project/glpi-inventory-plugin/main/README.md</readme>
    <authors>
       <author>Teclib'</author>
    </authors>
    <versions>
+      <version>
+         <num>1.3.5</num>
+         <compatibility>~10.0.10</compatibility>
+         <download_url>https://github.com/glpi-project/glpi-inventory-plugin/releases/download/1.3.5/glpi-glpiinventory-1.3.5.tar.bz2</download_url>
+      </version>
       <version>
          <num>1.3.4</num>
          <compatibility>~10.0.10</compatibility>

@@ -70,6 +70,7 @@ class PluginGlpiinventoryStateDiscovery extends CommonDBTM
             $data[$id] = $this->fields;
         }
 
+        $process_id = 0;
         foreach ($data as $process_id => $input) {
             foreach ($a_input as $field => $value) {
                 if (
@@ -163,8 +164,7 @@ class PluginGlpiinventoryStateDiscovery extends CommonDBTM
             'GROUP' => 'uniqid',
             'ORDER' => 'uniqid DESC'
         ]);
-        $result = $iterator->next();
-        $number = $result['cpt'];
+        $number = count($iterator);
 
         // Display the pager
         Html::printPager($start, $number, Plugin::getWebDir('glpiinventory') . "/front/statediscovery.php", '');

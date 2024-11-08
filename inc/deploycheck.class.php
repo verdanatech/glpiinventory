@@ -83,8 +83,8 @@ class PluginGlpiinventoryDeployCheck extends PluginGlpiinventoryDeployPackageIte
 
    /**
     * Get label for a type
-    * @param the type value
-    * @return the type label
+    * @param string $type the type value
+    * @return string the type label
     */
     public function getLabelForAType($type)
     {
@@ -158,7 +158,7 @@ class PluginGlpiinventoryDeployCheck extends PluginGlpiinventoryDeployPackageIte
    * Get all registry value types handled by the agent
    *
    * @since 9.2
-   * @return an array of registry values types
+   * @return array of registry values types
    */
     public function getRegistryTypes()
     {
@@ -189,7 +189,7 @@ class PluginGlpiinventoryDeployCheck extends PluginGlpiinventoryDeployPackageIte
     * Display list of checks
     *
     * @global array $CFG_GLPI
-    * @param object $package PluginGlpiinventoryDeployPackage instance
+    * @param PluginGlpiinventoryDeployPackage $package PluginGlpiinventoryDeployPackage instance
     * @param array $data array converted of 'json' field in DB where stored checks
     * @param string $rand unique element id used to identify/update an element
     */
@@ -285,7 +285,6 @@ class PluginGlpiinventoryDeployCheck extends PluginGlpiinventoryDeployPackageIte
         }
         echo "</table>";
         if ($canedit) {
-            echo "&nbsp;&nbsp;<img src='" . $CFG_GLPI["root_doc"] . "/pics/arrow-left.png' alt='' />";
             echo "<input type='submit' name='delete' value=\"" .
             __('Delete', 'glpiinventory') . "\" class='submit' />";
         }
@@ -337,9 +336,9 @@ class PluginGlpiinventoryDeployCheck extends PluginGlpiinventoryDeployPackageIte
 
    /**
    *  Get labels and type for a check
-   * @param check_type the type of check
-   * @param mandatory indicates if mandatory mark must be added to the label
-   * @return the labels and type for a check
+   * @param string $check_type the type of check
+   * @param boolean $mandatory indicates if mandatory mark must be added to the label
+   * @return array the labels and type for a check
    */
     public function getLabelsAndTypes($check_type, $mandatory = false)
     {
@@ -430,7 +429,7 @@ class PluginGlpiinventoryDeployCheck extends PluginGlpiinventoryDeployPackageIte
     * @param array $request_data
     * @param string $rand unique element id used to identify/update an element
     * @param string $mode mode in use (create, edit...)
-    * @return boolean
+    * @return void
     */
     public function displayAjaxValues($config, $request_data, $rand, $mode)
     {
@@ -572,7 +571,7 @@ class PluginGlpiinventoryDeployCheck extends PluginGlpiinventoryDeployPackageIte
 
    /**
    * Get all possible return values for a check
-   * @return an array of return values and their labels
+   * @return array of return values and their labels
    */
     public function getAllReturnValues()
     {
@@ -587,8 +586,8 @@ class PluginGlpiinventoryDeployCheck extends PluginGlpiinventoryDeployPackageIte
 
    /**
    * Get the label for a return value
-   * @param the check return value
-   * @return the label for the return value
+   * @param string $value the check return value
+   * @return string the label for the return value
    */
     public function getValueForReturn($value)
     {
@@ -603,10 +602,10 @@ class PluginGlpiinventoryDeployCheck extends PluginGlpiinventoryDeployPackageIte
 
    /**
    * Return an array corresponding to a check, ready to be serialized
-   * @param params the check's parameters
+   * @param $params the check's parameters
    * @return array the array to be encoded in json and serialized
    */
-    public static function formatCheckForJson($params)
+    public function formatCheckForJson($params)
     {
         if (!isset($params['value'])) {
             $params['value'] = "";
@@ -622,7 +621,7 @@ class PluginGlpiinventoryDeployCheck extends PluginGlpiinventoryDeployPackageIte
                 if ($params['checkstype'] == "freespaceGreater") {
                     $params['value'] = $params['value'] / (1024 * 1024);
                 } else {
-                    $params['value'] = $params['value'] * self::getUnitSize($params['unit']);
+                    $params['value'] = $params['value'] * $this->getUnitSize($params['unit']);
                 }
             }
         }
@@ -647,7 +646,7 @@ class PluginGlpiinventoryDeployCheck extends PluginGlpiinventoryDeployPackageIte
     */
     public function add_item($params)
     {
-        $entry = self::formatCheckForJson($params);
+        $entry = $this->formatCheckForJson($params);
 
        //get current order json
         $datas = json_decode(
@@ -670,7 +669,7 @@ class PluginGlpiinventoryDeployCheck extends PluginGlpiinventoryDeployPackageIte
     */
     public function save_item($params)
     {
-        $entry = self::formatCheckForJson($params);
+        $entry = $this->formatCheckForJson($params);
        //get current order json
         $datas = json_decode($this->getJson($params['id']), true);
 

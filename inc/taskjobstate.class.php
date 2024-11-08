@@ -110,7 +110,7 @@ class PluginGlpiinventoryTaskjobstate extends CommonDBTM
    /**
     * Get the tab name used for item
     *
-    * @param object $item the item object
+    * @param CommonGLPI $item the item object
     * @param integer $withtemplate 1 if is a template form
     * @return string name of the tab
     */
@@ -118,13 +118,19 @@ class PluginGlpiinventoryTaskjobstate extends CommonDBTM
     {
         switch ($item->getType()) {
             case 'Computer':
-                return __("Tasks / Groups", "glpiinventory");
-            break;
+                if (
+                    method_exists($item, 'getInventoryAgent')
+                    && $item->getInventoryAgent() != null
+                ) {
+                    return __("Tasks / Groups", "glpiinventory");
+                }
+                break;
 
             case 'PluginGlpiinventoryTask':
                 return __("Job executions", "glpiinventory");
-            break;
         }
+
+        return '';
     }
 
 
@@ -150,17 +156,17 @@ class PluginGlpiinventoryTaskjobstate extends CommonDBTM
    /**
     * Display the content of the tab
     *
-    * @param object $item
+    * @param CommonGLPI $item
     * @param integer $tabnum number of the tab to display
     * @param integer $withtemplate 1 if is a template form
     * @return boolean
     */
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
-        if ($item->getType() == 'PluginGlpiinventoryTask') {
+        if ($item instanceof PluginGlpiinventoryTask) {
             $item->showJobLogs();
             return true;
-        } elseif ($item->getType() == 'Computer') {
+        } elseif ($item instanceof Computer) {
             $pfTaskJobState = new PluginGlpiinventoryTaskjobstate();
             $pfTaskJobState->showStatesForComputer($item->fields['id']);
             echo "<br>";
@@ -282,10 +288,11 @@ class PluginGlpiinventoryTaskjobstate extends CommonDBTM
 
    /**
     * Process ajax parameters for getLogs() methods
+    * Displays in json format, encoded list of logs grouped by jobstates
     *
     * since 0.85+1.0
     * @param array $params list of ajax expected 'id' and 'last_date' parameters
-    * @return string in json format, encoded list of logs grouped by jobstates
+    * @return void
     */
     public function ajaxGetLogs($params)
     {
@@ -595,7 +602,7 @@ class PluginGlpiinventoryTaskjobstate extends CommonDBTM
    /**
    * Fill a taskjobstate by it's uuid
    * @since 9.2
-   * @param uniqid taskjobstate's uniqid
+   * @param string $uniqid taskjobstate's uniqid
    */
     public function getFromDBByUniqID($uniqid)
     {
@@ -621,7 +628,9 @@ class PluginGlpiinventoryTaskjobstate extends CommonDBTM
         $pfTaskjoblog = new PluginGlpiinventoryTaskjoblog();
 
        // Get the agent of the computer
-        $agent->getFromDBByCrit(['itemtype' => 'Computer', 'items_id' => $computers_id]);
+        if (!$agent->getFromDBByCrit(['itemtype' => 'Computer', 'items_id' => $computers_id])) {
+            return;
+        }
         $agents_id = $agent->fields['id'];
 
         $tasks_id = [];

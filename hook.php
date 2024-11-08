@@ -49,13 +49,6 @@ function plugin_glpiinventory_getAddSearchOptions($itemtype)
         $sopt[5164]['datatype']      = 'bool';
         $sopt[5164]['massiveaction'] = false;
 
-        $sopt[5165]['table']         = "glpi_plugin_glpiinventory_agentmodules";
-        $sopt[5165]['field']         = "WAKEONLAN";
-        $sopt[5165]['linkfield']     = "WAKEONLAN";
-        $sopt[5165]['name']          = __('Module', 'glpiinventory') . "-" . __('WakeOnLan', 'glpiinventory');
-        $sopt[5165]['datatype']      = 'bool';
-        $sopt[5165]['massiveaction'] = false;
-
         $sopt[5166]['table']         = "glpi_plugin_glpiinventory_agentmodules";
         $sopt[5166]['field']         = "INVENTORY";
         $sopt[5166]['linkfield']     = "INVENTORY";
@@ -124,7 +117,7 @@ function plugin_glpiinventory_hook_dashboard_cards($cards)
         ],
         'task'         => [
             'itemtype' => PluginGlpiinventoryTask::getType(),
-            'label' => sprintf(__("Number of %s"), __('Tasks')),
+            'label' => sprintf(__("Number of %s"), __('Tasks', 'glpiinventory')),
         ],
         'unmanaged'         => [
             'itemtype' => Unmanaged::getType(),
@@ -132,7 +125,7 @@ function plugin_glpiinventory_hook_dashboard_cards($cards)
         ],
         'computer'         => [
             'itemtype' => Computer::getType(),
-            'label' =>  sprintf(__("%s inventoried"), Computer::getTypeName(2)),
+            'label' =>  sprintf(__("%s inventoried", "glpiinventory"), Computer::getTypeName(2)),
             'apply_filters' =>  [
                 'link'          => 'AND',
                 'field'         => 42,
@@ -142,7 +135,7 @@ function plugin_glpiinventory_hook_dashboard_cards($cards)
             ],
         'printer'         => [
             'itemtype' => Printer::getType(),
-            'label' =>  sprintf(__("%s inventoried"), Printer::getTypeName(2)),
+            'label' =>  sprintf(__("%s inventoried", "glpiinventory"), Printer::getTypeName(2)),
             'apply_filters' =>  [
                 'link'          => 'AND',
                 'field'         => 72,
@@ -152,7 +145,7 @@ function plugin_glpiinventory_hook_dashboard_cards($cards)
             ],
         'networkequipement'         => [
             'itemtype' => NetworkEquipment::getType(),
-            'label' =>  sprintf(__("%s inventoried"), NetworkEquipment::getTypeName(2)),
+            'label' =>  sprintf(__("%s inventoried", "glpiinventory"), NetworkEquipment::getTypeName(2)),
             'apply_filters' =>  [
                 'link'          => 'AND',
                 'field'         => 72,
@@ -162,7 +155,7 @@ function plugin_glpiinventory_hook_dashboard_cards($cards)
             ],
         'phone'         => [
             'itemtype' => Phone::getType(),
-            'label' =>  sprintf(__("%s inventoried"), Phone::getTypeName(2)),
+            'label' =>  sprintf(__("%s inventoried", "glpiinventory"), Phone::getTypeName(2)),
             'apply_filters' =>  [
                 'link'          => 'AND',
                 'field'         => 72,
@@ -1136,9 +1129,4 @@ function plugin_glpiinventory_handle_collect_task(array $params)
 function plugin_glpiinventory_handle_deploy_task(array $params)
 {
     return plugin_glpiinventory_handle_common_handle_task('deploy', $params);
-}
-
-function plugin_glpiinventory_handle_wakeonlan_task(array $params)
-{
-    return plugin_glpiinventory_handle_common_handle_task('wakeonlan', $params);
 }

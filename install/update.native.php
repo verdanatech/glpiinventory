@@ -109,7 +109,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
                     if ($old_agent_id == $new_agent_id) {
                         continue;
                     }
-                    $DB->queryOrDie(
+                    $DB->doQueryOrDie(
                         $DB->buildUpdate(
                             $agent_table,
                             [
@@ -138,7 +138,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
                 }
                 $new_agent_ids[] = $agents_mapping[$old_agent_id];
             }
-            $DB->queryOrDie(
+            $DB->doQueryOrDie(
                 $DB->buildUpdate(
                     'glpi_plugin_glpiinventory_agentmodules',
                     [
@@ -203,7 +203,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
                     continue;
                 }
                 foreach ($cs_mapping as $old_cs_id => $new_cs_id) {
-                    $DB->queryOrDie(
+                    $DB->doQueryOrDie(
                         $DB->buildUpdate(
                             $cs_table,
                             [
@@ -244,7 +244,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
 
     $migration->displayMessage("Use core network ports");
     if ($DB->tableExists('glpi_plugin_glpiinventory_networkports')) {
-        $DB->queryOrDie(
+        $DB->doQueryOrDie(
             "UPDATE `glpi_networkports` AS `ports`
             INNER JOIN (
               SELECT
@@ -291,7 +291,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
 
     $migration->displayMessage("Use core computers");
     if ($DB->tableExists('glpi_plugin_glpiinventory_inventorycomputercomputers')) {
-        $DB->queryOrDie(
+        $DB->doQueryOrDie(
             "UPDATE `glpi_computers` AS `computers`
             INNER JOIN (
               SELECT
@@ -304,7 +304,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
           WHERE `computers`.`last_inventory_update` IS NULL;"
         );
 
-        $DB->queryOrDie(
+        $DB->doQueryOrDie(
             "UPDATE `glpi_computers` AS `computers`
             INNER JOIN (
               SELECT
@@ -318,7 +318,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
           ;"
         );
 
-        $DB->queryOrDie(
+        $DB->doQueryOrDie(
             "UPDATE `glpi_agents` AS `agents`
             INNER JOIN (
               SELECT
@@ -337,7 +337,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
     $migration->displayMessage("Use core network equipments");
     if ($DB->tableExists('glpi_plugin_glpiinventory_networkequipments')) {
         // agents and snmp credentials must be migrated before that one
-        $DB->queryOrDie(
+        $DB->doQueryOrDie(
             "UPDATE `glpi_networkequipments` AS `neteq`
             INNER JOIN (
               SELECT
@@ -363,7 +363,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
     $migration->displayMessage("Use core printers");
     if ($DB->tableExists('glpi_plugin_glpiinventory_printers')) {
         // agents and snmp credentials must be migrated before that one
-        $DB->queryOrDie(
+        $DB->doQueryOrDie(
             "UPDATE `glpi_printers` AS `printers`
             INNER JOIN (
               SELECT
@@ -385,8 +385,8 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
 
     $migration->displayMessage("Use core printer logs");
     if ($DB->tableExists('glpi_plugin_glpiinventory_printerlogs')) {
-        $DB->queryOrDie(
-            "INSERT INTO `glpi_printerlogs` (
+        $DB->doQueryOrDie(
+            "INSERT IGNORE INTO `glpi_printerlogs` (
                 `printers_id`,
                 `date`,
                 `total_pages`,
@@ -430,8 +430,8 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
 
     $migration->displayMessage("Use core networkports logs");
     if ($DB->tableExists('glpi_plugin_glpiinventory_networkportconnectionlogs')) {
-        $DB->queryOrDie(
-            "INSERT INTO `glpi_networkportconnectionlogs` (
+        $DB->doQueryOrDie(
+            "INSERT IGNORE INTO `glpi_networkportconnectionlogs` (
                 `date`,
                 `connected`,
                 `networkports_id_source`,
@@ -449,7 +449,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
 
     $migration->displayMessage("Use core network ports types");
     if ($DB->tableExists('glpi_plugin_glpiinventory_networkporttypes')) {
-        $DB->queryOrDie(
+        $DB->doQueryOrDie(
             "UPDATE `glpi_networkporttypes` AS `types`
             INNER JOIN (
               SELECT
@@ -540,7 +540,8 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
         [
             'OR' => [
                 ['sub_type'  => 'PluginFusioninventoryInventoryRuleImport'],
-                ['sub_type'  => 'PluginGlpiinventoryInventoryRuleImport']
+                ['sub_type'  => 'PluginGlpiinventoryInventoryRuleImport'],
+                ['sub_type'  => 'PluginFusioninventoryInventoryRuleRemotework']
             ]
         ]
     );
@@ -583,8 +584,8 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
 
     if ($DB->tableExists('glpi_plugin_glpiinventory_rulematchedlogs')) {
         // agents must be migrated before that one
-        $DB->queryOrDie(
-            "INSERT INTO `glpi_rulematchedlogs` (
+        $DB->doQueryOrDie(
+            "INSERT IGNORE INTO `glpi_rulematchedlogs` (
                `date`,
                `items_id`,
                `itemtype`,
@@ -607,8 +608,8 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
     $migration->displayMessage("Use core remote management");
     if ($DB->tableExists('glpi_plugin_glpiinventory_computerremotemanagements')) {
         // agents must be migrated before that one
-        $DB->queryOrDie(
-            "INSERT INTO `glpi_items_remotemanagements` (
+        $DB->doQueryOrDie(
+            "INSERT IGNORE INTO `glpi_items_remotemanagements` (
                 `itemtype`,
                 `items_id`,
                 `remoteid`,
@@ -665,7 +666,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
 
     $migration->displayMessage("Use core entities");
     if ($DB->tableExists('glpi_plugin_glpiinventory_entities')) {
-        $DB->queryOrDie(
+        $DB->doQueryOrDie(
             "UPDATE `glpi_entities` AS `entities`
             INNER JOIN (
               SELECT
@@ -817,7 +818,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
                 }
             }
 
-            $DB->queryOrDie(
+            $DB->doQueryOrDie(
                 $DB->buildUpdate(
                     'glpi_plugin_glpiinventory_taskjobs',
                     [
@@ -836,7 +837,7 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
     }
 
     // Use core configuration entries
-    $plugin_configs = $DB->request('glpi_plugin_glpiinventory_configs');
+    $plugin_configs = $DB->request(['FROM' => 'glpi_plugin_glpiinventory_configs']);
     $mapping = [
         'agents_action'   => 'stale_agents_action',
         'agents_old_days' => 'stale_agents_delay',
@@ -861,6 +862,25 @@ function pluginGlpiinventoryUpdateNative($current_version, $migrationname = 'Mig
             );
         }
     }
+
+    $DB->doQueryOrDie(
+        $DB->buildDelete(
+            'glpi_plugin_glpiinventory_agentmodules',
+            [
+                'modulename' => 'WAKEONLAN'
+            ]
+        )
+    );
+
+    $DB->doQueryOrDie(
+        $DB->buildDelete(
+            'glpi_displaypreferences',
+            [
+                'itemtype' => 'Computer',
+                'num' => 5165
+            ]
+        )
+    );
 
     // /!\ Keep it at the end
     $migration->executeMigration();

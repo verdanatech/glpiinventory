@@ -73,7 +73,7 @@ class PluginGlpiinventoryCommunicationNetworkInventory
     *
     * @param string $p_DEVICEID device_id of the agent
     * @param object $a_CONTENT
-    * @param Inventory $arrayinventory
+    * @param Inventory $inventory
     */
     public function import($p_DEVICEID, $a_CONTENT, Inventory $inventory)
     {
@@ -90,6 +90,7 @@ class PluginGlpiinventoryCommunicationNetworkInventory
 
         if (!isset($a_CONTENT->jobid)) {
             if (isset($a_CONTENT->content->processnumber)) {
+                // @phpstan-ignore-next-line
                 $a_CONTENT->jobid = $a_CONTENT->content->processnumber;
             } else {
                 $a_CONTENT->jobid = 1;
@@ -140,6 +141,19 @@ class PluginGlpiinventoryCommunicationNetworkInventory
             $_SESSION['plugin_glpiinventory_taskjoblog']['comment'] = '==inventorystarted==';
             $this->addtaskjoblog();
             $response = ['response' => ['RESPONSE' => 'SEND']];
+        } elseif (isset($a_CONTENT->content->error)) {
+            $itemtype = "";
+            if ($a_CONTENT->content->error->type == "NETWORKING" || $a_CONTENT->content->error->type == "STORAGE") {
+                $itemtype = "NetworkEquipment";
+            } elseif ($a_CONTENT->content->error->type == "PRINTER") {
+                $itemtype = "Printer";
+            }
+            $_SESSION['plugin_glpiinventory_taskjoblog']['comment'] = '[==detail==] ' .
+            $a_CONTENT->content->error->message . ' [[' . $itemtype . '::' .
+            $a_CONTENT->content->error->id . ']]';
+            $this->addtaskjoblog();
+
+            $response['response'] = ['RESPONSE' => 'SEND'];
         } elseif (isset($a_CONTENT->content->device->error)) {
             $itemtype = "";
             if ($a_CONTENT->content->device->error->type == "NETWORKING" || $a_CONTENT->content->device->error->type == "STORAGE") {
@@ -161,7 +175,7 @@ class PluginGlpiinventoryCommunicationNetworkInventory
             } else {
                 $refused = $inventory->getMainAsset()->getRefused();
                 $device = $a_CONTENT->content->network_device;
-                if (isset($refused) && count($refused)) {
+                if (count($refused)) {
                     $a_text = [];
                     if (isset($device)) {
                         foreach (["type", "name", "mac", "ips"] as $property) {

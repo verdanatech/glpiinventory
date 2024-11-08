@@ -36,7 +36,7 @@ include("../../../inc/includes.php");
 $pfTask = new PluginGlpiinventoryTask();
 
 //Submit the task form parameters
-$pfTask->submitForm($_POST);
+$pfTask->submitForm($_REQUEST);
 
 Html::header(
     __('GLPI Inventory', 'glpiinventory'),
@@ -55,8 +55,6 @@ if (isset($_GET['forcetab'])) {
 Session::checkRight('plugin_glpiinventory_task', READ);
 
 PluginGlpiinventoryMenu::displayMenu("mini");
-
-//PluginGlpiinventoryTaskjob::isAllowurlfopen();
 
 //If there is no form to submit, display the form
 $pfTask->display($_GET);

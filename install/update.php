@@ -134,60 +134,6 @@ function pluginGlpiinventoryGetCurrentVersion()
             $data = $iterator->current();
             return $data['value'];
         }
-        if ($DB->fieldExists('glpi_plugin_fusioninventory_agentmodules', 'plugins_id')) {
-            $iterator = $DB->request([
-            'SELECT' => ['plugins_id'],
-            'FROM'   => 'glpi_plugin_fusioninventory_agentmodules',
-            'WHERE'  => ['modulename' => 'WAKEONLAN'],
-            'LIMIT'  => 1
-            ]);
-            if (count($iterator)) {
-                $ex_pluginid = $iterator->current();
-
-                $DB->update(
-                    'glpi_plugin_fusioninventory_taskjobs',
-                    [
-                    'plugins_id'   => PluginGlpiinventoryModule::getModuleId('fusioninventory')
-                    ],
-                    [
-                    'plugins_id'   => $ex_pluginid['plugins_id']
-                    ]
-                );
-
-                 $DB->update(
-                     'glpi_plugin_fusioninventory_profiles',
-                     [
-                     'plugins_id'   => PluginGlpiinventoryModule::getModuleId('fusioninventory')
-                     ],
-                     [
-                     'plugins_id'   => $ex_pluginid['plugins_id']
-                     ]
-                 );
-
-                 $DB->update(
-                     'glpi_plugin_fusioninventory_agentmodules',
-                     [
-                     'plugins_id'   => PluginGlpiinventoryModule::getModuleId('fusioninventory')
-                     ],
-                     [
-                     'plugins_id'   => $ex_pluginid['plugins_id']
-                     ]
-                 );
-
-                 $iterator = $DB->request([
-                   'SELECT' => ['value'],
-                   'FROM'   => 'glpi_plugin_fusioninventory_configs',
-                   'WHERE'  => ['type' => 'version'],
-                   'LIMIT'  => 1
-                 ]);
-
-                 $data = [];
-                if (count($iterator)) {
-                     $data = $iterator->current();
-                     return $data['value'];
-                }
-            }
-        }
     } elseif ($DB->tableExists("glpi_plugin_glpiinventory_configs")) {
         $iterator = $DB->request([
          'SELECT' => ['value'],
@@ -200,60 +146,6 @@ function pluginGlpiinventoryGetCurrentVersion()
         if (count($iterator)) {
             $data = $iterator->current();
             return $data['value'];
-        }
-        if ($DB->fieldExists('glpi_plugin_glpiinventory_agentmodules', 'plugins_id')) {
-            $iterator = $DB->request([
-            'SELECT' => ['plugins_id'],
-            'FROM'   => 'glpi_plugin_glpiinventory_agentmodules',
-            'WHERE'  => ['modulename' => 'WAKEONLAN'],
-            'LIMIT'  => 1
-            ]);
-            if (count($iterator)) {
-                $ex_pluginid = $iterator->current();
-
-                $DB->update(
-                    'glpi_plugin_glpiinventory_taskjobs',
-                    [
-                        'plugins_id'   => PluginGlpiinventoryModule::getModuleId('glpiinventory')
-                    ],
-                    [
-                        'plugins_id'   => $ex_pluginid['plugins_id']
-                    ]
-                );
-
-                 $DB->update(
-                     'glpi_plugin_glpiinventory_profiles',
-                     [
-                        'plugins_id'   => PluginGlpiinventoryModule::getModuleId('glpiinventory')
-                     ],
-                     [
-                        'plugins_id'   => $ex_pluginid['plugins_id']
-                     ]
-                 );
-
-                 $DB->update(
-                     'glpi_plugin_glpiinventory_agentmodules',
-                     [
-                     'plugins_id'   => PluginGlpiinventoryModule::getModuleId('glpiinventory')
-                     ],
-                     [
-                     'plugins_id'   => $ex_pluginid['plugins_id']
-                     ]
-                 );
-
-                 $iterator = $DB->request([
-                   'SELECT' => ['value'],
-                   'FROM'   => 'glpi_plugin_glpiinventory_configs',
-                   'WHERE'  => ['type' => 'version'],
-                   'LIMIT'  => 1
-                 ]);
-
-                 $data = [];
-                if (count($iterator)) {
-                     $data = $iterator->current();
-                     return $data['value'];
-                }
-            }
         }
     }
     return "1.1.0";
@@ -361,7 +253,7 @@ function pluginGlpiinventoryUpdate($current_version, $migrationname = 'Migration
       'glpi_plugin_fusinvdeploy_tasks'
     ];
     foreach ($old_deploy_views as $view) {
-        $DB->query("DROP VIEW IF EXISTS $view");
+        $DB->dropView($view, true);
     }
 
     renamePlugin($migration);
@@ -1186,6 +1078,17 @@ function pluginGlpiinventoryUpdate($current_version, $migrationname = 'Migration
     // Add missing index on `glpi_plugin_glpiinventory_taskjoblogs`
     $migration = addTaskJobLogIndex($migration);
 
+    $credential_migration_was_already_executed = Config::getConfigurationValue(
+        'glpiinventory',
+        'credentials_encryption_migration_was_executed'
+    ) ?? false;
+    if (!$credential_migration_was_already_executed) {
+        $migration = encryptCredentials($migration);
+        $migration->addConfig([
+            'credentials_encryption_migration_was_executed' => true
+        ], "glpiinventory");
+    }
+
     $migration->executeMigration();
 }
 
@@ -1334,8 +1237,7 @@ function do_agent_migration($migration)
                  "threads_networkdiscovery" => $data['threads_discovery'],
                  "NETORKINVENTORY" => $data['module_snmpquery'],
                  "NETWORKDISCOVERY" => $data['module_netdiscovery'],
-                 "INVENTORY" => $data['module_inventory'],
-                 "WAKEONLAN" => $data['module_wakeonlan']
+                 "INVENTORY" => $data['module_inventory']
                 ];
             }
         }
@@ -1398,7 +1300,6 @@ function do_agent_migration($migration)
       'module_snmpquery',
       'module_netdiscovery',
       'module_inventory',
-      'module_wakeonlan',
       'core_discovery',
       'threads_discovery',
       'core_query',
@@ -1474,24 +1375,6 @@ function do_agent_migration($migration)
             'exceptions'   => exportArrayToDB([])
             ]
         );
-    }
-
-   /*
-    * Add WakeOnLan module appear in version 2.3.0
-    */
-    $iterator = $DB->request([
-      'FROM'   => 'glpi_plugin_glpiinventory_agentmodules',
-      'WHERE'  => ['modulename' => 'WAKEONLAN'],
-      'LIMIT'  => 1
-    ]);
-    if (!count($iterator)) {
-        $agentmodule = new PluginGlpiinventoryAgentmodule();
-        $input = [
-         'modulename'   => "WAKEONLAN",
-         'is_active'  => 0,
-         'exceptions' => exportArrayToDB([])
-        ];
-        $agentmodule->add($input);
     }
 
    /*
@@ -2189,7 +2072,6 @@ function do_profile_migration($migration)
           'deviceinventory',
           'netdiscovery',
           'snmp_query',
-          'wol',
           'configuration'];
 
         $a_table['renamefields'] = [];
@@ -2207,7 +2089,7 @@ function do_profile_migration($migration)
          GROUP BY `type`,`plugins_id`,`profiles_id`
          HAVING cnt >1
          ORDER BY cnt";
-        $result = $DB->query($query);
+        $result = $DB->doQuery($query);
         while ($data = $DB->fetchArray($result)) {
             //DB::delete() not yet supports limit nor order
             $queryd = "DELETE FROM `glpi_plugin_glpiinventory_profiles`
@@ -2216,7 +2098,7 @@ function do_profile_migration($migration)
                   AND `profiles_id`='" . $data['profiles_id'] . "'
                ORDER BY `id` DESC
                LIMIT " . ($data['cnt'] - 1) . " ";
-            $DB->query($queryd);
+            $DB->doQuery($queryd);
         }
 
         $a_table = [];
@@ -2905,7 +2787,7 @@ function do_rulematchedlog_migration($migration)
                   `id` int unsigned NOT NULL AUTO_INCREMENT,
                    PRIMARY KEY (`id`)
                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
-        $DB->query($query);
+        $DB->doQuery($query);
     }
     $migration->changeField(
         $newTable,
@@ -3009,12 +2891,10 @@ function do_computercomputer_migration($migration)
                 $Computer->update($input);
             }
         }
-        $sql = "DROP TABLE `glpi_plugin_fusinvinventory_computers`";
-        $DB->query($sql);
+        $DB->dropTable('glpi_plugin_fusinvinventory_computers');
     }
     if ($DB->tableExists("glpi_plugin_fusinvinventory_tmp_agents")) {
-        $sql = "DROP TABLE `glpi_plugin_fusinvinventory_tmp_agents`";
-        $DB->query($sql);
+        $DB->dropTable('glpi_plugin_fusinvinventory_tmp_agents');
     }
     $a_table = [];
     $a_table['name'] = 'glpi_plugin_glpiinventory_inventorycomputercomputers';
@@ -3269,7 +3149,7 @@ function do_configlogfield_migration($migration)
                   `id` int unsigned NOT NULL AUTO_INCREMENT,
                    PRIMARY KEY (`id`)
                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
-        $DB->query($query);
+        $DB->doQuery($query);
     }
     $migration->changeField(
         $newTable,
@@ -3354,7 +3234,7 @@ function do_networkport_migration($migration)
     renamePluginFields($migration, $newTable);
 
     if (!$DB->tableExists($newTable)) {
-        $DB->query('CREATE TABLE `' . $newTable . '` (
+        $DB->doQuery('CREATE TABLE `' . $newTable . '` (
                         `id` int unsigned NOT NULL AUTO_INCREMENT,
                         PRIMARY KEY (`id`)
                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC');
@@ -3480,7 +3360,7 @@ function do_networkport_migration($migration)
                      `id` int unsigned NOT NULL AUTO_INCREMENT,
                       PRIMARY KEY (`id`)
                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
-        $DB->query($query);
+        $DB->doQuery($query);
     }
     $migration->changeField(
         $newTable,
@@ -3552,7 +3432,7 @@ function do_networkport_migration($migration)
     renamePluginFields($migration, $newTable);
 
     if (!$DB->tableExists($newTable)) {
-        $DB->query('CREATE TABLE `' . $newTable . '` (
+        $DB->doQuery('CREATE TABLE `' . $newTable . '` (
                         `id` int unsigned NOT NULL AUTO_INCREMENT,
                         PRIMARY KEY (`id`)
                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC');
@@ -3886,7 +3766,7 @@ function do_networkport_migration($migration)
                      `id` int unsigned NOT NULL AUTO_INCREMENT,
                       PRIMARY KEY (`id`)
                   ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
-        $DB->query($query);
+        $DB->doQuery($query);
     }
     $migration->changeField(
         $newTable,
@@ -4172,7 +4052,7 @@ function do_printer_migration($migration)
     renamePluginFields($migration, $newTable);
 
     if (!$DB->tableExists($newTable)) {
-        $DB->query('CREATE TABLE `' . $newTable . '` (
+        $DB->doQuery('CREATE TABLE `' . $newTable . '` (
                         `id` int unsigned NOT NULL AUTO_INCREMENT,
                         PRIMARY KEY (`id`)
                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC');
@@ -4328,7 +4208,7 @@ function do_printer_migration($migration)
     renamePluginFields($migration, $newTable);
 
     if (!$DB->tableExists($newTable)) {
-        $DB->query('CREATE TABLE `' . $newTable . '` (
+        $DB->doQuery('CREATE TABLE `' . $newTable . '` (
                         `id` int unsigned NOT NULL AUTO_INCREMENT,
                         PRIMARY KEY (`id`)
                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC');
@@ -4535,7 +4415,7 @@ function do_printer_migration($migration)
     renamePluginFields($migration, $newTable);
 
     if (!$DB->tableExists($newTable)) {
-        $DB->query('CREATE TABLE `' . $newTable . '` (
+        $DB->doQuery('CREATE TABLE `' . $newTable . '` (
                         `id` bigint unsigned NOT NULL AUTO_INCREMENT,
                         PRIMARY KEY (`id`)
                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC');
@@ -4727,6 +4607,12 @@ function do_printer_migration($migration)
             "PluginFusinvsnmpPrinterLogReport",
             "PluginGlpiinventoryPrinterLogReport"
         );
+
+        changeDisplayPreference(
+            "PluginFusioninventoryPrinterLogReport",
+            "PluginGlpiinventoryPrinterLogReport"
+        );
+
         changeDisplayPreference("5156", "PluginFusinvsnmpPrinterCartridge");
     }
 
@@ -4804,7 +4690,7 @@ function do_networkequipment_migration($migration)
     renamePluginFields($migration, $newTable);
 
     if (!$DB->tableExists($newTable)) {
-        $DB->query('CREATE TABLE `' . $newTable . '` (
+        $DB->doQuery('CREATE TABLE `' . $newTable . '` (
                         `id` int unsigned NOT NULL AUTO_INCREMENT,
                         PRIMARY KEY (`id`)
                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC');
@@ -4997,7 +4883,7 @@ function do_networkequipment_migration($migration)
         renamePluginFields($migration, $newTable);
 
         if (!$DB->tableExists($newTable)) {
-            $DB->query('CREATE TABLE `' . $newTable . '` (
+            $DB->doQuery('CREATE TABLE `' . $newTable . '` (
                         `id` int unsigned NOT NULL AUTO_INCREMENT,
                         PRIMARY KEY (`id`)
                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC');
@@ -5226,7 +5112,7 @@ function do_configsecurity_migration($migration)
     renamePluginFields($migration, $newTable);
 
     if (!$DB->tableExists($newTable)) {
-        $DB->query('CREATE TABLE `' . $newTable . '` (
+        $DB->doQuery('CREATE TABLE `' . $newTable . '` (
                         `id` int unsigned NOT NULL AUTO_INCREMENT,
                         PRIMARY KEY (`id`)
                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC');
@@ -5421,7 +5307,7 @@ function do_statediscovery_migration($migration)
     renamePluginFields($migration, $newTable);
 
     if (!$DB->tableExists($newTable)) {
-        $DB->query("CREATE TABLE `" . $newTable . "` (
+        $DB->doQuery("CREATE TABLE `" . $newTable . "` (
                      `id` int unsigned NOT NULL AUTO_INCREMENT,
                      PRIMARY KEY (`id`)
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC");
@@ -6026,7 +5912,7 @@ function do_deployuserinteraction_migration($migration)
          KEY `entities_id` (`entities_id`),
          KEY `is_recursive` (`is_recursive`)
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
-        $DB->query($query);
+        $DB->doQuery($query);
     }
 }
 
@@ -7529,7 +7415,7 @@ function changeDisplayPreference($olditemtype, $newitemtype)
       WHERE (`itemtype` = '" . $newitemtype . "'
       OR `itemtype` = '" . $olditemtype . "')
       group by `users_id`, `num`";
-    $result = $DB->query($query);
+    $result = $DB->doQuery($query);
     while ($data = $DB->fetchArray($result)) {
         if ($data['cnt'] > 1) {
             $ids = explode(' ', $data['id']);
@@ -8360,7 +8246,7 @@ function migratePluginTables($migration, $a_table)
                      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci ROW_FORMAT=DYNAMIC";
         }
 
-        $DB->query($query);
+        $DB->doQuery($query);
     }
 
     foreach ($a_table['renamefields'] as $old => $new) {
@@ -8669,7 +8555,7 @@ function migrateTablesFromFusinvDeploy($migration)
         $DB->tableExists('glpi_plugin_fusinvdeploy_fileparts')
            && $DB->tableExists('glpi_plugin_fusinvdeploy_files')
     ) {
-        $files_list = $DB->request('glpi_plugin_fusinvdeploy_files');
+        $files_list = $DB->request(['FROM' => 'glpi_plugin_fusinvdeploy_files']);
        // multipart file datas
         foreach ($files_list as $file) {
             $sha = $file['sha512'];
@@ -8713,7 +8599,7 @@ function migrateTablesFromFusinvDeploy($migration)
 
    //migrate fusinvdeploy_files
     if ($DB->tableExists("glpi_plugin_fusinvdeploy_files")) {
-        $DB->query("TRUNCATE TABLE `glpi_plugin_glpiinventory_deployfiles`");
+        $DB->doQuery("TRUNCATE TABLE `glpi_plugin_glpiinventory_deployfiles`");
         if ($DB->fieldExists("glpi_plugin_fusinvdeploy_files", "filesize")) {
             $f_iterator = $DB->request([
                 'SELECT' => [
@@ -8775,7 +8661,7 @@ function migrateTablesFromFusinvDeploy($migration)
     *    otherwise.
     */
 
-    $packages = $DB->request('glpi_plugin_glpiinventory_deploypackages');
+    $packages = $DB->request(['FROM' => 'glpi_plugin_glpiinventory_deploypackages']);
     foreach ($packages as $order_config) {
         $json_order = json_decode($order_config['json']);
        //print("deployorders fixer : actual order structure for ID ".$order_config['id']."\n" . print_r($json_order,true) ."\n");
@@ -8808,8 +8694,15 @@ function migrateTablesFromFusinvDeploy($migration)
          //"deployorders fixer : final order structure for ID ".$order_config['id']."\n" .
        //   json_encode($json_order,JSON_PRETTY_PRINT) ."\n"
        //);
-        $pfDeployPackageItem = new PluginGlpiinventoryDeployPackageItem();
-        $pfDeployPackageItem->updateOrderJson($order_config['id'], $json_order);
+        $DB->update(
+            PluginGlpiinventoryDeployPackage::getTable(),
+            [
+             'json' => Toolbox::addslashes_deep(json_encode($json_order, JSON_UNESCAPED_SLASHES)),
+            ],
+            [
+             'id' => $order_config['id'],
+            ]
+        );
     }
 
    /**
@@ -8939,4 +8832,30 @@ function renamePluginFields(Migration $migration, string $table)
     if ($has_changes) {
         $migration->migrationOneTable($table);
     }
+}
+
+function encryptCredentials(Migration $migration): Migration
+{
+    global $DB;
+
+    $key = new GLPIKey();
+    $credentials = (new PluginGlpiinventoryCredential())->find([
+        'password' => ['<>', ""]
+    ]);
+
+    foreach ($credentials as $row) {
+        $password = $row['password'];
+        $encrypted_password = $key->encrypt($password);
+
+        $query = $DB->buildUpdate(
+            PluginGlpiinventoryCredential::getTable(),
+            [
+                'password' => $encrypted_password,
+            ],
+            ['id' => $row['id']]
+        );
+        $migration->addPostQuery($query);
+    }
+
+    return $migration;
 }

@@ -79,7 +79,7 @@ class PluginGlpiinventoryDeployGroup_Staticdata extends CommonDBRelation
    /**
     * Get the tab name used for item
     *
-    * @param object $item the item object
+    * @param CommonGLPI $item the item object
     * @param integer $withtemplate 1 if is a template form
     * @return string|array name of the tab
     */
@@ -88,7 +88,7 @@ class PluginGlpiinventoryDeployGroup_Staticdata extends CommonDBRelation
 
         if (
             !$withtemplate
-            && ($item->getType() == 'PluginGlpiinventoryDeployGroup')
+            && ($item instanceof PluginGlpiinventoryDeployGroup)
              && $item->fields['type'] == PluginGlpiinventoryDeployGroup::STATIC_GROUP
         ) {
             $tabs[1] = _n('Criterion', 'Criteria', 2);
@@ -114,7 +114,7 @@ class PluginGlpiinventoryDeployGroup_Staticdata extends CommonDBRelation
    /**
     * Display the content of the tab
     *
-    * @param object $item
+    * @param CommonGLPI $item
     * @param integer $tabnum number of the tab to display
     * @param integer $withtemplate 1 if is a template form
     * @return boolean
@@ -141,7 +141,7 @@ class PluginGlpiinventoryDeployGroup_Staticdata extends CommonDBRelation
    /**
     * Display criteria form + list of computers
     *
-    * @param object $item PluginGlpiinventoryDeployGroup instance
+    * @param PluginGlpiinventoryDeployGroup $item PluginGlpiinventoryDeployGroup instance
     */
     public static function showCriteriaAndSearch(PluginGlpiinventoryDeployGroup $item)
     {
@@ -156,28 +156,24 @@ class PluginGlpiinventoryDeployGroup_Staticdata extends CommonDBRelation
         echo "</span>";
         echo "</div>";
 
-       // WITH checking post values
+        // WITH checking post values
         $search_params = PluginGlpiinventoryDeployGroup::getSearchParamsAsAnArray($item, true);
-       //If metacriteria array is empty, remove it as it displays the metacriteria form,
-       //and it's is not we want !
+        //If metacriteria array is empty, remove it as it displays the metacriteria form,
+        //and it's is not we want !
         if (isset($search_params['metacriteria']) && empty($search_params['metacriteria'])) {
             unset($search_params['metacriteria']);
         }
         PluginGlpiinventoryDeployGroup::showCriteria($item, $search_params);
 
-       //Add extra parameters for massive action display : only the Add action should be displayed
+        //Add extra parameters for massive action display : only the Add action should be displayed
         $search_params['massiveactionparams']['extraparams']['id']                    = $item->getID();
         $search_params['massiveactionparams']['extraparams']['specific_actions']['PluginGlpiinventoryComputer' . MassiveAction::CLASS_ACTION_SEPARATOR . 'add'] = __('Add to static group', 'glpiinventory');
         $search_params['massiveactionparams']['extraparams']['massive_action_fields'] = ['action', 'id'];
 
-        $data = Search::prepareDatasForSearch('PluginGlpiinventoryComputer', $search_params);
-        $data['itemtype'] = 'Computer';
+        $data = Search::prepareDatasForSearch('Computer', $search_params);
         Search::constructSQL($data);
-
-       // Use our specific constructDatas function rather than Glpi function
-        PluginGlpiinventorySearch::constructDatas($data);
+        Search::constructData($data);
         $data['search']['target'] = PluginGlpiinventoryDeployGroup::getSearchEngineTargetURL($item->getID(), false);
-        $data['itemtype'] = 'PluginGlpiinventoryComputer';
         $limit_backup = $_SESSION['glpilist_limit'];
         $_SESSION['glpilist_limit'] = 200;
         Search::displayData($data);
@@ -295,9 +291,9 @@ class PluginGlpiinventoryDeployGroup_Staticdata extends CommonDBRelation
 
    /**
    * Duplicate entries from one group to another
-   * @param $source_deploygroups_id the source group ID
-   * @param $target_deploygroups_id the target group ID
-   * @return the duplication status, as a boolean
+   * @param integer $source_deploygroups_id the source group ID
+   * @param integer $target_deploygroups_id the target group ID
+   * @return boolean the duplication status
    */
     public static function duplicate($source_deploygroups_id, $target_deploygroups_id)
     {
@@ -322,7 +318,7 @@ class PluginGlpiinventoryDeployGroup_Staticdata extends CommonDBRelation
     *
     * @since 9.2+2.0
     *
-    * @param object $item it's an instance of PluginGlpiinventoryDeployGroup class
+    * @param PluginGlpiinventoryDeployGroup $item it's an instance of PluginGlpiinventoryDeployGroup class
     *
     * @return boolean
     */

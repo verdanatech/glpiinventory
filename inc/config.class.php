@@ -217,7 +217,7 @@ class PluginGlpiinventoryConfig extends CommonDBTM
    /**
     * Get the tab name used for item
     *
-    * @param object $item the item object
+    * @param CommonGLPI $item the item object
     * @param integer $withtemplate 1 if is a template form
     * @return string|array name of the tab
     */
@@ -238,14 +238,14 @@ class PluginGlpiinventoryConfig extends CommonDBTM
    /**
     * Display the content of the tab
     *
-    * @param object $item
+    * @param CommonGLPI $item
     * @param integer $tabnum number of the tab to display
     * @param integer $withtemplate 1 if is a template form
     * @return boolean
     */
     public static function displayTabContentForItem($item, $tabnum = 1, $withtemplate = 0)
     {
-
+        /** @var PluginGlpiinventoryConfig $item */
         switch ($tabnum) {
             case 0:
                 $item->showConfigForm();
@@ -390,6 +390,8 @@ class PluginGlpiinventoryConfig extends CommonDBTM
             case self::ACTION_CLEAN:
                 return __('Clean agents', 'glpiinventory');
         }
+
+        return '';
     }
 
 
@@ -475,13 +477,15 @@ class PluginGlpiinventoryConfig extends CommonDBTM
         $options['colspan'] = 1;
         $pfConfig->showFormHeader($options);
 
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Root folder for sending files from server', 'glpiinventory') . "</td>";
-        echo "<td>";
-        echo "<input type='text' class='form-control' name='server_upload_path' value='" .
-         $pfConfig->getValue('server_upload_path') . "' size='60' />";
-        echo "</td>";
-        echo "</tr>";
+        if (GLPI_INSTALL_MODE !== 'CLOUD') {
+            echo "<tr class='tab_bg_1'>";
+            echo "<td>" . __('Root folder for sending files from server', 'glpiinventory') . "</td>";
+            echo "<td>";
+            echo "<input type='text' class='form-control' name='server_upload_path' value='" .
+            $pfConfig->getValue('server_upload_path') . "' size='60' />";
+            echo "</td>";
+            echo "</tr>";
+        }
 
         echo "<tr>";
         echo "<td>" . __('Use this GLPI server as a mirror server', 'glpiinventory') . "</td>";
@@ -619,7 +623,8 @@ class PluginGlpiinventoryConfig extends CommonDBTM
 
         if ($DB->tableExists('glpi_plugin_glpiinventory_configs')) {
             $PF_CONFIG = [];
-            foreach ($DB->request('glpi_plugin_glpiinventory_configs') as $data) {
+            $configs = $DB->request(['FROM' => 'glpi_plugin_glpiinventory_configs']);
+            foreach ($configs as $data) {
                 $PF_CONFIG[$data['type']] = $data['value'];
             }
         }

@@ -109,7 +109,7 @@ class PluginGlpiinventoryDeployMirror extends CommonDBTM
         $agent = new Agent();
         $agent->getFromDB($agents_id);
         $agent = $agent->fields;
-        if (!isset($agent) || !isset($agent['items_id'])) {
+        if (!(int)$agent['items_id'] > 0) {
             return [];
         }
 
@@ -333,7 +333,7 @@ class PluginGlpiinventoryDeployMirror extends CommonDBTM
    /**
     * Display form related to the massive action selected
     *
-    * @param object $ma MassiveAction instance
+    * @param MassiveAction $ma MassiveAction instance
     * @return boolean
     */
     public static function showMassiveActionsSubForm(MassiveAction $ma)
@@ -350,8 +350,8 @@ class PluginGlpiinventoryDeployMirror extends CommonDBTM
    /**
     * Execution code for massive action
     *
-    * @param object $ma MassiveAction instance
-    * @param object $item item on which execute the code
+    * @param MassiveAction $ma MassiveAction instance
+    * @param CommonDBTM $item item on which execute the code
     * @param array $ids list of ID on which execute the code
     */
     public static function processMassiveActionsForOneItemtype(

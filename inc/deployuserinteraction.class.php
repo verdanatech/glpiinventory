@@ -109,9 +109,9 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
 
 
    /**
-    * Get an event label by it's identifier
+    * Get an event label by its identifier
     * @since 9.2
-    * @return array
+    * @return string
     */
     public function getLabelForAType($event)
     {
@@ -131,7 +131,7 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
     * @param array $request_data
     * @param string $rand unique element id used to identify/update an element
     * @param string $mode mode in use (create, edit...)
-    * @return boolean
+    * @return void
     */
     public function displayAjaxValues($config, $request_data, $rand, $mode)
     {
@@ -244,13 +244,13 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
    /**
     * Display list of user interactions
     *
-    * @global array $CFG_GLPI
-    * @param object $package PluginGlpiinventoryDeployPackage instance
+    * @param PluginGlpiinventoryDeployPackage $package PluginGlpiinventoryDeployPackage instance
     * @param array $data array converted of 'json' field in DB where stored checks
     * @param string $rand unique element id used to identify/update an element
     */
     public function displayList(PluginGlpiinventoryDeployPackage $package, $data, $rand)
     {
+        /** @var array $CFG_GLPI */
         global $CFG_GLPI;
 
         $interaction_types = $this->getTypes();
@@ -295,7 +295,6 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
         }
         echo "</table>";
         if ($canedit) {
-            echo "&nbsp;&nbsp;<img src='" . $CFG_GLPI["root_doc"] . "/pics/arrow-left.png' alt='' />";
             echo "<input type='submit' name='delete' value=\"" .
             __('Delete', 'glpiinventory') . "\" class='submit' />";
         }
@@ -306,8 +305,8 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
    * Get of a short description of a user interaction
    *
    * @since 9.2
-   * @param interaction an array representing an interaction
-   * @return a short description
+   * @param string $interaction an array representing an interaction
+   * @return string a short description
    */
     public function getInteractionDescription($interaction)
     {
@@ -391,6 +390,10 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
     }
 
 
+    /**
+     * @param PluginGlpiinventoryDeployPackage $package
+     * @return array
+     */
     public function getTypesAlreadyInUse(PluginGlpiinventoryDeployPackage $package)
     {
         $used_interactions = [];
@@ -414,11 +417,11 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
    * Get a log message depending on an agent response
    * @since 9.2
    *
-   * @param behavior the behavior the agent must adopt for the job
-   * @param type the type of event that triggered the user interaction
-   * @param $event the button clicked by the user
+   * @param string $behavior the behavior the agent must adopt for the job
+   * @param string $type the type of event that triggered the user interaction
+   * @param string $event the button clicked by the user
    *         (or the what's happened in special cases, as defined in a template)
-   * @param user userid the user who performed the interaction
+   * @param integer $user userid the user who performed the interaction
    * @return string the message to be display in a taskjob log
    */
     public function getLogMessage($behavior, $type, $event, $user)

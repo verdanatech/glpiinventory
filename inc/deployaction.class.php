@@ -97,7 +97,7 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
    /**
     * Display form
     *
-    * @param object $package PluginGlpiinventoryDeployPackage instance
+    * @param PluginGlpiinventoryDeployPackage $package PluginGlpiinventoryDeployPackage instance
     * @param array $request_data
     * @param string $rand unique element id used to identify/update an element
     * @param string $mode possible values: init|edit|create
@@ -162,13 +162,13 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
    /**
     * Display list of actions
     *
-    * @global array $CFG_GLPI
-    * @param object $package PluginGlpiinventoryDeployPackage instance
+    * @param PluginGlpiinventoryDeployPackage $package PluginGlpiinventoryDeployPackage instance
     * @param array $data array converted of 'json' field in DB where stored actions
     * @param string $rand unique element id used to identify/update an element
     */
     public function displayList(PluginGlpiinventoryDeployPackage $package, $data, $rand)
     {
+        /** @var array $CFG_GLPI */
         global $CFG_GLPI;
 
         $canedit    = $package->canUpdateContent();
@@ -246,7 +246,6 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
         }
         echo "</table>";
         if ($canedit) {
-            echo "&nbsp;&nbsp;<img src='" . $CFG_GLPI["root_doc"] . "/pics/arrow-left.png' alt=''>";
             echo "<input type='submit' name='delete' value=\"" .
             __('Delete', 'glpiinventory') . "\" class='submit'>";
         }
@@ -259,7 +258,7 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
     * @param array $config
     * @param array $request_data
     * @param string $mode mode in use (create, edit...)
-    * @return boolean
+    * @return void
     */
     public function displayAjaxValues($config, $request_data, $rand, $mode)
     {
@@ -292,11 +291,9 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
         $value_type_1 = "input";
         $value_1      = "";
         $value_2      = "";
+        $name_label_2 = "";
         $retChecks    = null;
-        $name_label   = __('Action label', 'glpiinventory');
         $name_value   = (isset($config_data['name'])) ? $config_data['name'] : "";
-        $name_type    = "input";
-        $logLineLimit = (isset($config_data['logLineLimit'])) ? $config_data['logLineLimit'] : 100;
 
        /*
        * set values from element's config in 'edit' mode
@@ -309,7 +306,9 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
                 $value_label_2 = __("To", 'glpiinventory');
                 $name_label_2  = "to";
                 if ($mode === self::EDIT) {
+                    /** @phpstan-ignore-next-line  */
                     $value_1 = $config_data['from'];
+                    /** @phpstan-ignore-next-line  */
                     $value_2 = $config_data['to'];
                 }
                 break;
@@ -320,6 +319,7 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
                 $value_label_2 = false;
                 $value_type_1  = "textarea";
                 if ($mode === self::EDIT) {
+                    /** @phpstan-ignore-next-line  */
                     $value_1 = $config_data['exec'];
                     if (isset($config_data['retChecks'])) {
                         $retChecks = $config_data['retChecks'];
@@ -337,6 +337,7 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
                     * TODO : Add list input like `retChecks` on `mkdir` and `delete`
                     * because those methods are defined as list in specification
                     */
+                    /** @phpstan-ignore-next-line  */
                     $value_1 = array_shift($config_data['list']);
                 }
                 break;
@@ -463,8 +464,9 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
     */
     public function add_item($params)
     {
-       //prepare new action entry to insert in json
+        //prepare new action entry to insert in json
         $fields = ['list', 'from', 'to', 'exec', 'name', 'logLineLimit'];
+        $tmp = [];
         foreach ($fields as $field) {
             if (isset($params[$field])) {
                 $tmp[$field] = $params[$field];

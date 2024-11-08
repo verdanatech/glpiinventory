@@ -62,6 +62,7 @@ class PluginGlpiinventoryComputer extends Computer
                  'id'   => 'fields_plugin',
                  'name' => __('Plugin fields')
                 ];
+                /** @phpstan-ignore-next-line */
                 $fieldsoptions =  plugin_fields_getAddSearchOptions('Computer');
                 foreach ($fieldsoptions as $id => $data) {
                     $data['id'] = $id;
@@ -105,8 +106,8 @@ class PluginGlpiinventoryComputer extends Computer
    /**
     * Execution code for massive action
     *
-    * @param object $ma MassiveAction instance
-    * @param object $item item on which execute the code
+    * @param MassiveAction $ma MassiveAction instance
+    * @param CommonDBTM $item item on which execute the code
     * @param array $ids list of ID on which execute the code
     */
     public static function processMassiveActionsForOneItemtype(MassiveAction $ma, CommonDBTM $item, array $ids)
@@ -163,7 +164,7 @@ class PluginGlpiinventoryComputer extends Computer
    /**
     * Display form related to the massive action selected
     *
-    * @param object $ma MassiveAction instance
+    * @param MassiveAction $ma MassiveAction instance
     * @return boolean
     */
     public static function showMassiveActionsSubForm(MassiveAction $ma)

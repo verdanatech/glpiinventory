@@ -4,7 +4,7 @@
 
 namespace Composer\Autoload;
 
-class ComposerStaticInit9141f04856edfad35c5961be3dd79f1f
+class ComposerStaticInit2521c5c0ff9f150c5d514e7e6fbdaacf
 {
     public static $classMap = array (
         'Composer\\InstalledVersions' => __DIR__ . '/..' . '/composer/InstalledVersions.php',
@@ -13,8 +13,6 @@ class ComposerStaticInit9141f04856edfad35c5961be3dd79f1f
         'PluginGlpiinventoryCollect' => __DIR__ . '/../..' . '/inc/collect.class.php',
         'PluginGlpiinventoryCollectCommon' => __DIR__ . '/../..' . '/inc/collectcommon.class.php',
         'PluginGlpiinventoryCollectContentCommon' => __DIR__ . '/../..' . '/inc/collectcontentcommon.class.php',
-        'PluginGlpiinventoryCollectRule' => __DIR__ . '/../..' . '/inc/collectrule.class.php',
-        'PluginGlpiinventoryCollectRuleCollection' => __DIR__ . '/../..' . '/inc/collectrulecollection.class.php',
         'PluginGlpiinventoryCollect_File' => __DIR__ . '/../..' . '/inc/collect_file.class.php',
         'PluginGlpiinventoryCollect_File_Content' => __DIR__ . '/../..' . '/inc/collect_file_content.class.php',
         'PluginGlpiinventoryCollect_Registry' => __DIR__ . '/../..' . '/inc/collect_registry.class.php',
@@ -60,7 +58,6 @@ class ComposerStaticInit9141f04856edfad35c5961be3dd79f1f
         'PluginGlpiinventoryNetworkdiscovery' => __DIR__ . '/../..' . '/inc/networkdiscovery.class.php',
         'PluginGlpiinventoryNetworkinventory' => __DIR__ . '/../..' . '/inc/networkinventory.class.php',
         'PluginGlpiinventoryProfile' => __DIR__ . '/../..' . '/inc/profile.class.php',
-        'PluginGlpiinventorySearch' => __DIR__ . '/../..' . '/inc/search.class.php',
         'PluginGlpiinventorySetup' => __DIR__ . '/../..' . '/inc/setup.class.php',
         'PluginGlpiinventoryStateDiscovery' => __DIR__ . '/../..' . '/inc/statediscovery.class.php',
         'PluginGlpiinventoryStateInventory' => __DIR__ . '/../..' . '/inc/stateinventory.class.php',
@@ -74,13 +71,12 @@ class ComposerStaticInit9141f04856edfad35c5961be3dd79f1f
         'PluginGlpiinventoryTimeslot' => __DIR__ . '/../..' . '/inc/timeslot.class.php',
         'PluginGlpiinventoryTimeslotEntry' => __DIR__ . '/../..' . '/inc/timeslotentry.class.php',
         'PluginGlpiinventoryToolbox' => __DIR__ . '/../..' . '/inc/toolbox.class.php',
-        'PluginGlpiinventoryWakeonlan' => __DIR__ . '/../..' . '/inc/wakeonlan.class.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
     {
         return \Closure::bind(function () use ($loader) {
-            $loader->classMap = ComposerStaticInit9141f04856edfad35c5961be3dd79f1f::$classMap;
+            $loader->classMap = ComposerStaticInit2521c5c0ff9f150c5d514e7e6fbdaacf::$classMap;
 
         }, null, ClassLoader::class);
     }

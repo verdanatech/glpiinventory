@@ -253,7 +253,7 @@ class PluginGlpiinventoryDeployTaskjob extends CommonDBTM
                     case 'Computer':
                         $where = [];
                         if (isset($params['query'])) {
-                            $where['name'] = ['LIKE', '%' . $like];
+                            $where['name'] = ['LIKE', '%' . $params['query']];
                         }
 
                         $i = 0;
@@ -288,10 +288,6 @@ class PluginGlpiinventoryDeployTaskjob extends CommonDBTM
                             $i++;
                         }
                         $res = json_encode($res);
-                        break;
-
-                    case 'PluginGlpiinventoryDeployGroup':
-                        $res = PluginGlpiinventoryDeployGroup::getAllDatas('action_selections');
                         break;
                 }
                 break;

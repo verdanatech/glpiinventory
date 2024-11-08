@@ -12,8 +12,6 @@ return array(
     'PluginGlpiinventoryCollect' => $baseDir . '/inc/collect.class.php',
     'PluginGlpiinventoryCollectCommon' => $baseDir . '/inc/collectcommon.class.php',
     'PluginGlpiinventoryCollectContentCommon' => $baseDir . '/inc/collectcontentcommon.class.php',
-    'PluginGlpiinventoryCollectRule' => $baseDir . '/inc/collectrule.class.php',
-    'PluginGlpiinventoryCollectRuleCollection' => $baseDir . '/inc/collectrulecollection.class.php',
     'PluginGlpiinventoryCollect_File' => $baseDir . '/inc/collect_file.class.php',
     'PluginGlpiinventoryCollect_File_Content' => $baseDir . '/inc/collect_file_content.class.php',
     'PluginGlpiinventoryCollect_Registry' => $baseDir . '/inc/collect_registry.class.php',
@@ -59,7 +57,6 @@ return array(
     'PluginGlpiinventoryNetworkdiscovery' => $baseDir . '/inc/networkdiscovery.class.php',
     'PluginGlpiinventoryNetworkinventory' => $baseDir . '/inc/networkinventory.class.php',
     'PluginGlpiinventoryProfile' => $baseDir . '/inc/profile.class.php',
-    'PluginGlpiinventorySearch' => $baseDir . '/inc/search.class.php',
     'PluginGlpiinventorySetup' => $baseDir . '/inc/setup.class.php',
     'PluginGlpiinventoryStateDiscovery' => $baseDir . '/inc/statediscovery.class.php',
     'PluginGlpiinventoryStateInventory' => $baseDir . '/inc/stateinventory.class.php',
@@ -73,5 +70,4 @@ return array(
     'PluginGlpiinventoryTimeslot' => $baseDir . '/inc/timeslot.class.php',
     'PluginGlpiinventoryTimeslotEntry' => $baseDir . '/inc/timeslotentry.class.php',
     'PluginGlpiinventoryToolbox' => $baseDir . '/inc/toolbox.class.php',
-    'PluginGlpiinventoryWakeonlan' => $baseDir . '/inc/wakeonlan.class.php',
 );

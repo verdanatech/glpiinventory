@@ -65,13 +65,14 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
    /**
     * Get the tab name used for item
     *
-    * @param object $item the item object
+    * @param CommonGLPI $item the item object
     * @param integer $withtemplate 1 if is a template form
     * @return string name of the tab
     */
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
 
+        /** @var CommonDBTM $item */
         if (
             !$withtemplate
             && $item->fields['type'] == PluginGlpiinventoryDeployGroup::DYNAMIC_GROUP
@@ -96,13 +97,12 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
     * This function saves and restores the pagination parameters to avoid breaking the pagination in the
     * query results.
     *
-    * @param object $item the item object
-    * @param integer $withtemplate 1 if is a template form
+    * @param CommonGLPI $item the item object
     * @return string name of the tab
     */
     public function getMatchingItemsCount(CommonGLPI $item)
     {
-       // Save pagination parameters
+        // Save pagination parameters
         $pagination_params = [];
         foreach (['sort', 'order', 'start'] as $field) {
             if (isset($_SESSION['glpisearch']['Computer'][$field])) {
@@ -119,11 +119,9 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
 
         $data = Search::prepareDatasForSearch('Computer', $params);
         Search::constructSQL($data);
+        Search::constructData($data);
 
-       // Use our specific constructDatas function rather than Glpi function
-        PluginGlpiinventorySearch::constructDatas($data);
-
-       // Restore pagination parameters
+        // Restore pagination parameters
         foreach ($pagination_params as $key => $value) {
             $_SESSION['glpisearch']['Computer'][$field] = $pagination_params[$field];
         }
@@ -135,7 +133,7 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
    /**
     * Display the content of the tab
     *
-    * @param object $item
+    * @param CommonGLPI $item
     * @param integer $tabnum number of the tab to display
     * @param integer $withtemplate 1 if is a template form
     * @return boolean
@@ -165,18 +163,19 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
                     $params['metacriteria'] = [];
                 }
                 $params['target'] = PluginGlpiinventoryDeployGroup::getSearchEngineTargetURL($_GET['id'], true);
-                self::showList('Computer', $params, ['1', '2']);
+                self::showList('Computer', $params, []);
                 return true;
         }
         return false;
     }
 
 
-
    /**
     * Display criteria form + list of computers
     *
-    * @param object $item PluginGlpiinventoryDeployGroup instance
+    * @param PluginGlpiinventoryDeployGroup $item PluginGlpiinventoryDeployGroup instance
+    *
+    * @return void
     */
     public static function showCriteriaAndSearch(PluginGlpiinventoryDeployGroup $item)
     {
@@ -190,7 +189,7 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
        // WITHOUT checking post values
         $search_params = PluginGlpiinventoryDeployGroup::getSearchParamsAsAnArray($item, false);
        //If metacriteria array is empty, remove it as it displays the metacriteria form,
-       //and it's is not we want !
+       //and it is not we want !
         if (isset($search_params['metacriteria']) && empty($search_params['metacriteria'])) {
             unset($search_params['metacriteria']);
         }
@@ -200,24 +199,6 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
         PluginGlpiinventoryDeployGroup::showCriteria($item, $search_params);
         echo '</div>';
         echo '</div>';
-       /* Do not display the search result on the current tab
-       * @mohierf: I do not remove this code if this feature is intended to be reactivated...
-       * -----
-       // Include pagination parameters in the provided parameters
-       foreach ($pagination_params as $key => $value) {
-         $search_params[$key] = $value;
-       }
-       // Add extra parameters for massive action display : only the Add action should be displayed
-       $search_params['massiveactionparams']['extraparams']['id']                    = $item->getID();
-       $search_params['massiveactionparams']['extraparams']['custom_action']         = 'add_to_group';
-       $search_params['massiveactionparams']['extraparams']['massive_action_fields'] = ['action', 'id'];
-
-       $data = Search::prepareDatasForSearch('Computer', $search_params);
-       Search::constructSQL($data);
-       Search::constructDatas($data);
-       $data['search']['target'] = PluginGlpiinventoryDeployGroup::getSearchEngineTargetURL($item->getID(), false);
-       Search::displayDatas($data);
-       */
     }
 
 
@@ -232,19 +213,8 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
     {
         $data = Search::prepareDatasForSearch('Computer', $params, $forcedisplay);
         Search::constructSQL($data);
+        Search::constructData($data);
 
-       // Use our specific constructDatas function rather than Glpi function
-        PluginGlpiinventorySearch::constructDatas($data);
-
-       // Remove some fields from the displayed columns
-        if (Session::isMultiEntitiesMode()) {
-           // Remove entity and computer Id
-            unset($data['data']['cols'][1]);
-            unset($data['data']['cols'][2]);
-        } else {
-           // Remove computer Id
-            unset($data['data']['cols'][1]);
-        }
         Search::displayData($data);
     }
 
@@ -272,9 +242,9 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
     *
     * @since 0.85+1.0
     *
-    * @param group the group object
-    * @param use_cache retrieve computers_id from cache (computers_id_cache field)
-    * @return an array of computer ids
+    * @param PluginGlpiinventoryDeployGroup $group the group object
+    * @param boolean $use_cache retrieve computers_id from cache (computers_id_cache field)
+    * @return array of computer ids
     */
     public static function getTargetsByGroup(PluginGlpiinventoryDeployGroup $group, $use_cache = false)
     {
@@ -286,27 +256,22 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
                 unset($search_params['metacriteria']);
             }
 
-           //force no sort (Search engine will sort by id) for better performance
+            //force no sort (Search engine will sort by id) for better performance
             $search_params['sort'] = '';
 
-           //Only retrieve computers IDs
+            //Only retrieve computers IDs
             $results = self::getDatas(
                 'Computer',
                 $search_params,
                 ['2']
             );
 
-            $results = Search::prepareDatasForSearch('Computer', $search_params, ['2']);
-            Search::constructSQL($results);
-
-           // Use our specific constructDatas function rather than Glpi function
-            PluginGlpiinventorySearch::constructDatas($results);
 
             foreach ($results['data']['rows'] as $id => $row) {
                  $ids[$row['id']] = $row['id'];
             }
 
-           //store results in cache (for reusing on agent communication)
+            //store results in cache (for reusing on agent communication)
             self::storeCache($group, $ids);
         }
 
@@ -362,9 +327,9 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
 
    /**
    * Duplicate entries from one group to another
-   * @param $source_deploygroups_id the source group ID
-   * @param $target_deploygroups_id the target group ID
-   * @return the duplication status, as a boolean
+   * @param integer $source_deploygroups_id the source group ID
+   * @param integer $target_deploygroups_id the target group ID
+   * @return boolean the duplication status
    */
     public static function duplicate($source_deploygroups_id, $target_deploygroups_id)
     {

@@ -123,7 +123,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
     *
     * Also call canUpdateItem()
     *
-    * @return booleen
+    * @return boolean
    **/
     public function canUpdateContent()
     {
@@ -179,7 +179,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
    /**
     * Display form related to the massive action selected
     *
-    * @param object $ma MassiveAction instance
+    * @param MassiveAction $ma MassiveAction instance
     * @return boolean
     */
     public static function showMassiveActionsSubForm(MassiveAction $ma)
@@ -204,13 +204,13 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
    /**
     * Execution code for massive action
     *
-    * @param object $ma MassiveAction instance
-    * @param object $item item on which execute the code
+    * @param MassiveAction $ma MassiveAction instance
+    * @param CommonDBTM $item item on which execute the code
     * @param array $ids list of ID on which execute the code
     */
     public static function processMassiveActionsForOneItemtype(MassiveAction $ma, CommonDBTM $item, array $ids)
     {
-
+        /** @var PluginGlpiinventoryDeployPackage $item  */
         switch ($ma->getAction()) {
             case 'export':
                 foreach ($ids as $key) {
@@ -391,7 +391,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
    /**
     * Get all packages in json format
     *
-    * @return json
+    * @return string json
     */
     public function getAllDatas()
     {
@@ -986,12 +986,8 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
         ];
 
         $error_json = json_last_error();
+        $error_json_message = json_last_error_msg();
 
-        if (version_compare(PHP_VERSION, '5.5.0', "ge")) {
-            $error_json_message = json_last_error_msg();
-        } else {
-            $error_json_message = "";
-        }
         $error = 0;
         if ($error_json != JSON_ERROR_NONE) {
             $error_msg = $json_error_consts[$error_json];
@@ -1018,7 +1014,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
    /**
     * Get the tab name used for item
     *
-    * @param object $item the item object
+    * @param CommonGLPI $item the item object
     * @param integer $withtemplate 1 if is a template form
     * @return string name of the tab
     */
@@ -1026,8 +1022,8 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
     {
 
         if (!$withtemplate) {
-            switch ($item->getType()) {
-                case __CLASS__:
+            switch (get_class($item)) {
+                case self::class:
                     if ($item->canUpdateItem()) {
                         $tabs = [];
                         if ($item->fields['id'] > 0) {
@@ -1058,7 +1054,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
                     }
                     break;
 
-                case 'Computer':
+                case Computer::class:
                     if (
                         Session::haveRight("plugin_glpiinventory_selfpackage", READ)
                         && PluginGlpiinventoryToolbox::isAnInventoryDevice($item)
@@ -1076,7 +1072,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
    /**
     * Display the content of the tab
     *
-    * @param object $item
+    * @param CommonGLPI $item
     * @param integer $tabnum number of the tab to display
     * @param integer $withtemplate 1 if is a template form
     * @return boolean
@@ -1084,7 +1080,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
 
-        if ($item->getType() == __CLASS__) {
+        if ($item instanceof self) {
             if ($tabnum == 2) {
                 $item->showVisibility();
                 return true;
@@ -1092,7 +1088,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
                 $item->displayOrderTypeForm();
                 return true;
             }
-        } elseif ($item->getType() == 'Computer') {
+        } elseif ($item instanceof Computer) {
             $package = new self();
             $package->showPackageForMe($_SESSION['glpiID'], $item);
             return true;
@@ -1363,12 +1359,11 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
 
    /**
    * Get all available states for a package
-   * @return an array of states and their labels
+   * @return array of states and their labels
    */
     public static function getPackageDeploymentStates()
     {
         return [
-              'agents_notdone'   => __('Not done yet', 'glpiinventory'),
               'agents_error'     => __('In error', 'glpiinventory'),
               'agents_success'   => __('Successful', 'glpiinventory'),
               'agents_running'   => __('Running', 'glpiinventory'),
@@ -1379,8 +1374,8 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
 
    /**
    * Get a label for a state
-   * @param state the state
-   * @return the label associated to a state
+   * @param string $state the state
+   * @return string the label associated to a state
    */
     public static function getDeploymentLabelForAState($state)
     {
@@ -1436,7 +1431,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
             $computer->getFromDB($computers_id);
             echo "<tr>";
             echo "<th><img src='$url/pics/computer_icon.png'/> "
-            . __('Computer', 'Computers', 1) . " <i>"
+            . _n('Computer', 'Computers', 1) . " <i>"
             . $computer->fields['name'] . "</i></th>";
             echo "</tr>";
 
@@ -1838,7 +1833,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
         global $DB;
 
         $pfTask    = new PluginGlpiinventoryTask();
-        $pfTaskJob = new PluginGlpiinventoryTaskJob();
+        $pfTaskJob = new PluginGlpiinventoryTaskjob();
         $computer  = new Computer();
 
         $computer->getFromDB($computers_id);
@@ -1868,6 +1863,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
             'LIMIT'  => 1
         ]);
 
+        $tasks_id = 0;
         // case 1: if exist, we add computer in actors of the taskjob
         if ($iterator->numrows() == 1) {
             foreach ($iterator as $data) {
@@ -1897,10 +1893,10 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
                 $tasks_id = $data['plugin_glpiinventory_tasks_id'];
             }
         } else {
-           // case 2: if not exist, create a new task + taskjob
+            // case 2: if not exist, create a new task + taskjob
             $this->getFromDB($packages_id);
 
-           //Add the new task
+            //Add the new task
             $input = [
                 'name'                    => '[deploy on demand] ' . Sanitizer::dbEscape($this->fields['name']),
                 'entities_id'             => $computer->fields['entities_id'],
@@ -1910,8 +1906,8 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
             ];
             $tasks_id = $pfTask->add($input);
 
-           //Add a new job for the newly created task
-           //and enable it
+            //Add a new job for the newly created task
+            //and enable it
             $input = [
             'plugin_glpiinventory_tasks_id' => $tasks_id,
             'entities_id' => $computer->fields['entities_id'],
@@ -1924,7 +1920,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
             $pfTaskJob->add($input);
         }
 
-       //Prepare the task (and only this one)
+        //Prepare the task (and only this one)
         $pfTask->prepareTaskjobs(['deployinstall'], $tasks_id);
     }
 
@@ -1933,17 +1929,18 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
     * Get all packages that a user has requested to install
     * on one of it's computer
     *
-    * @global object $DB
     * @param array $computers_packages
-    * @param integer $users_id
+    * @param false|integer $users_id
     * @return array
     */
     public function getMyDepoyPackages($computers_packages, $users_id = false)
     {
+        /** @var DBmysql $DB */
         global $DB;
 
        // Get packages yet deployed by enduser
         $packages_used = [];
+        $computers_id = 0;
         foreach ($computers_packages as $computers_id => $data) {
             $packages_used[$computers_id] = [];
         }
@@ -2005,11 +2002,10 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
 
 
    /**
-    * Get the state of the package I have requeted to install
+    * Get the state of the package I have requested to install
     *
     * @param integer $computers_id id of the computer
     * @param integer $taskjobs_id id of the taskjob (where order defined)
-    * @param string $packages_name name of the package
     */
     public function getMyDepoyPackagesState($computers_id, $taskjobs_id)
     {
@@ -2151,8 +2147,8 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
 
    /**
    * Duplicate a deploy package
-   * @param $deploypackages_id the ID of the package to duplicate
-   * @return duplication process status
+   * @param integer $deploypackages_id the ID of the package to duplicate
+   * @return boolean duplication process status
    */
     public function duplicate($deploypackages_id)
     {
@@ -2230,15 +2226,15 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
                         $job['job']['userinteractions'][$key]
                         = $template->addJsonFieldsToArray($job['job']['userinteractions'][$key]);
                         unset($job['job']['userinteractions'][$key]['template']);
-
-                        $job['job']['userinteractions'][$key]['text']
-                        = str_replace(
-                            PluginGlpiinventoryDeployUserinteraction::RN_TRANSFORMATION,
-                            "\r\n",
-                            $job['job']['userinteractions'][$key]['text']
-                        );
                     }
                 }
+
+                $job['job']['userinteractions'][$key]['text']
+                = str_replace(
+                    PluginGlpiinventoryDeployUserinteraction::RN_TRANSFORMATION,
+                    "\r\n",
+                    $job['job']['userinteractions'][$key]['text']
+                );
             }
         }
         return $job;

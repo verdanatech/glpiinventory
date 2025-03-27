@@ -98,7 +98,7 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
     */
     public static function getTypeName($nb = 0)
     {
-        return __('Inventory group', 'glpiinventory');
+        return _n('Inventory group', 'Inventory groups', $nb, 'glpiinventory');
     }
 
 
@@ -113,8 +113,12 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
         $ong = [];
         $this->addDefaultFormTab($ong);
 
-        $count = self::getMatchingItemsCount("PluginGlpiinventoryTaskjob");
-        $ong[$this->getType() . '$task'] = self::createTabEntry(_n('Associated task', 'Associated tasks', $count), $count);
+        if ($_SESSION['glpishow_count_on_tabs']) {
+            $count = self::getMatchingItemsCount("PluginGlpiinventoryTaskjob");
+            $tabs[2] = self::createTabEntry(_n('Associated task', 'Associated tasks', Session::getPluralNumber(), 'glpiinventory'), $count);
+        } else {
+            $tabs[2] = _n('Associated task', 'Associated tasks', Session::getPluralNumber());
+        }
 
         $this->addStandardTab('Log', $ong, $options);
         return $ong;
@@ -130,7 +134,7 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
             && is_numeric($_GET['id'])
         ) {
             $pfTaskjob = new PluginGlpiinventoryTaskjob();
-            $data = $pfTaskjob->find(['actors' => ['LIKE', '%"PluginGlpiinventoryDeployGroup":"' . $_GET['id'] . '"%']]);
+            $data = $pfTaskjob->find(['actors' => ['LIKE', '%"PluginGlpiinventoryDeployGroup":"' . (int)$_GET['id'] . '"%']]);
             $count = count($data);
         }
         return $count;
@@ -160,7 +164,7 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
             echo __('Active');
             echo "</th>";
             echo "<th>";
-            echo __('Module method');
+            echo __('Module method', 'glpiinventory');
             echo "</th>";
             echo "</tr>";
 
@@ -184,7 +188,7 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
                     ]
                 ],
                 'WHERE' => [
-                    'actors' => ['LIKE', '%"PluginGlpiinventoryDeployGroup":"' . $_GET['id'] . '"%']
+                    'actors' => ['LIKE', '%"PluginGlpiinventoryDeployGroup":"' . (int)$_GET['id'] . '"%']
                 ],
                 'ORDER' => 'glpi_plugin_glpiinventory_tasks.name'
             ]);
@@ -661,6 +665,15 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
     {
         global $DB;
 
+        // It's necessary to do a backup of $_SESSION['glpisearch']['Computer']
+        // to isolate the search performed in the dynamic group,
+        // otherwise the search will be reused by GLPI in the computer list (cf.$_SESSION['glpisearch']['Computer'])
+        $backup_criteria = [];
+        if (isset($_SESSION['glpisearch']['Computer'])) {
+            $backup_criteria = $_SESSION['glpisearch']['Computer'];
+        }
+
+
         $is_dynamic = $group->isDynamicGroup();
         $computers_params = [];
 
@@ -698,7 +711,12 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
         }
 
         $computers_params["reset"] = true;
-        return Search::manageParams('Computer', $computers_params, $is_dynamic, false);
+        $managed_criteria =  Search::manageParams('Computer', $computers_params, $is_dynamic, false);
+
+        //restore session data
+        $_SESSION['glpisearch']['Computer'] = $backup_criteria;
+
+        return $managed_criteria;
     }
 
 
@@ -804,5 +822,11 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
             echo "</tr>";
         }
         echo "</table>";
+    }
+
+
+    public static function getIcon()
+    {
+        return 'ti ti-devices-pc';
     }
 }

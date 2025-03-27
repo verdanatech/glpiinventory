@@ -78,12 +78,12 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
             && $item->fields['type'] == PluginGlpiinventoryDeployGroup::DYNAMIC_GROUP
         ) {
             $tabs[1] = _n('Criterion', 'Criteria', 2);
-           // Get the count of matching items
-            $count = self::getMatchingItemsCount($item);
             if ($_SESSION['glpishow_count_on_tabs']) {
-                $tabs[2] = self::createTabEntry(_n('Associated item', 'Associated items', $count), $count);
+               // Get the count of matching items
+                $count = self::getMatchingItemsCount($item);
+                $tabs[2] = self::createTabEntry(_n('Associated item', 'Associated items', Session::getPluralNumber()), $count);
             } else {
-                $tabs[2] = _n('Associated item', 'Associated items', $count);
+                $tabs[2] = _n('Associated item', 'Associated items', Session::getPluralNumber());
             }
             return $tabs;
         }
@@ -102,12 +102,12 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
     */
     public function getMatchingItemsCount(CommonGLPI $item)
     {
-        // Save pagination parameters
-        $pagination_params = [];
-        foreach (['sort', 'order', 'start'] as $field) {
-            if (isset($_SESSION['glpisearch']['Computer'][$field])) {
-                $pagination_params[$field] = $_SESSION['glpisearch']['Computer'][$field];
-            }
+        // It's necessary to do a backup of $_SESSION['glpisearch']['Computer']
+        // to isolate the search performed in the dynamic group,
+        // otherwise the search will be reused by GLPI in the computer list (cf.$_SESSION['glpisearch']['Computer'])
+        $backup_criteria = [];
+        if (isset($_SESSION['glpisearch']['Computer'])) {
+            $backup_criteria = $_SESSION['glpisearch']['Computer'];
         }
 
         $params = PluginGlpiinventoryDeployGroup::getSearchParamsAsAnArray($item, false);
@@ -121,10 +121,8 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
         Search::constructSQL($data);
         Search::constructData($data);
 
-        // Restore pagination parameters
-        foreach ($pagination_params as $key => $value) {
-            $_SESSION['glpisearch']['Computer'][$field] = $pagination_params[$field];
-        }
+        $_SESSION['glpisearch']['Computer'] = $backup_criteria;
+
         return $data['data']['totalcount'];
     }
 
@@ -140,13 +138,22 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
     */
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
+        // It's necessary to do a backup of $_SESSION['glpisearch']['Computer']
+        // to isolate the search performed in the dynamic group,
+        // otherwise the search will be reused by GLPI in the computer list (cf.$_SESSION['glpisearch']['Computer'])
+        $backup_criteria = [];
+        if (isset($_SESSION['glpisearch']['Computer'])) {
+            $backup_criteria = $_SESSION['glpisearch']['Computer'];
+        }
+
         switch ($tabnum) {
             case 1:
                 self::showCriteriaAndSearch($item);
+                //restore session data
+                $_SESSION['glpisearch']['Computer'] = $backup_criteria;
                 return true;
 
             case 2:
-               // Save pagination parameters
                 $pagination_params = [];
                 foreach (['sort', 'order', 'start'] as $field) {
                     if (isset($_SESSION['glpisearch']['Computer'][$field])) {
@@ -164,6 +171,8 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
                 }
                 $params['target'] = PluginGlpiinventoryDeployGroup::getSearchEngineTargetURL($_GET['id'], true);
                 self::showList('Computer', $params, []);
+                //restore session data
+                $_SESSION['glpisearch']['Computer'] = $backup_criteria;
                 return true;
         }
         return false;
@@ -186,10 +195,14 @@ class PluginGlpiinventoryDeployGroup_Dynamicdata extends CommonDBChild
                 $pagination_params[$field] = $_SESSION['glpisearch']['Computer'][$field];
             }
         }
-       // WITHOUT checking post values
+        // WITHOUT checking post values
         $search_params = PluginGlpiinventoryDeployGroup::getSearchParamsAsAnArray($item, false);
-       //If metacriteria array is empty, remove it as it displays the metacriteria form,
-       //and it is not we want !
+        //If metacriteria array is empty, remove it as it displays the metacriteria form,
+        //and it is not we want !
+        unset($search_params['reset']);
+
+        $_SESSION['glpisearch']['Computer']['criteria'] = $search_params['criteria'];
+
         if (isset($search_params['metacriteria']) && empty($search_params['metacriteria'])) {
             unset($search_params['metacriteria']);
         }

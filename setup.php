@@ -33,7 +33,7 @@
 
 use Glpi\Plugin\Hooks;
 
-define("PLUGIN_GLPIINVENTORY_VERSION", "1.4.0");
+define("PLUGIN_GLPIINVENTORY_VERSION", "1.5.0");
 // Minimal GLPI version, inclusive
 define('PLUGIN_GLPI_INVENTORY_GLPI_MIN_VERSION', '10.0.11');
 // Maximum GLPI version, exclusive
@@ -57,6 +57,11 @@ define(
 define(
     "PLUGIN_GLPI_INVENTORY_MANIFESTS_DIR",
     GLPI_PLUGIN_DOC_DIR . "/glpiinventory/files/manifests/"
+);
+
+define(
+    "PLUGIN_GLPI_INVENTORY_UPLOAD_DIR",
+    GLPI_PLUGIN_DOC_DIR . "/glpiinventory/upload/"
 );
 
 /**

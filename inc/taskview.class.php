@@ -85,28 +85,28 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
             null,
             [
             "off"  => __('Off', 'glpiinventory'),
-            "1"    => '1 ' . _n('second', 'seconds', 1),
-            "5"    => '5 ' . _n('second', 'seconds', 5),
-            "10"   => '10 ' . _n('second', 'seconds', 10),
-            "60"   => '1 ' . _n('minute', 'minutes', 1),
-            "120"  => '2 ' . _n('minute', 'minutes', 2),
-            "300"  => '5 ' . _n('minute', 'minutes', 5),
-            "600"  => '10 ' . _n('minute', 'minutes', 10),
+            "1"    => sprintf(_n('%s second', '%s seconds', 1), 1),
+            "5"    => sprintf(_n('%s second', '%s seconds', 5), 5),
+            "10"   => sprintf(_n('%s second', '%s seconds', 10), 10),
+            "60"   => sprintf(_n('%s minute', '%s minutes', 1), 1),
+            "120"  => sprintf(_n('%s minute', '%s minutes', 2), 2),
+            "300"  => sprintf(_n('%s minute', '%s minutes', 5), 5),
+            "600"  => sprintf(_n('%s minute', '%s minutes', 10), 10),
             ],
             ['value' => $_SESSION['glpi_plugin_glpiinventory']['refresh']]
         );
 
        // display export button
-        echo "<div class='col mt-auto'>";
+        echo "<div class='col d-flex align-items-center'>";
 
         echo '<a class="openExportDialog pointer btn btn-icon btn-sm btn-secondary me-1 pe-2">';
-        echo '<i class="ti ti-save"></i>';
-        echo'<span class="d-none d-xxl-block">' .  __('Export task result', 'glpinventory') . '</span>';
+        echo '<i class="ti ti-device-floppy"></i>';
+        echo'<span class="d-none d-xxl-block">' .  __('Export task result', 'glpiinventory') . '</span>';
         echo '</a>';
 
         // Add a manual refresh button
         echo "<div class='refresh_button submit'>";
-        echo "<span></span>";
+        echo "<span class='fa fa-sync'></span>";
         echo "</div>"; // .refresh_button
         echo "</div>";
 
@@ -206,7 +206,7 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
                      data-counter_type='{{counter_type}}'
                      data-chart_id='{{chart_id}}'
                      title='" . __("Show/Hide details", "glpiinventory") . "'>
-                     <div class='fold'></div>
+                     <div class='fa fold'></div>
                      <span class='counter_name'>{{counter_type_name}}</span>
                      <span class='counter_value'>{{counter_value}}</span>
                   </a>
@@ -310,7 +310,7 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
 
         echo "<tr class='tab_bg_1'>";
         echo "<td colspan='4'>";
-        echo "<div class='row'>";
+        echo "<div class='row flex-row align-items-start flex-grow-1'>";
 
         $this->showTextField(__('Name'), "name");
         $this->showTextArea(__('Comments'), "comment");
@@ -394,8 +394,23 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
             $ID = $this->fields['id'];
         }
 
-        echo "<tr>";
-        echo "<td colspan='2'>";
+        echo "<tr class='border-top'>";
+        echo "<td class='right pt-3' colspan='4'>";
+        if (!$this->isNewID($ID) && $this->can($ID, PURGE)) {
+            echo Html::submit("<i class='fas fa-trash me-1'></i>" . _x('button', 'Delete permanently'), [
+            'name'    => 'purge',
+            'confirm' => __('Confirm the final deletion?'),
+            'class '  => 'btn btn-outline-danger me-2',
+            ]);
+        }
+
+        if ($this->fields['is_active']) {
+            echo Html::submit("<i class='fas fa-bolt me-1'></i>" . __('Force start', 'glpiinventory'), [
+            'name' => 'forcestart',
+            'class' => 'btn btn-outline-warning me-2',
+            ]);
+        }
+
         if ($this->isNewID($ID)) {
             echo Html::submit(_x('button', 'Add'), [
                 'name' => 'add',
@@ -403,28 +418,9 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
             ]);
         } else {
             echo Html::hidden('id', ['value' => $ID]);
-            echo Html::submit("<i class='fas fa-save me-1'></i>" . _x('button', 'Save'), [
+            echo Html::submit("<i class='far fa-save me-1'></i>" . _x('button', 'Save'), [
             'name'  => 'update',
-            'class' => 'btn btn-primary'
-            ]);
-        }
-        echo "</td>";
-
-        if ($this->fields['is_active']) {
-            echo "<td>";
-            echo Html::submit("<i class='fas fa-bolt me-1'></i>" . __('Force start', 'glpiinventory'), [
-            'name' => 'forcestart',
-            'class' => 'btn btn-warning',
-            ]);
-            echo "</td>";
-        }
-
-        echo "<td>";
-        if (!$this->isNewID($ID) && $this->can($ID, PURGE)) {
-            echo Html::submit("<i class='fas fa-trash me-1'></i>" . _x('button', 'Delete permanently'), [
-            'name'    => 'purge',
-            'confirm' => __('Confirm the final deletion?'),
-            'class '  => 'btn btn-danger',
+            'class' => 'btn btn-primary me-2'
             ]);
         }
         echo "</td>";

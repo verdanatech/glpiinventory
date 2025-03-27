@@ -146,7 +146,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
     {
 
         $actions = [];
-        if (strstr($_SERVER["HTTP_REFERER"], 'deploypackage.import.php')) {
+        if (strstr($_SERVER["HTTP_REFERER"] ?? '', 'deploypackage.import.php')) {
             $actions[__CLASS__ . MassiveAction::CLASS_ACTION_SEPARATOR . 'import'] = __('Import', 'glpiinventory');
         } else {
             $actions[__CLASS__ . MassiveAction::CLASS_ACTION_SEPARATOR . 'transfert'] = __('Transfer');
@@ -166,7 +166,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
     public function getForbiddenStandardMassiveAction()
     {
         $forbidden = parent::getForbiddenStandardMassiveAction();
-        if (strstr($_SERVER["HTTP_REFERER"], 'deploypackage.import.php')) {
+        if (strstr($_SERVER["HTTP_REFERER"] ?? '', 'deploypackage.import.php')) {
             $forbidden[] = 'update';
             $forbidden[] = 'add';
             $forbidden[] = 'delete';
@@ -1036,7 +1036,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
                                     _n(
                                         'Target for deploy on demand',
                                         'Targets for deploy on demand',
-                                        $nb,
+                                        Session::getPluralNumber(),
                                         'glpiinventory'
                                     ),
                                     $nb
@@ -1045,7 +1045,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
                                 $tabs[2] = _n(
                                     'Target for deploy on demand',
                                     'Targets for deploy on demand',
-                                    2,
+                                    Session::getPluralNumber(),
                                     'glpiinventory'
                                 );
                             }
@@ -1430,7 +1430,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
             $package_to_install = [];
             $computer->getFromDB($computers_id);
             echo "<tr>";
-            echo "<th><img src='$url/pics/computer_icon.png'/> "
+            echo "<th><i class='ti ti-devices-pc align-bottom'></i> "
             . _n('Computer', 'Computers', 1) . " <i>"
             . $computer->fields['name'] . "</i></th>";
             echo "</tr>";

@@ -44,7 +44,7 @@ class PluginGlpiinventoryCollect_Wmi_Content extends PluginGlpiinventoryCollectC
     public $collect_itemtype = 'PluginGlpiinventoryCollect_Wmi';
     public $collect_table    = 'glpi_plugin_glpiinventory_collects_wmis';
 
-    public $type = 'wmi';
+    public $collect_type = 'wmi';
 
    /**
     * update wmi data to compute (add and update) with data sent by the agent
@@ -81,8 +81,9 @@ class PluginGlpiinventoryCollect_Wmi_Content extends PluginGlpiinventoryCollectC
             foreach ($db_wmis as $keydb => $arraydb) {
                 if ($arraydb['property'] == $key) {
                     $input = ['property' => $arraydb['property'],
-                              'id'       => $keydb,
-                              'value'    => $value];
+                        'id'       => $keydb,
+                        'value'    => $value
+                    ];
                     $this->update($input);
                     unset($wmi_data[$key]);
                     unset($db_wmis[$keydb]);
@@ -96,10 +97,10 @@ class PluginGlpiinventoryCollect_Wmi_Content extends PluginGlpiinventoryCollectC
         }
         foreach ($wmi_data as $key => $value) {
             $input = [
-            'computers_id' => $computers_id,
-            'plugin_glpiinventory_collects_wmis_id' => $collects_wmis_id,
-            'property'     => $key,
-            'value'        => $value
+                'computers_id' => $computers_id,
+                'plugin_glpiinventory_collects_wmis_id' => $collects_wmis_id,
+                'property'     => $key,
+                'value'        => $value
             ];
             $this->add($input);
         }
@@ -117,7 +118,7 @@ class PluginGlpiinventoryCollect_Wmi_Content extends PluginGlpiinventoryCollectC
         echo "<table class='tab_cadre_fixe'>";
 
         echo "<tr>";
-        echo "<th>" . __('Moniker', 'glpiinventory') . "</th>";
+        echo "<th>Moniker</th>";
         echo "<th>" . __('Class', 'glpiinventory') . "</th>";
         echo "<th>" . __('Property', 'glpiinventory') . "</th>";
         echo "<th>" . __('Value', 'glpiinventory') . "</th>";
@@ -182,7 +183,7 @@ class PluginGlpiinventoryCollect_Wmi_Content extends PluginGlpiinventoryCollectC
             echo "<tr class='tab_bg_1'>";
             echo '<td>';
             $computer->getFromDB($data['computers_id']);
-            echo $computer->getLink(1);
+            echo $computer->getLink();
             echo '</td>';
             echo '<td>';
             echo $data['property'];

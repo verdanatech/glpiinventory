@@ -143,8 +143,9 @@ class PluginGlpiinventoryAgentmodule extends CommonDBTM
             $checked = $data['is_active'];
 
             Html::showCheckbox(['name'    => 'activation',
-                                  'value'   => '1',
-                                  'checked' => $checked]);
+                'value'   => '1',
+                'checked' => $checked
+            ]);
             echo "</td>";
             echo "<td>";
              echo "<table>";
@@ -156,7 +157,8 @@ class PluginGlpiinventoryAgentmodule extends CommonDBTM
                  $a_used[] = $agent_id;
             }
             Dropdown::show("Agent", ["name" => "agent_to_add[]",
-                                                               "used" => $a_used]);
+                "used" => $a_used
+            ]);
              echo "</td>";
              echo "<td align='center'>";
              echo "<input type='submit' class='btn btn-secondary' name='agent_add' value='" .
@@ -212,9 +214,9 @@ class PluginGlpiinventoryAgentmodule extends CommonDBTM
         echo "<table class='tab_cadre_fixe'>";
         echo "<tr>";
         echo "<th>" . __('Module', 'glpiinventory') . "</th>";
-        echo "<th>Activation</th>";
+        echo "<th>" . __('Activation', 'glpiinventory') . "</th>";
         echo "<th>" . __('Module', 'glpiinventory') . "</th>";
-        echo "<th>Activation</th>";
+        echo "<th>" . __('Activation', 'glpiinventory') . "</th>";
         echo "</tr>";
 
         $a_modules = $this->find();
@@ -259,8 +261,9 @@ class PluginGlpiinventoryAgentmodule extends CommonDBTM
                 }
             }
             Html::showCheckbox(['name'    => "activation-" . $data["modulename"],
-                                  'value'   => '1',
-                                  'checked' => $checked]);
+                'value'   => '1',
+                'checked' => $checked
+            ]);
             echo "</td>";
             if ($i == 1) {
                 echo "</tr>";
@@ -373,20 +376,49 @@ class PluginGlpiinventoryAgentmodule extends CommonDBTM
     public function isAgentCanDo($module_name, $agents_id)
     {
 
+        switch (strtoupper($module_name)) {
+            case "INVENTORYCOMPUTERESX":
+                $module_active = "use_module_esx_remote_inventory";
+                break;
+            case "NETWORKDISCOVERY":
+                $module_active = "use_module_network_discovery";
+                break;
+            case "NETWORKINVENTORY":
+                $module_active = "use_module_network_inventory";
+                break;
+            case "DEPLOY":
+                $module_active = "use_module_package_deployment";
+                break;
+            case "COLLECT":
+                $module_active = "use_module_collect_data";
+                break;
+        }
+
+        $a_agentModList = [];
+        if (isset($module_active)) {
+            $agent = new Agent();
+            $a_agentModList = $agent->find(['id' => $agents_id, $module_active => 1]);
+        }
+
         $agentModule = $this->getActivationExceptions($module_name);
+        $a_agentExceptList = importArrayFromDB($agentModule['exceptions']);
 
         if ($agentModule['is_active'] == 0) {
-            $a_agentList = importArrayFromDB($agentModule['exceptions']);
-            if (in_array($agents_id, $a_agentList)) {
+            if (in_array($agents_id, $a_agentExceptList)) {
+                if (isset($module_active) && count($a_agentModList) == 0) {
+                    return false;
+                }
                 return true;
             } else {
                 return false;
             }
         } else {
-            $a_agentList = importArrayFromDB($agentModule['exceptions']);
-            if (in_array($agents_id, $a_agentList)) {
+            if (in_array($agents_id, $a_agentExceptList)) {
                 return false;
             } else {
+                if (isset($module_active) && count($a_agentModList) == 0) {
+                    return false;
+                }
                 return true;
             }
         }

@@ -52,11 +52,11 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
     public function getReturnActionNames()
     {
         return [
-         0              => Dropdown::EMPTY_VALUE,
-         'okCode'       => __("Return code is equal to", 'glpiinventory'),
-         'errorCode'    => __("Return code is not equal to", 'glpiinventory'),
-         'okPattern'    => __("Command output contains", 'glpiinventory'),
-         'errorPattern' => __("Command output does not contains", 'glpiinventory')
+            0              => Dropdown::EMPTY_VALUE,
+            'okCode'       => __("Return code is equal to", 'glpiinventory'),
+            'errorCode'    => __("Return code is not equal to", 'glpiinventory'),
+            'okPattern'    => __("Command output contains", 'glpiinventory'),
+            'errorPattern' => __("Command output does not contains", 'glpiinventory')
         ];
     }
 
@@ -69,11 +69,11 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
     public function getTypes()
     {
         return [
-         'cmd'     => __('Command', 'glpiinventory'),
-         'move'    => __('Move', 'glpiinventory'),
-         'copy'    => __('Copy', 'glpiinventory'),
-         'delete'  => __('Delete directory', 'glpiinventory'),
-         'mkdir'   => __('Create directory', 'glpiinventory')
+            'cmd'     => __('Command', 'glpiinventory'),
+            'move'    => __('Move', 'glpiinventory'),
+            'copy'    => __('Copy', 'glpiinventory'),
+            'delete'  => __('Delete directory', 'glpiinventory'),
+            'mkdir'   => __('Create directory', 'glpiinventory')
         ];
     }
 
@@ -176,7 +176,7 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
         echo "<table class='tab_cadrehov package_item_list' id='table_action_$rand'>";
         $i = 0;
         foreach ($data['jobs'][$this->json_name] as $action) {
-            echo Search::showNewLine(Search::HTML_OUTPUT, ($i % 2));
+            echo Search::showNewLine(Search::HTML_OUTPUT, (bool)($i % 2));
             if ($canedit) {
                 echo "<td class='control'>";
                 Html::showCheckbox(['name' => 'actions_entries[' . $i . ']']);
@@ -205,10 +205,19 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
                     }
                 } else {
                     echo "<b>";
-                    if ($key == 'exec') {
-                        echo __('Command to execute', 'glpiinventory');
-                    } else {
-                        echo $key;
+                    switch ($key) {
+                        case 'exec':
+                            echo __('Command to execute', 'glpiinventory');
+                            break;
+                        case 'name':
+                            echo __('Action label', 'glpiinventory');
+                            break;
+                        case 'logLineLimit':
+                            echo __('Number of output lines to retrieve', 'glpiinventory');
+                            break;
+                        default:
+                            echo $key;
+                            break;
                     }
                     echo "</b>";
                     if ($key === "exec") {
@@ -216,6 +225,7 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
                           "padding-left:2px;white-space: pre-wrap;'>$value</pre>";
                     } else {
                         echo " $value ";
+                        echo "<br>";
                     }
                 }
             }
@@ -343,7 +353,7 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
                 break;
 
             default:
-                return false;
+                return;
         }
 
         echo "<table class='package_item'>";
@@ -393,8 +403,8 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
                         'retchecks_type[]',
                         self::getReturnActionNames(),
                         [ 'value' => $retcheck['type'],
-                                         'width' => '200px'
-                                       ]
+                            'width' => '200px'
+                        ]
                     );
                     echo "</td>";
                     echo "<td>";
@@ -433,11 +443,11 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
             echo "<th>" . __('Number of output lines to retrieve', 'glpiinventory') . "</th>";
             echo "<td>";
             $options = ['min'   => 0,
-                     'max'   => 5000,
-                     'step'  => 10,
-                     'toadd' => [0 => __('None'), -1 => __('All')],
-                     'value' => (isset($config_data['logLineLimit'])) ? $config_data['logLineLimit'] : 10
-                    ];
+                'max'   => 5000,
+                'step'  => 10,
+                'toadd' => [0 => __('None'), -1 => __('All')],
+                'value' => (isset($config_data['logLineLimit'])) ? $config_data['logLineLimit'] : 10
+            ];
             Dropdown::showNumber('logLineLimit', $options);
             echo "&nbsp;<span class='red'><i>";
             echo sprintf(__('GLPI-Agent or Fusioninventory-Agent >= %1s mandatory', 'glpiinventory'), '2.3.20');
@@ -481,8 +491,8 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
             foreach ($params['retchecks_type'] as $index => $type) {
                 if ($type !== '0') {
                     $tmp['retChecks'][] = [
-                    'type'  => $type,
-                    'values' => [$params['retchecks_value'][$index]]
+                        'type'  => $type,
+                        'values' => [$params['retchecks_value'][$index]]
                     ];
                 }
             }
@@ -523,8 +533,8 @@ class PluginGlpiinventoryDeployAction extends PluginGlpiinventoryDeployPackageIt
                //if type == '0', this means nothing is selected
                 if ($type !== '0') {
                     $tmp['retChecks'][] = [
-                    'type'  => $type,
-                    'values' => [$params['retchecks_value'][$index]]
+                        'type'  => $type,
+                        'values' => [$params['retchecks_value'][$index]]
                     ];
                 }
             }

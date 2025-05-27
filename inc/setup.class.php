@@ -59,7 +59,7 @@ class PluginGlpiinventorySetup
         if (class_exists('PluginGlpiinventoryConfig')) {
             $inventory_config      = new PluginGlpiinventoryConfig();
             $users_id = $inventory_config->getValue('users_id');
-            $user->delete(['id' => $users_id], 1);
+            $user->delete(['id' => $users_id], true);
         }
 
         if (file_exists(GLPI_PLUGIN_DOC_DIR . '/glpiinventory')) {
@@ -83,7 +83,7 @@ class PluginGlpiinventorySetup
         $DB->deleteOrDie(
             'glpi_displaypreferences',
             [
-            'itemtype' => ['LIKE', 'PluginGlpiinventory%']
+                'itemtype' => ['LIKE', 'PluginGlpiinventory%']
             ]
         );
 

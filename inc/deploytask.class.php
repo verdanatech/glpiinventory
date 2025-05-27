@@ -179,13 +179,6 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
     */
     public function showActions($id)
     {
-
-       //load extjs plugins library
-        echo "<script type='text/javascript'>";
-        require_once GLPI_ROOT . "/plugins/fusinvdeploy/lib/extjs/Spinner.js";
-        require_once GLPI_ROOT . "/plugins/fusinvdeploy/lib/extjs/SpinnerField.js";
-        echo "</script>";
-
         $this->getFromDB($id);
         if ($this->getField('is_active') == 1) {
             echo "<div class='box' style='margin-bottom:20px;'>";
@@ -208,9 +201,6 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
             </tr>
          </tbody>
       </table>";
-
-       // Include JS
-        require GLPI_ROOT . "/plugins/fusinvdeploy/js/task_job.front.php";
     }
 
 
@@ -248,11 +238,11 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
             foreach ($a_taskjobstatuss as $a_taskjobstatus) {
                 $a_taskjoblogs = $log->find(['plugin_glpiinventory_taskjobstates_id' => $a_taskjobstatus['id']]);
                 foreach ($a_taskjoblogs as $a_taskjoblog) {
-                    $log->delete($a_taskjoblog, 1);
+                    $log->delete($a_taskjoblog, true);
                 }
-                $status->delete($a_taskjobstatus, 1);
+                $status->delete($a_taskjobstatus, true);
             }
-            $job->delete($a_taskjob, 1);
+            $job->delete($a_taskjob, true);
         }
         return true;
     }
@@ -264,8 +254,8 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
     public function post_addItem()
     {
         $options = [
-         'id'              => $this->getField('id'),
-         'date_creation'   => date("Y-m-d H:i:s")
+            'id'              => $this->getField('id'),
+            'date_creation'   => date("Y-m-d H:i:s")
         ];
         $this->update($options);
     }

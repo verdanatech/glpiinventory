@@ -82,11 +82,11 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
         $fi_path = Plugin::getWebDir('glpiinventory');
 
         $this->base_urls = [
-         'fi.base'   => $fi_path,
-         'fi.ajax'   => $fi_path . "/ajax",
-         'fi.front'  => $fi_path . "/front",
-         'fi.pics'   => $fi_path . "/pics",
-         'glpi.pics' => $CFG_GLPI['root_doc'] . "/pics",
+            'fi.base'   => $fi_path,
+            'fi.ajax'   => $fi_path . "/ajax",
+            'fi.front'  => $fi_path . "/front",
+            'fi.pics'   => $fi_path . "/pics",
+            'glpi.pics' => $CFG_GLPI['root_doc'] . "/pics",
         ];
     }
 
@@ -129,7 +129,7 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
     public function showTextField($title, $varname)
     {
         echo "<div class='mb-2 row col-12 col-sm-6'>";
-        echo "<label class='form-label col-sm-4 col-form-label'>" . $title . "&nbsp;:</label>";
+        echo "<label class='form-label col-sm-4 col-form-label text-sm-end'>" . $title . "</label>";
         echo "<div class='col-sm-6'>";
         echo Html::input($varname, ['value' => $this->fields[$varname]]);
         echo "</div>";
@@ -147,7 +147,7 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
     public function showIntegerField($title, $varname, $options = [])
     {
         echo "<div class='mb-2 row col-12 col-sm-6'>";
-        echo "<label class='form-label col-sm-4 col-form-label'>" . $title . "&nbsp;:</label>";
+        echo "<label class='form-label col-sm-4 col-form-label text-sm-end'>" . $title . "</label>";
         echo "<div class='col-sm-6'>";
         Dropdown::showNumber($varname, $options);
         echo "</div>";
@@ -165,8 +165,8 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
     public function showCheckboxField($title, $varname, $options = [])
     {
         echo "<div class='mb-2 row col-12 col-sm-6'>";
-        echo "<label class='form-label col-sm-4 col-form-label'>" . $title . "&nbsp;:" . "</label>";
-        echo "<div class='col-sm-6'>";
+        echo "<label class='form-label col-sm-4 col-form-label text-sm-end'>" . $title . "</label>";
+        echo "<div class='col-sm-6 d-flex align-items-center'>";
         $options['name'] = $varname;
         $options['checked'] = $this->fields[$varname];
         $options['zero_on_empty'] = true;
@@ -188,12 +188,12 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
     public function showDropdownForItemtype($title, $itemtype, $options = [])
     {
         echo "<div class='mb-2 row col-12 col-sm-6'>";
-        echo "<label class='form-label col-sm-4 col-form-label'>" . $title . "&nbsp;:" . "</label>";
-        echo "<div class='col-sm-6'>";
+        echo "<label class='form-label col-sm-4 col-form-label text-sm-end'>" . $title . "</label>";
+        echo "<div class='col-sm-6' style='max-width: 270px;'>";
         $dropdown_options = array_merge(
             [
-            'width' => '90%',
-            'display' => true,
+                'width' => '90%',
+                'display' => true,
             ],
             $options
         );
@@ -208,7 +208,7 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
     * Display dropdown form element with array data
     *
     * @param string $title
-    * @param string $varname
+    * @param ?string $varname
     * @param array $values
     * @param array $options
     * @return string the rand number can be used with ajax to update something
@@ -261,7 +261,7 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
         $options['value'] = $value;
 
         echo "<div class='mb-2 row col-12 col-sm-6'>";
-        echo "<label class='form-label col-sm-4 col-form-label'>" . $title . "&nbsp;:</label>";
+        echo "<label class='form-label col-sm-4 col-form-label text-sm-end'>" . $title . "</label>";
         echo "<div class='col-sm-6 datetime'>";
         Html::showDateTimeField(
             $varname,
@@ -281,7 +281,7 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
     public function showTextArea($title, $varname)
     {
         echo "<div class='mb-2 row col-12 col-sm-6'>";
-        echo "<label class='form-label col-sm-4 col-form-label'>" . $title . "&nbsp;:</label>";
+        echo "<label class='form-label col-sm-4 col-form-label text-sm-end'>" . $title . "</label>";
         echo "<div class='col-sm-6'>";
         echo
          "<textarea class='autogrow form-control' name='" . $varname . "' >" .

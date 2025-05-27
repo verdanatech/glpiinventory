@@ -40,7 +40,7 @@ if (!defined('GLPI_ROOT')) {
  */
 class PluginGlpiinventoryCollect_Registry extends PluginGlpiinventoryCollectCommon
 {
-    public $type = 'registry';
+    public $collect_type = 'registry';
 
    /**
     * Get name of this type by language of the user connected
@@ -61,28 +61,28 @@ class PluginGlpiinventoryCollect_Registry extends PluginGlpiinventoryCollectComm
     public static function getHives()
     {
         return [
-         "HKEY_LOCAL_MACHINE"  => "HKEY_LOCAL_MACHINE",
+            "HKEY_LOCAL_MACHINE"  => "HKEY_LOCAL_MACHINE",
         ];
     }
 
     public function getListHeaders()
     {
         return [
-         __('Name'),
-         __('Hive', 'glpiinventory'),
-         __("Path", "glpiinventory"),
-         __("Key", "glpiinventory"),
-         __("Action")
+            __('Name'),
+            __('Hive', 'glpiinventory'),
+            __("Path", "glpiinventory"),
+            __("Key", "glpiinventory"),
+            __("Action")
         ];
     }
 
     public function displayOneRow($row = [])
     {
         return [
-         $row['name'],
-         $row['hive'],
-         $row['path'],
-         $row['key']
+            $row['name'],
+            $row['hive'],
+            $row['path'],
+            $row['key']
         ];
     }
 

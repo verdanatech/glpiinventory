@@ -43,7 +43,7 @@ class PluginGlpiinventoryCollect_Registry_Content extends PluginGlpiinventoryCol
     public $collect_itemtype = 'PluginGlpiinventoryCollect_Registry';
     public $collect_table    = 'glpi_plugin_glpiinventory_collects_registries';
 
-    public $type = 'registry';
+    public $collect_type = 'registry';
 
    /**
     * Get the tab name used for item
@@ -117,8 +117,9 @@ class PluginGlpiinventoryCollect_Registry_Content extends PluginGlpiinventoryCol
             foreach ($db_registries as $keydb => $arraydb) {
                 if ($arraydb['key'] == $key) {
                     $input = ['key'   => $arraydb['key'],
-                              'id'    => $keydb,
-                              'value' => $value];
+                        'id'    => $keydb,
+                        'value' => $value
+                    ];
                     $this->update($input);
                     unset($registry_data[$key]);
                     unset($db_registries[$keydb]);
@@ -135,10 +136,10 @@ class PluginGlpiinventoryCollect_Registry_Content extends PluginGlpiinventoryCol
                 $value = hexdec($value);
             }
             $input = [
-            'computers_id' => $computers_id,
-            'plugin_glpiinventory_collects_registries_id' => $collects_registries_id,
-            'key'          => $key,
-            'value'        => $value
+                'computers_id' => $computers_id,
+                'plugin_glpiinventory_collects_registries_id' => $collects_registries_id,
+                'key'          => $key,
+                'value'        => $value
             ];
             $this->add($input);
         }
@@ -228,7 +229,7 @@ class PluginGlpiinventoryCollect_Registry_Content extends PluginGlpiinventoryCol
             echo "<tr class='tab_bg_1'>";
             echo '<td>';
             $computer->getFromDB($data['computers_id']);
-            echo $computer->getLink(1);
+            echo $computer->getLink();
             echo '</td>';
             echo '<td>';
             echo $data['key'];

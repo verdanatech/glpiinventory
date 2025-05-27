@@ -43,30 +43,11 @@ if (!defined('GLPI_ROOT')) {
 class PluginGlpiinventoryCommunicationNetworkInventory
 {
    /**
-    * Define protected variables
-    *
-    * @var null
-    */
-    private $logFile;
-
-   /**
     * The right name for this class
     *
     * @var string
     */
     public static $rightname = 'plugin_glpiinventory_networkequipment';
-
-
-   /**
-    * __contruct function where fill logFile if extradebug enabled
-    */
-    public function __construct()
-    {
-        if (PluginGlpiinventoryConfig::isExtradebugActive()) {
-            $this->logFile = GLPI_LOG_DIR . '/glpiinventorycommunication.log';
-        }
-    }
-
 
    /**
     * Import data, so get data from agent to put in GLPI
@@ -90,7 +71,6 @@ class PluginGlpiinventoryCommunicationNetworkInventory
 
         if (!isset($a_CONTENT->jobid)) {
             if (isset($a_CONTENT->content->processnumber)) {
-                // @phpstan-ignore-next-line
                 $a_CONTENT->jobid = $a_CONTENT->content->processnumber;
             } else {
                 $a_CONTENT->jobid = 1;
@@ -120,8 +100,8 @@ class PluginGlpiinventoryCommunicationNetworkInventory
             $cnt = countElementsInTable(
                 'glpi_plugin_glpiinventory_taskjoblogs',
                 [
-                'plugin_glpiinventory_taskjobstates_id' => $a_CONTENT->jobid,
-                'comment'                                 => ["LIKE", '%[==detail==] ==updatetheitem== %'],
+                    'plugin_glpiinventory_taskjobstates_id' => $a_CONTENT->jobid,
+                    'comment'                                 => ["LIKE", '%[==detail==] ==updatetheitem== %'],
                 ]
             );
 
@@ -129,7 +109,7 @@ class PluginGlpiinventoryCommunicationNetworkInventory
                 $a_CONTENT->jobid,
                 $agent->fields['id'],
                 'Agent',
-                '0',
+                0,
                 'Total updated:' . $cnt
             );
             $response = ['response' => ['RESPONSE' => 'SEND']];

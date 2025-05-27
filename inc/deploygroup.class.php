@@ -98,7 +98,7 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
     */
     public static function getTypeName($nb = 0)
     {
-        return __('Inventory group', 'glpiinventory');
+        return _n('Inventory group', 'Inventory groups', $nb, 'glpiinventory');
     }
 
 
@@ -113,10 +113,14 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
         $ong = [];
         $this->addDefaultFormTab($ong);
 
-        $count = self::getMatchingItemsCount("PluginGlpiinventoryTaskjob");
-        $ong[$this->getType() . '$task'] = self::createTabEntry(_n('Associated task', 'Associated tasks', $count), $count);
+        if ($_SESSION['glpishow_count_on_tabs']) {
+            $count = self::getMatchingItemsCount("PluginGlpiinventoryTaskjob");
+            $tabs[2] = self::createTabEntry(_n('Associated task', 'Associated tasks', Session::getPluralNumber(), 'glpiinventory'), $count);
+        } else {
+            $tabs[2] = _n('Associated task', 'Associated tasks', Session::getPluralNumber());
+        }
 
-        $this->addStandardTab('Log', $ong, $options);
+        $this->addStandardTab(Log::class, $ong, $options);
         return $ong;
     }
 
@@ -130,7 +134,7 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
             && is_numeric($_GET['id'])
         ) {
             $pfTaskjob = new PluginGlpiinventoryTaskjob();
-            $data = $pfTaskjob->find(['actors' => ['LIKE', '%"PluginGlpiinventoryDeployGroup":"' . $_GET['id'] . '"%']]);
+            $data = $pfTaskjob->find(['actors' => ['LIKE', '%"PluginGlpiinventoryDeployGroup":"' . (int)$_GET['id'] . '"%']]);
             $count = count($data);
         }
         return $count;
@@ -160,7 +164,7 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
             echo __('Active');
             echo "</th>";
             echo "<th>";
-            echo __('Module method');
+            echo __('Module method', 'glpiinventory');
             echo "</th>";
             echo "</tr>";
 
@@ -184,7 +188,7 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
                     ]
                 ],
                 'WHERE' => [
-                    'actors' => ['LIKE', '%"PluginGlpiinventoryDeployGroup":"' . $_GET['id'] . '"%']
+                    'actors' => ['LIKE', '%"PluginGlpiinventoryDeployGroup":"' . (int)$_GET['id'] . '"%']
                 ],
                 'ORDER' => 'glpi_plugin_glpiinventory_tasks.name'
             ]);
@@ -270,16 +274,17 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
                             !countElementsInTable(
                                 $group_item->getTable(),
                                 [
-                                'plugin_glpiinventory_deploygroups_id' => $_POST['plugin_glpiinventory_deploygroups_id'],
-                                'itemtype'                               => 'Computer',
-                                'items_id'                               => $id,
+                                    'plugin_glpiinventory_deploygroups_id' => $_POST['plugin_glpiinventory_deploygroups_id'],
+                                    'itemtype'                               => 'Computer',
+                                    'items_id'                               => $id,
                                 ]
                             )
                         ) {
                             $values = [
-                            'plugin_glpiinventory_deploygroups_id' => $_POST['plugin_glpiinventory_deploygroups_id'],
-                            'itemtype' => 'Computer',
-                            'items_id' => $id];
+                                'plugin_glpiinventory_deploygroups_id' => $_POST['plugin_glpiinventory_deploygroups_id'],
+                                'itemtype' => 'Computer',
+                                'items_id' => $id
+                            ];
                             $group_item->add($values);
                             $ma->itemDone($item->getType(), $id, MassiveAction::ACTION_OK);
                         } else {
@@ -296,16 +301,17 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
                             countElementsInTable(
                                 $group_item->getTable(),
                                 [
-                                'plugin_glpiinventory_deploygroups_id' => $_POST['plugin_glpiinventory_deploygroups_id'],
-                                'itemtype'                               => 'Computer',
-                                'items_id'                               => $id,
+                                    'plugin_glpiinventory_deploygroups_id' => $_POST['plugin_glpiinventory_deploygroups_id'],
+                                    'itemtype'                               => 'Computer',
+                                    'items_id'                               => $id,
                                 ]
                             )
                         ) {
                             $values = [
-                            'plugin_glpiinventory_deploygroups_id' => $_POST['plugin_glpiinventory_deploygroups_id'],
-                            'itemtype' => 'Computer',
-                            'items_id' => $id];
+                                'plugin_glpiinventory_deploygroups_id' => $_POST['plugin_glpiinventory_deploygroups_id'],
+                                'itemtype' => 'Computer',
+                                'items_id' => $id
+                            ];
                             if ($group_item->getFromDBByCrit($values)) {
                                 $group_item->deleteByCriteria($values);
                                 $ma->itemDone($item->getType(), $id, MassiveAction::ACTION_OK);
@@ -380,7 +386,7 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
             $title = "";
         }
         Html::displayTitle(
-            $CFG_GLPI['root_doc'] . "/plugins/fusinvdeploy/pics/menu_group.png",
+            '',
             $title,
             $title,
             $buttons
@@ -436,27 +442,27 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
         $tab = [];
 
         $tab[] = [
-         'id'   => 'common',
-         'name' => self::getTypeName(),
+            'id'   => 'common',
+            'name' => self::getTypeName(),
         ];
 
         $tab[] = [
-         'id'            => '1',
-         'table'         => $this->getTable(),
-         'field'         => 'name',
-         'name'          => __('Name'),
-         'datatype'      => 'itemlink',
-         'massiveaction' => false
+            'id'            => '1',
+            'table'         => $this->getTable(),
+            'field'         => 'name',
+            'name'          => __('Name'),
+            'datatype'      => 'itemlink',
+            'massiveaction' => false
         ];
 
         $tab[] = [
-         'id'            => '2',
-         'table'         => $this->getTable(),
-         'field'         => 'type',
-         'name'          => __('Type'),
-         'datatype'      => 'specific',
-         'massiveaction' => false,
-         'searchtype'    => 'equals',
+            'id'            => '2',
+            'table'         => $this->getTable(),
+            'field'         => 'type',
+            'name'          => __('Type'),
+            'datatype'      => 'specific',
+            'massiveaction' => false,
+            'searchtype'    => 'equals',
         ];
 
         return $tab;
@@ -489,7 +495,7 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
     * Get a specific value to display
     *
     * @param string $field
-    * @param array $values
+    * @param string|array $values
     * @param array $options
     * @return string
     */
@@ -595,9 +601,9 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
         $p['target'] = self::getSearchEngineTargetURL($item->getID(), $is_dynamic);
         if ($can_update) {
             $p['addhidden'] = [
-             'plugin_glpiinventory_deploygroups_id' => $item->getID(),
-             'id'                                     => $item->getID(),
-             'start'                                  => 0
+                'plugin_glpiinventory_deploygroups_id' => $item->getID(),
+                'id'                                     => $item->getID(),
+                'start'                                  => 0
             ];
         }
         if ($is_dynamic) {
@@ -633,7 +639,8 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
             foreach (
                 $staticgroup->find(
                     ['plugin_glpiinventory_deploygroups_id' => $groups_id,
-                    'itemtype'                               => 'Computer']
+                        'itemtype'                               => 'Computer'
+                    ]
                 ) as $tmpgroup
             ) {
                 $results[$tmpgroup['items_id']] = $tmpgroup['items_id'];
@@ -660,6 +667,15 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
     public static function getSearchParamsAsAnArray(PluginGlpiinventoryDeployGroup $group, $check_post_values = false, $getAll = false)
     {
         global $DB;
+
+        // It's necessary to do a backup of $_SESSION['glpisearch']['Computer']
+        // to isolate the search performed in the dynamic group,
+        // otherwise the search will be reused by GLPI in the computer list (cf.$_SESSION['glpisearch']['Computer'])
+        $backup_criteria = [];
+        if (isset($_SESSION['glpisearch']['Computer'])) {
+            $backup_criteria = $_SESSION['glpisearch']['Computer'];
+        }
+
 
         $is_dynamic = $group->isDynamicGroup();
         $computers_params = [];
@@ -698,7 +714,12 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
         }
 
         $computers_params["reset"] = true;
-        return Search::manageParams('Computer', $computers_params, $is_dynamic, false);
+        $managed_criteria =  Search::manageParams('Computer', $computers_params, $is_dynamic, false);
+
+        //restore session data
+        $_SESSION['glpisearch']['Computer'] = $backup_criteria;
+
+        return $managed_criteria;
     }
 
 
@@ -760,11 +781,11 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
         $link = Toolbox::getItemTypeFormURL("PluginGlpiinventoryDeployGroup");
 
         $iterator = $DB->request([
-         'FROM'   => PluginGlpiinventoryDeployGroup_Staticdata::getTable(),
-         'WHERE'  => [
-            'items_id' => $computers_id,
-            'itemtype' => 'Computer',
-         ],
+            'FROM'   => PluginGlpiinventoryDeployGroup_Staticdata::getTable(),
+            'WHERE'  => [
+                'items_id' => $computers_id,
+                'itemtype' => 'Computer',
+            ],
         ]);
         foreach ($iterator as $data) {
             $this->getFromDB($data['plugin_glpiinventory_deploygroups_id']);
@@ -784,10 +805,10 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
         }
 
         $iterator = $DB->request([
-         'FROM'   => PluginGlpiinventoryDeployGroup_Dynamicdata::getTable(),
-         'WHERE'  => [
-            'computers_id_cache' => ["LIKE", '%"' . $computers_id . '"%'],
-         ],
+            'FROM'   => PluginGlpiinventoryDeployGroup_Dynamicdata::getTable(),
+            'WHERE'  => [
+                'computers_id_cache' => ["LIKE", '%"' . $computers_id . '"%'],
+            ],
         ]);
         foreach ($iterator as $data) {
             $this->getFromDB($data['plugin_glpiinventory_deploygroups_id']);
@@ -804,5 +825,11 @@ class PluginGlpiinventoryDeployGroup extends CommonDBTM
             echo "</tr>";
         }
         echo "</table>";
+    }
+
+
+    public static function getIcon()
+    {
+        return 'ti ti-devices-pc';
     }
 }

@@ -89,7 +89,7 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
 
         $ong = [];
         $this->addStandardTab(__CLASS__, $ong, $options)
-         ->addStandardTab('Log', $ong, $options);
+         ->addStandardTab(Log::class, $ong, $options);
 
         return $ong;
     }
@@ -151,21 +151,19 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
     public static function getTypes()
     {
         return [self::ALERT_WTS
-               => __("Windows system alert (WTS)", 'glpiinventory')];
+               => __("Windows system alert (WTS)", 'glpiinventory')
+        ];
     }
 
 
    /**
-    * Get available buttons for alerts, by interaction type
+    * Get available buttons for alerts
     *
-    * @since 9.2
-    * @param string $interaction_type the type of interaction
     * @return array
     */
-    public static function getButtons($interaction_type = '')
+    public static function getButtons()
     {
-        $interactions = [
-         self::ALERT_WTS => [
+        return  [
             self::WTS_BUTTON_OK_SYNC             => __('OK', 'glpiinventory'),
             self::WTS_BUTTON_OK_ASYNC            => __('OK (asynchronous)', 'glpiinventory'),
             self::WTS_BUTTON_OK_CANCEL           => __('OK - Cancel', 'glpiinventory'),
@@ -174,39 +172,25 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
             self::WTS_BUTTON_ABORT_RETRY_IGNORE  => __('Abort - Retry - Ignore', 'glpiinventory'),
             self::WTS_BUTTON_CANCEL_TRY_CONTINUE => __('Cancel - Try - Continue', 'glpiinventory'),
             self::WTS_BUTTON_YES_NO_CANCEL       => __('Yes - No - Cancel', 'glpiinventory')
-         ]
         ];
-        if (isset($interactions[$interaction_type])) {
-            return $interactions[$interaction_type];
-        } else {
-            return false;
-        }
     }
 
 
    /**
-    * Get available icons for alerts, by interaction type
+    * Get available icons for alerts
     *
     * @since 9.2
-    * @param string $interaction_type the type of interaction
     * @return array
     */
-    public static function getIcons($interaction_type = self::ALERT_WTS)
+    public static function getIcons()
     {
-        $icons = [
-         self::ALERT_WTS => [
+        return [
             self::WTS_ICON_NONE     => __('None'),
             self::WTS_ICON_WARNING  => __('Warning'),
-            self::WTS_ICON_INFO     => _n('Information', 'Informations', 1),
+            self::WTS_ICON_INFO     => _n('Information', 'Information', 1),
             self::WTS_ICON_ERROR    => __('Error'),
             self::WTS_ICON_QUESTION => __('Question', 'glpiinventory')
-         ]
         ];
-        if (isset($icons[$interaction_type])) {
-            return $icons[$interaction_type];
-        } else {
-            return false;
-        }
     }
 
 
@@ -219,9 +203,9 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
     public static function getBehaviors()
     {
         return [self::BEHAVIOR_CONTINUE_DEPLOY => __('Continue job with no user interaction', 'glpiinventory'),
-              self::BEHAVIOR_POSTPONE_DEPLOY => __('Retry job later', 'glpiinventory'),
-              self::BEHAVIOR_STOP_DEPLOY     => __('Cancel job', 'glpiinventory')
-             ];
+            self::BEHAVIOR_POSTPONE_DEPLOY => __('Retry job later', 'glpiinventory'),
+            self::BEHAVIOR_STOP_DEPLOY     => __('Cancel job', 'glpiinventory')
+        ];
     }
 
 
@@ -266,7 +250,8 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
     public function getMainFormFields()
     {
         return  ['platform', 'timeout', 'buttons', 'icon',
-               'retry_after', 'nb_max_retry'];
+            'retry_after', 'nb_max_retry'
+        ];
     }
 
 
@@ -278,8 +263,9 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
     public function getBehaviorsFields()
     {
         return  ['on_timeout', 'on_nouser', 'on_multiusers', 'on_ok', 'on_no',
-               'on_yes', 'on_cancel', 'on_abort', 'on_retry', 'on_tryagain',
-               'on_ignore', 'on_continue', 'on_async'];
+            'on_yes', 'on_cancel', 'on_abort', 'on_retry', 'on_tryagain',
+            'on_ignore', 'on_continue', 'on_async'
+        ];
     }
 
 
@@ -361,9 +347,9 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
         $json_data = $this->initializeJsonFields($json_data);
 
         TemplateRenderer::getInstance()->display('@glpiinventory/forms/deployuserinteractiontemplate.html.twig', [
-         'item'      => $this,
-         'params'    => $options,
-         'json_data' => $json_data,
+            'item'      => $this,
+            'params'    => $options,
+            'json_data' => $json_data,
         ]);
 
         return true;
@@ -378,7 +364,7 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
     public static function getRetries()
     {
         $tab = [
-        0 => __('Never')
+            0 => __('Never')
         ];
 
         $tab[MINUTE_TIMESTAMP]   = sprintf(_n('%d minute', '%d minutes', 1), 1);
@@ -416,12 +402,12 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
     public static function getTimeouts()
     {
         $tab = [
-         0 => __('Never')
+            0 => __('Never')
         ];
 
        // Minutes
         for ($i = 30; $i < 60; $i += 5) {
-            $tab[$i] = sprintf(_n('%d second', '%d seconds', $i), $i);
+            $tab[$i] = sprintf(_n('%s second', '%s seconds', $i), $i);
         }
 
         $tab[MINUTE_TIMESTAMP]   = sprintf(_n('%d minute', '%d minutes', 1), 1);
@@ -452,18 +438,18 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
     public function getEvents()
     {
         return ['on_ok'       => __('Button ok', 'glpiinventory'),
-              'on_yes'      => __('Button yes', 'glpiinventory'),
-              'on_continue' => __('Button continue', 'glpiinventory'),
-              'on_retry'    => __('Button retry', 'glpiinventory'),
-              'on_tryagain' => __('Button try', 'glpiinventory'),
-              'on_no'       => __('Button no', 'glpiinventory'),
-              'on_cancel'   => __('Button cancel', 'glpiinventory'),
-              'on_abort'    => __('Button abort', 'glpiinventory'),
-              'on_ignore'   => __('Button ignore', 'glpiinventory'),
-              'on_nouser'   => __('No active session', 'glpiinventory'),
-              'on_timeout'  => __('Alert timeout exceeded', 'glpiinventory'),
-              'on_multiusers' => __('Several active sessions', 'glpiinventory')
-             ];
+            'on_yes'      => __('Button yes', 'glpiinventory'),
+            'on_continue' => __('Button continue', 'glpiinventory'),
+            'on_retry'    => __('Button retry', 'glpiinventory'),
+            'on_tryagain' => __('Button try', 'glpiinventory'),
+            'on_no'       => __('Button no', 'glpiinventory'),
+            'on_cancel'   => __('Button cancel', 'glpiinventory'),
+            'on_abort'    => __('Button abort', 'glpiinventory'),
+            'on_ignore'   => __('Button ignore', 'glpiinventory'),
+            'on_nouser'   => __('No active session', 'glpiinventory'),
+            'on_timeout'  => __('Alert timeout exceeded', 'glpiinventory'),
+            'on_multiusers' => __('Several active sessions', 'glpiinventory')
+        ];
     }
 
 

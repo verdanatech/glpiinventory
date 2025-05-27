@@ -44,7 +44,7 @@ class PluginGlpiinventoryToolbox
     * Log if extra debug enabled
     *
     * @param string $file
-    * @param string $message
+    * @param string|array $message
     */
     public static function logIfExtradebug($file, $message)
     {
@@ -109,10 +109,10 @@ class PluginGlpiinventoryToolbox
         $credentials = new SNMPCredential();
         if ($credentials->getFromDB($p_id)) {
             $node = [
-            'AUTHENTICATION' => [
-               'ID' => $p_id,
-               'VERSION' => $credentials->getRealVersion()
-            ]
+                'AUTHENTICATION' => [
+                    'ID' => $p_id,
+                    'VERSION' => $credentials->getRealVersion()
+                ]
             ];
 
             if ($credentials->fields['snmpversion'] == '3') {
@@ -150,19 +150,23 @@ class PluginGlpiinventoryToolbox
         $a_ips = [];
         $a_ports = $NetworkPort->find(
             ['itemtype'           => $itemtype,
-             'items_id'           => $items_id,
-            'instantiation_type' => ['!=',
-            'NetworkPortLocal']]
+                'items_id'           => $items_id,
+                'instantiation_type' => ['!=',
+                    'NetworkPortLocal'
+                ]
+            ]
         );
         foreach ($a_ports as $a_port) {
             $a_networknames = $networkName->find(
                 ['itemtype' => 'NetworkPort',
-                'items_id' => $a_port['id']]
+                    'items_id' => $a_port['id']
+                ]
             );
             foreach ($a_networknames as $a_networkname) {
                  $a_ipaddresses = $iPAddress->find(
                      ['itemtype' => 'NetworkName',
-                     'items_id' => $a_networkname['id']]
+                         'items_id' => $a_networkname['id']
+                     ]
                  );
                 foreach ($a_ipaddresses as $data) {
                     if (
@@ -179,62 +183,6 @@ class PluginGlpiinventoryToolbox
 
 
    // *********************** Functions used for inventory *********************** //
-
-   /**
-    *  This function fetch rows from a MySQL result in an array with each table as a key
-    *
-    *  example:
-    *  $query =
-    *     "SELECT table_a.*,table_b.* ".
-    *     "FROM table_b ".
-    *     "LEFT JOIN table_a ON table_a.id = table_b.linked_id";
-    *  $result = mysqli_query( $query );
-    *  print_r( fetchTableAssoc( $result ) )
-    *
-    *  output:
-    *  $results = Array
-    *     (
-    *        [0] => Array
-    *           (
-    *              [table_a] => Array
-    *                 (
-    *                    [id] => 1
-    *                 )
-    *              [table_b] => Array
-    *                 (
-    *                    [id] => 2
-    *                    [linked_id] => 1
-    *                 )
-    *           )
-    *           ...
-    *     )
-    *
-    * @param object $mysql_result
-    * @return array
-    */
-    public static function fetchAssocByTable($mysql_result)
-    {
-        $results = [];
-       //get fields header infos
-        $fields = mysqli_fetch_fields($mysql_result);
-       //associate row data as array[table][field]
-        while ($row = mysqli_fetch_row($mysql_result)) {
-            $result = [];
-            for ($i = 0; $i < count($row); $i++) {
-                $tname = $fields[$i]->table;
-                $fname = $fields[$i]->name;
-                if (!isset($result[$tname])) {
-                    $result[$tname] = [];
-                }
-                $result[$tname][$fname] = $row[$i];
-            }
-            if (count($result) > 0) {
-                $results[] = $result;
-            }
-        }
-        return $results;
-    }
-
     /**
      *  This function fetch rows from a DBMysqlIterator result in an array with each table as a key
      *
@@ -324,7 +272,7 @@ class PluginGlpiinventoryToolbox
     * @param array $options
     * @return string unique html element id
     */
-    public static function showHours($name, $options = [])
+    public static function showHours(string $name, array $options = [])
     {
 
         $p['value']          = '';
@@ -334,7 +282,7 @@ class PluginGlpiinventoryToolbox
         $p['begin']          = 0;
         $p['end']            = (24 * 3600);
 
-        if (is_array($options) && count($options)) {
+        if (count($options)) {
             foreach ($options as $key => $val) {
                 $p[$key] = $val;
             }
@@ -368,11 +316,11 @@ class PluginGlpiinventoryToolbox
 
 
    /**
-    * Execute a function as as pllugin user
+    * Execute a function as plugin user
     *
     * @param string|array $function
     * @param array $args
-    * @return array the normaly returned value from executed callable
+    * @return array the normally returned value from executed callable
     */
     public function executeAsGlpiinventoryUser($function, array $args = [])
     {
@@ -385,7 +333,8 @@ class PluginGlpiinventoryToolbox
 
         foreach (
             ['glpiID', 'glpiname','glpiactiveentities_string',
-            'glpiactiveentities', 'glpiparententities'] as $session_key
+                'glpiactiveentities', 'glpiparententities'
+            ] as $session_key
         ) {
             if (isset($_SESSION[$session_key])) {
                 $OLD_SESSION[$session_key] = $_SESSION[$session_key];

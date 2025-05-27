@@ -56,8 +56,7 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
     public function definitionFiltered($definition_type, $definitions_filter)
     {
         if (
-            !is_null($definitions_filter)
-              && is_array($definitions_filter)
+              is_array($definitions_filter)
               && count($definitions_filter) > 0
               && !in_array($definition_type, $definitions_filter)
         ) {
@@ -125,8 +124,9 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
                     foreach ($members as $member) {
                         $computers = $computer_object->find(
                             ['users_id'    => $member['id'],
-                            'is_deleted'  => 0,
-                            'is_template' => 0]
+                                'is_deleted'  => 0,
+                                'is_template' => 0
+                            ]
                         );
                         foreach ($computers as $computer) {
                                $computers_a_1[] = $computer['id'];
@@ -136,8 +136,9 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
                  //find computers directly associated with this group
                     $computers = $computer_object->find(
                         ['groups_id'   => $items_id,
-                        'is_deleted'  => 0,
-                        'is_template' => 0]
+                            'is_deleted'  => 0,
+                            'is_template' => 0
+                        ]
                     );
                     foreach ($computers as $computer) {
                          $computers_a_2[] = $computer['id'];
@@ -277,9 +278,9 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
 
                         $jobstates_running = $jobstate->find(
                             ['itemtype'                         => 'PluginGlpiinventoryDeployPackage',
-                            'items_id'                         => $package->fields['id'],
-                            'state'                            => ['!=', PluginGlpiinventoryTaskjobstate::FINISHED],
-                            'agents_id' => $agents_id
+                                'items_id'                         => $package->fields['id'],
+                                'state'                            => ['!=', PluginGlpiinventoryTaskjobstate::FINISHED],
+                                'agents_id' => $agents_id
                             ]
                         );
 
@@ -310,8 +311,8 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
    /**
     * run function, so return data to send to the agent for deploy
     *
-    * @param object $taskjobstate PluginGlpiinventoryTaskjobstate instance
-    * @return array
+    * @param PluginGlpiinventoryTaskjobstate $taskjobstate PluginGlpiinventoryTaskjobstate instance
+    * @return false|array
     */
     public function run($taskjobstate)
     {
@@ -387,8 +388,8 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
         }
 
         $order = [
-         "job"             => $order_job,
-         "associatedFiles" => $order_files
+            "job"             => $order_job,
+            "associatedFiles" => $order_files
         ];
         return $order;
     }

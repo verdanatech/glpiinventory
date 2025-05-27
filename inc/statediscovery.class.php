@@ -59,7 +59,8 @@ class PluginGlpiinventoryStateDiscovery extends CommonDBTM
     {
         $data = $this->find(
             ['plugin_glpiinventory_taskjob_id' => $p_number,
-            'agents_id'  => $agent_id]
+                'agents_id'  => $agent_id
+            ]
         );
         if (count($data) == "0") {
             $input = [];
@@ -114,7 +115,8 @@ class PluginGlpiinventoryStateDiscovery extends CommonDBTM
     {
         $data = $this->find(
             ['plugin_glpiinventory_taskjob_id' => $p_number,
-            'agents_id'  => $agent_id]
+                'agents_id'  => $agent_id
+            ]
         );
         foreach ($data as $input) {
             $input['end_time'] = $date_end;
@@ -221,7 +223,7 @@ class PluginGlpiinventoryStateDiscovery extends CommonDBTM
             echo "<a href='$link'>$label</a>";
             echo "</td>";
             $agent->getFromDB($data['agents_id']);
-            echo "<td>" . $agent->getLink(1) . "</td>";
+            echo "<td>" . $agent->getLink() . "</td>";
             $nb_found = 0;
             $nb_threads = 0;
             $start_date = "";

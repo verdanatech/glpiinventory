@@ -78,40 +78,40 @@ class PluginGlpiinventoryTimeslot extends CommonDBTM
         $tab = [];
 
         $tab[] = [
-         'id' => 'common',
-         'name' => __('Time slot', 'glpiinventory')
+            'id' => 'common',
+            'name' => __('Time slot', 'glpiinventory')
         ];
 
         $tab[] = [
-         'id'        => '1',
-         'table'     => $this->getTable(),
-         'field'     => 'name',
-         'name'      => __('Name'),
-         'datatype'  => 'itemlink',
+            'id'        => '1',
+            'table'     => $this->getTable(),
+            'field'     => 'name',
+            'name'      => __('Name'),
+            'datatype'  => 'itemlink',
         ];
 
         $tab[] = [
-         'id'       => '2',
-         'table'    => 'glpi_entities',
-         'field'    => 'completename',
-         'name'     => Entity::getTypeName(1),
-         'datatype' => 'dropdown',
+            'id'       => '2',
+            'table'    => 'glpi_entities',
+            'field'    => 'completename',
+            'name'     => Entity::getTypeName(1),
+            'datatype' => 'dropdown',
         ];
 
         $tab[] = [
-         'id'        => '3',
-         'table'     => $this->getTable(),
-         'field'     => 'is_recursive',
-         'name'      => __('Child entities'),
-         'datatype'  => 'bool',
+            'id'        => '3',
+            'table'     => $this->getTable(),
+            'field'     => 'is_recursive',
+            'name'      => __('Child entities'),
+            'datatype'  => 'bool',
         ];
 
         $tab[] = [
-         'id'        => '4',
-         'table'     => $this->getTable(),
-         'field'     => 'name',
-         'name'      => __('Name'),
-         'datatype'  => 'string',
+            'id'        => '4',
+            'table'     => $this->getTable(),
+            'field'     => 'name',
+            'name'      => __('Name'),
+            'datatype'  => 'string',
         ];
 
         return $tab;
@@ -243,11 +243,11 @@ class PluginGlpiinventoryTimeslot extends CommonDBTM
     *
     * @since 0.85+1.0
     *
-    * @param DateTime $datetime The date and time we want to transform into
+    * @param ?DateTime $datetime The date and time we want to transform into
     *                              cursor. If null the default value is now()
     * @return integer
     */
-    public function getTimeslotCursor(DateTime $datetime = null)
+    public function getTimeslotCursor(?DateTime $datetime = null)
     {
         if (is_null($datetime)) {
             $datetime = new DateTime();

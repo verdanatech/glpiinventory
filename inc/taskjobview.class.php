@@ -47,10 +47,10 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
     {
         parent::__construct();
         $this->base_urls = array_merge($this->base_urls, [
-         'fi.job.create' => $this->getBaseUrlFor('fi.ajax') . "/taskjob_form.php",
-         'fi.job.edit' => $this->getBaseUrlFor('fi.ajax') . "/taskjob_form.php",
-         'fi.job.moduletypes' => $this->getBaseUrlFor('fi.ajax') . "/taskjob_moduletypes.php",
-         'fi.job.moduleitems' => $this->getBaseUrlFor('fi.ajax') . "/taskjob_moduleitems.php",
+            'fi.job.create' => $this->getBaseUrlFor('fi.ajax') . "/taskjob_form.php",
+            'fi.job.edit' => $this->getBaseUrlFor('fi.ajax') . "/taskjob_form.php",
+            'fi.job.moduletypes' => $this->getBaseUrlFor('fi.ajax') . "/taskjob_moduletypes.php",
+            'fi.job.moduleitems' => $this->getBaseUrlFor('fi.ajax') . "/taskjob_moduleitems.php",
         ]);
     }
 
@@ -64,9 +64,8 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
     */
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
-        $tab_names = [];
         /** @var CommonDBTM $item */
-        if ($item->fields['id'] > 0 and $this->can('task', READ)) {
+        if ($item->fields['id'] > 0 and Session::haveRight('plugin_glpiinventory_task', READ)) {
             return __('Job configuration', 'glpiinventory');
         }
         return '';
@@ -299,7 +298,8 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
        // Find taskjobs tied to the selected task
         $taskjobs = $this->find(
             ['plugin_glpiinventory_tasks_id' => $task_id,
-             'rescheduled_taskjob_id'          => 0],
+                'rescheduled_taskjob_id'          => 0
+            ],
             ['id']
         );
         return $taskjobs;
@@ -478,6 +478,9 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
                 $condition = ['id' => $filter_id];
             }
         }
+        if ($DB->fieldExists($itemtype::getTable(), 'is_active')) {
+            $condition['is_active'] = 1;
+        }
 
        /**
         * get Itemtype choices dropdown
@@ -486,8 +489,8 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
             $title,
             $itemtype,
             [
-            'width'     => "95%",
-            'condition' => $condition
+                'width'     => "95%",
+                'condition' => $condition
             ]
         );
         $item = getItemForItemtype($itemtype);
@@ -520,7 +523,7 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
                 data-itemtype='$itemtype'
                 data-method='$method'>
             $title
-            <img src='" . $this->getBaseUrlFor('glpi.pics') . "/add_dropdown.png' />
+            <i class='ti ti-circle-plus' style='font-size: 11px;'></i>
             </a>";
     }
 
@@ -530,12 +533,10 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
     *
     * @param integer $id id of the taskjob
     * @param array $options
-    * @return true
+    * @return bool
     */
     public function showForm($id, $options = [])
     {
-        global $CFG_GLPI;
-
         $new_item = false;
         if ($id > 0) {
             if ($this->getFromDB($id)) {
@@ -553,7 +554,7 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
                     __('A job can not be created outside a task form'),
                     self::MSG_ERROR
                 );
-                return;
+                return false;
             }
             $this->getEmpty();
             $this->fields['plugin_glpiinventory_tasks_id'] = $options['task_id'];
@@ -561,7 +562,7 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
         }
         $pfTask = $this->getTask();
 
-        echo "<form method='post' name='form_taskjob' action='" .
+        echo "<form method='post' id='taskjobs_form' name='form_taskjob' action='" .
             Plugin::getWebDir('glpiinventory') . "/front/taskjob.form.php''>";
 
         if (!$new_item) {
@@ -628,16 +629,13 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
         }
 
         echo "<div class='mb-2 row col-20 col-sm-10'>";
-        echo "<label>" . __('Module method', 'glpiinventory') . "&nbsp;</label>";
+        echo "<label class='form-label col-form-label'>" . __('Module method', 'glpiinventory') . "&nbsp;</label>";
 
         if (!isset($options['width'])) {
             $options['width'] = '40%';
         }
 
-        if (!is_null("method")) {
-            $options['value'] = $this->fields["method"];
-        }
-
+        $options['value'] = $this->fields["method"];
         $options["on_change"] = "task_method_change(this.value)";
 
         $modules_methods_rand = Dropdown::showFromArray(
@@ -670,14 +668,9 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
         echo "<div " . $style . "id='entity_restrict' class='mb-2 col-20 col-sm-10'>";
         echo "<label>" . __('Restrict scope to task entity', 'glpiinventory') . "&nbsp;</label>";
 
-        if (!isset($options['width'])) {
-            $options['width'] = '40%';
-        }
         $options['name'] = 'restrict_to_task_entity';
-        if (!is_null("restrict_to_task_entity")) {
-            $options['value'] = 1;
-            $options['checked'] = $this->fields["restrict_to_task_entity"];
-        }
+        $options['value'] = 1;
+        $options['checked'] = $this->fields["restrict_to_task_entity"];
         echo Html::getCheckbox($options);
         echo Html::showToolTip(__('Only for IPRange, restrict target to task entity. Unchecked if assets are not in the same entity as the task'), ['display' => true]);
         echo "</div>";
@@ -773,27 +766,23 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
             echo '</tr>';
         } else {
             echo "<tr>";
-            echo "<td class='center'>";
-            echo Html::submit(__('Update'), ['name' => 'update', 'class' => 'btn btn-primary']);
-            echo "</td>";
+            echo "<td class='right' colspan='4'>";
+            echo "<button type='button' id='cancel_job_changes_button' style='display:none'
+                             class='btn btn-outline-secondary me-2'
+                             onclick='taskjobs.edit(\"" . $this->getBaseUrlFor('fi.job.edit') . "\", $id)'>" .
+                             __('Cancel modifications', 'glpiinventory') . "
+                   </button>&nbsp;";
 
-            echo "<td class='center' colspan='2'>
-                  <div id='cancel_job_changes_button' style='display:none'>
-                     <button type='button' class='btn btn-secondary'
-                            onclick='taskjobs.edit(\"" . $this->getBaseUrlFor('fi.job.edit') . "\", $id)'>" .
-                            __('Cancel modifications', 'glpiinventory') . "</button>
-                  </div>
-               </td>";
-
-            echo "<td class='center'>";
             echo "<input type='submit'
                       name='delete'
                       value=\"" . __('Purge', 'glpiinventory') . "\"
-                      class='btn btn-danger' " .
+                      class='btn btn-outline-danger me-2' " .
                       Html::addConfirmationOnAction(__(
                           'Confirm the final deletion ?',
                           'glpiinventory'
-                      )) . ">";
+                      )) . ">&nbsp;";
+
+            echo Html::submit(__('Update'), ['name' => 'update', 'class' => 'btn btn-primary me-2']);
             echo "</td>";
             echo '</tr>';
         }
@@ -928,7 +917,7 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
             Session::checkRight('plugin_glpiinventory_task', CREATE);
             if (isset($postvars['add'])) {
                 if (!isset($postvars['entities_id'])) {
-                    $postvars['entities_id'] = $_SESSION['glpidefault_entity'];
+                    $postvars['entities_id'] = $_SESSION['glpidefault_entity'] ?? 0;
                 }
                // Get entity of task
                 $pfTask = new PluginGlpiinventoryTask();
@@ -1055,16 +1044,16 @@ class PluginGlpiinventoryTaskjobView extends PluginGlpiinventoryCommonView
         $tab = [];
 
         $tab[] = [
-         'id'           => 'common',
-         'name'         => __('Characteristics')
+            'id'           => 'common',
+            'name'         => __('Characteristics')
         ];
 
         $tab[] = [
-         'id'           => '1',
-         'table'        => $this->getTable(),
-         'field'        => 'name',
-         'name'         => __('Name'),
-         'datatype'     => 'itemlink'
+            'id'           => '1',
+            'table'        => $this->getTable(),
+            'field'        => 'name',
+            'name'         => __('Name'),
+            'datatype'     => 'itemlink'
         ];
 
         return $tab;

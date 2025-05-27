@@ -122,16 +122,16 @@ class PluginGlpiinventoryDeployPackageItem extends CommonDBTM
                 $type_field,
                 $types,
                 ['rand' => $rand,
-                                  'used' => $this->getTypesAlreadyInUse($package)
+                    'used' => $this->getTypesAlreadyInUse($package)
                 ]
             );
             $params = [
-                     'value'  => '__VALUE__',
-                     'rand'   => $rand,
-                     'myname' => 'method',
-                     'type'   => $this->shortname,
-                     'class'  => get_class($this),
-                     'mode'   => $mode
+                'value'  => '__VALUE__',
+                'rand'   => $rand,
+                'myname' => 'method',
+                'type'   => $this->shortname,
+                'class'  => get_class($this),
+                'mode'   => $mode
             ];
 
             Ajax::updateItemOnEvent(
@@ -163,7 +163,8 @@ class PluginGlpiinventoryDeployPackageItem extends CommonDBTM
         $element = $package->getSubElement($this->json_name, $request_data['index']);
         if (is_array($element) && count($element)) {
             $config = [ 'type' => $element['type'],
-                     'data' => $element];
+                'data' => $element
+            ];
         }
         return $config;
     }
@@ -247,8 +248,8 @@ class PluginGlpiinventoryDeployPackageItem extends CommonDBTM
     *
     * @since 9.2
     * @param integer $id the package ID
-    * @param string $item the item to add to the package definition
-    * @param integer $order the order of the item
+    * @param array $item the item to add to the package definition
+    * @param string $order the order of the item
     *
     * @return void
     */
@@ -317,12 +318,12 @@ class PluginGlpiinventoryDeployPackageItem extends CommonDBTM
         $options           = JSON_UNESCAPED_SLASHES;
         $json              = json_encode($data, $options);
         $json_error_consts = [
-         JSON_ERROR_NONE           => "JSON_ERROR_NONE",
-         JSON_ERROR_DEPTH          => "JSON_ERROR_DEPTH",
-         JSON_ERROR_STATE_MISMATCH => "JSON_ERROR_STATE_MISMATCH",
-         JSON_ERROR_CTRL_CHAR      => "JSON_ERROR_CTRL_CHAR",
-         JSON_ERROR_SYNTAX         => "JSON_ERROR_SYNTAX",
-         JSON_ERROR_UTF8           => "JSON_ERROR_UTF8"
+            JSON_ERROR_NONE           => "JSON_ERROR_NONE",
+            JSON_ERROR_DEPTH          => "JSON_ERROR_DEPTH",
+            JSON_ERROR_STATE_MISMATCH => "JSON_ERROR_STATE_MISMATCH",
+            JSON_ERROR_CTRL_CHAR      => "JSON_ERROR_CTRL_CHAR",
+            JSON_ERROR_SYNTAX         => "JSON_ERROR_SYNTAX",
+            JSON_ERROR_UTF8           => "JSON_ERROR_UTF8"
         ];
         $error_json         = json_last_error();
         $error_json_message = json_last_error_msg();
@@ -339,7 +340,8 @@ class PluginGlpiinventoryDeployPackageItem extends CommonDBTM
             $error = 1;
         } else {
             $error = $pfDeployPackage->update(['id'   => $packages_id,
-                                            'json' => Toolbox::addslashes_deep($json)]);
+                'json' => Toolbox::addslashes_deep($json)
+            ]);
         }
         return $error;
     }
@@ -403,7 +405,7 @@ class PluginGlpiinventoryDeployPackageItem extends CommonDBTM
    /**
     * Get the size of file
     *
-    * @param integer $filesize
+    * @param mixed $filesize
     * @return string
     */
     public function processFilesize($filesize)
@@ -466,7 +468,7 @@ class PluginGlpiinventoryDeployPackageItem extends CommonDBTM
 
     public function displayAjaxValues($config, $request_data, $rand, $mode)
     {
-        return true;
+        return;
     }
 
     public function getTypes()

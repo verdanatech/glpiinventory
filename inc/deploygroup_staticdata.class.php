@@ -95,8 +95,8 @@ class PluginGlpiinventoryDeployGroup_Staticdata extends CommonDBRelation
             $count = countElementsInTable(
                 getTableForItemType(__CLASS__),
                 [
-                'itemtype'                               => 'Computer',
-                'plugin_glpiinventory_deploygroups_id' => $item->fields['id'],
+                    'itemtype'                               => 'Computer',
+                    'plugin_glpiinventory_deploygroups_id' => $item->fields['id'],
                 ]
             );
             if ($_SESSION['glpishow_count_on_tabs']) {
@@ -121,6 +121,7 @@ class PluginGlpiinventoryDeployGroup_Staticdata extends CommonDBRelation
     */
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
+        /** @var PluginGlpiinventoryDeployGroup $item */
         switch ($tabnum) {
             case 1:
                 self::showCriteriaAndSearch($item);
@@ -221,11 +222,11 @@ class PluginGlpiinventoryDeployGroup_Staticdata extends CommonDBRelation
         $mass_class = "PluginGlpiinventoryComputer";
         Html::openMassiveActionsForm('mass' . $mass_class . $rand);
         $massiveactionparams = ['num_displayed' => min($_SESSION['glpilist_limit'], $number),
-                    'item' => $item,
-                    'specific_actions' => ['PluginGlpiinventoryComputer' . MassiveAction::CLASS_ACTION_SEPARATOR . 'deleteitem' => _x('button', __('Remove from static group', 'glpiinventory'))],
-                    'container' => 'mass' . $mass_class . $rand,
-                    'massive_action_fields' => ['action', 'id'],
-                    ];
+            'item' => $item,
+            'specific_actions' => ['PluginGlpiinventoryComputer' . MassiveAction::CLASS_ACTION_SEPARATOR . 'deleteitem' => _x('button', __('Remove from static group', 'glpiinventory'))],
+            'container' => 'mass' . $mass_class . $rand,
+            'massive_action_fields' => ['action', 'id'],
+        ];
         Html::showMassiveActions($massiveactionparams);
 
         echo "<table class='tab_cadre_fixehov'>";
@@ -366,13 +367,13 @@ class PluginGlpiinventoryDeployGroup_Staticdata extends CommonDBRelation
         $pfDeployGroup_static = new self();
         $computer = new Computer();
         $input = [
-         'plugin_glpiinventory_deploygroups_id' => $post_data['groups_id'],
-         'itemtype' => 'Computer'
+            'plugin_glpiinventory_deploygroups_id' => $post_data['groups_id'],
+            'itemtype' => 'Computer'
         ];
         if (isset($files_data['importcsvfile']['tmp_name'])) {
             if (($handle = fopen($files_data['importcsvfile']['tmp_name'], "r")) !== false) {
-                while (($data = fgetcsv($handle, 1000, $_SESSION["glpicsv_delimiter"])) !== false) {
-                    $input['items_id'] = str_replace(' ', '', $data[0]);
+                while (($data = fgetcsv($handle, 1000, $_SESSION["glpicsv_delimiter"], '"', '')) !== false) {
+                    $input['items_id'] = (int)str_replace(' ', '', $data[0]);
                     if ($computer->getFromDB($input['items_id'])) {
                         $pfDeployGroup_static->add($input);
                     }

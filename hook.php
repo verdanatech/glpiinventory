@@ -93,8 +93,11 @@ function plugin_glpiinventory_getAddSearchOptions($itemtype)
         $sopt[5171]['datatype']      = 'dropdown';
         $sopt[5171]['joinparams']    = ['beforejoin'
                                        => ['table'      => 'glpi_plugin_glpiinventory_deploygroups_staticdatas',
-                                                'joinparams' => ['jointype'          => 'itemtype_item',
-                                                                        'specific_itemtype' => 'Computer']]];
+                                           'joinparams' => ['jointype'          => 'itemtype_item',
+                                               'specific_itemtype' => 'Computer'
+                                           ]
+                                       ]
+        ];
     }
 
     if ($itemtype == 'Computer') {
@@ -131,8 +134,8 @@ function plugin_glpiinventory_hook_dashboard_cards($cards)
                 'field'         => 42,
                 'searchtype'    => 'contains',
                 'value'         => 'GLPI Native Inventory',
-                ]
-            ],
+            ]
+        ],
         'printer'         => [
             'itemtype' => Printer::getType(),
             'label' =>  sprintf(__("%s inventoried", "glpiinventory"), Printer::getTypeName(2)),
@@ -141,8 +144,8 @@ function plugin_glpiinventory_hook_dashboard_cards($cards)
                 'field'         => 72,
                 'searchtype'    => 'contains',
                 'value'         => 'GLPI Native Inventory',
-                ]
-            ],
+            ]
+        ],
         'networkequipement'         => [
             'itemtype' => NetworkEquipment::getType(),
             'label' =>  sprintf(__("%s inventoried", "glpiinventory"), NetworkEquipment::getTypeName(2)),
@@ -151,8 +154,8 @@ function plugin_glpiinventory_hook_dashboard_cards($cards)
                 'field'         => 72,
                 'searchtype'    => 'contains',
                 'value'         => 'GLPI Native Inventory',
-                ]
-            ],
+            ]
+        ],
         'phone'         => [
             'itemtype' => Phone::getType(),
             'label' =>  sprintf(__("%s inventoried", "glpiinventory"), Phone::getTypeName(2)),
@@ -161,8 +164,8 @@ function plugin_glpiinventory_hook_dashboard_cards($cards)
                 'field'         => 72,
                 'searchtype'    => 'contains',
                 'value'         => 'GLPI Native Inventory',
-                ]
             ]
+        ]
     ];
 
 
@@ -321,9 +324,9 @@ function plugin_glpiinventory_searchOptionsValues($item)
     ) {
         $elements = [];
         $iterator = $DB->request([
-         'FROM'      => $item['searchoption']['table'],
-         'GROUPBY'   => 'uniqid',
-         'ORDER'     => 'uniqid'
+            'FROM'      => $item['searchoption']['table'],
+            'GROUPBY'   => 'uniqid',
+            'ORDER'     => 'uniqid'
         ]);
         foreach ($iterator as $data) {
             $elements[$data['uniqid']] = $data['uniqid'];
@@ -331,37 +334,6 @@ function plugin_glpiinventory_searchOptionsValues($item)
         Dropdown::showFromArray($item['name'], $elements, ['value' => $item['value']]);
         return true;
     }
-}
-
-
-/**
- * Define Dropdown tables to be manage in GLPI
- *
- * @return array
- */
-function plugin_glpiinventory_getDropdown()
-{
-    return [];
-}
-
-
-/**
- * Manage GLPI cron
- *
- * @return integer
- */
-function cron_plugin_glpiinventory()
-{
-   //   TODO :Disable for the moment (may be check if functions is good or not
-   //   $ptud = new PluginGlpiinventoryUnmanaged;
-   //   $ptud->cleanOrphelinsConnections();
-   //   $ptud->FusionUnknownKnownDevice();
-   //   TODO : regarder les 2 lignes juste en dessous !!!!!
-   //   #Clean server script processes history
-   //   $pfisnmph = new PluginGlpiinventoryNetworkPortLog;
-   //   $pfisnmph->cronCleanHistory();
-
-    return 1;
 }
 
 
@@ -374,14 +346,10 @@ function plugin_glpiinventory_install()
 {
     ini_set("max_execution_time", "0");
 
-    if (basename($_SERVER['SCRIPT_NAME']) != "cli_install.php") {
-        if (!isCommandLine()) {
-            Html::header(__('Setup', 'glpiinventory'), $_SERVER['PHP_SELF'], "config", "plugins");
-        }
-        $migrationname = 'Migration';
-    } else {
-        $migrationname = 'CliMigration';
+    if (!isCommandLine()) {
+        Html::header(__('Setup', 'glpiinventory'), $_SERVER['PHP_SELF'], "config", "plugins");
     }
+    $migrationname = 'Migration';
 
     require_once(PLUGIN_GLPI_INVENTORY_DIR . "/install/update.php");
     $version_detected = pluginGlpiinventoryGetCurrentVersion();
@@ -456,7 +424,7 @@ function plugin_glpiinventory_MassiveActions($type)
 
 
 /**
- * Manage massice actions fields display
+ * Manage massive actions fields display
  *
  * @param array $options
  * @return boolean
@@ -474,7 +442,8 @@ function plugin_glpiinventory_MassiveActionsFieldsDisplay($options = [])
                 Dropdown::show(
                     "Entities",
                     ['name' => "entities_id",
-                    'value' => $_SESSION["glpiactive_entity"]]
+                        'value' => $_SESSION["glpiactive_entity"]
+                    ]
                 );
             }
             return true;
@@ -848,9 +817,9 @@ function plugin_pre_item_purge_glpiinventory($parm)
             }
 
             $clean = [
-            'PluginGlpiinventoryCollect_File_Content',
-            'PluginGlpiinventoryCollect_Registry_Content',
-            'PluginGlpiinventoryCollect_Wmi_Content'
+                'PluginGlpiinventoryCollect_File_Content',
+                'PluginGlpiinventoryCollect_Registry_Content',
+                'PluginGlpiinventoryCollect_Wmi_Content'
             ];
             foreach ($clean as $obj) {
                 $obj::cleanComputer($items_id);
@@ -931,7 +900,8 @@ function plugin_item_purge_glpiinventory($parm)
             foreach (array_keys($a_hubs) as $unknowndevice_id) {
                 $a_networkports = $NetworkPort->find(
                     ['itemtype' => 'Unmanaged',
-                    'items_id' => $unknowndevice_id]
+                        'items_id' => $unknowndevice_id
+                    ]
                 );
                 if (count($a_networkports) < 2) {
                      $unmanaged->delete(['id' => $unknowndevice_id], 1);
@@ -952,7 +922,8 @@ function plugin_item_purge_glpiinventory($parm)
                     $networkPort_NetworkPort->disconnectFrom($otherPorts_id);
 
                     $networkPort_NetworkPort->add(['networkports_id_1' => $switchPorts_id,
-                                                   'networkports_id_2' => $otherPorts_id]);
+                        'networkports_id_2' => $otherPorts_id
+                    ]);
                 }
             }
             break;
@@ -962,9 +933,9 @@ function plugin_item_purge_glpiinventory($parm)
             $dbentries = getAllDataFromTable(
                 'glpi_plugin_glpiinventory_timeslotentries',
                 [
-                'WHERE'  => [
-                  'plugin_glpiinventory_timeslots_id' => $parm->fields['id']
-                ]
+                    'WHERE'  => [
+                        'plugin_glpiinventory_timeslots_id' => $parm->fields['id']
+                    ]
                 ]
             );
             foreach ($dbentries as $data) {
@@ -977,25 +948,25 @@ function plugin_item_purge_glpiinventory($parm)
             $DB->delete(
                 'glpi_plugin_glpiinventory_deploypackages_entities',
                 [
-                'plugin_glpiinventory_deploypackages_id' => $parm->fields['id']
+                    'plugin_glpiinventory_deploypackages_id' => $parm->fields['id']
                 ]
             );
             $DB->delete(
                 'glpi_plugin_glpiinventory_deploypackages_groups',
                 [
-                'plugin_glpiinventory_deploypackages_id' => $parm->fields['id']
+                    'plugin_glpiinventory_deploypackages_id' => $parm->fields['id']
                 ]
             );
             $DB->delete(
                 'glpi_plugin_glpiinventory_deploypackages_profiles',
                 [
-                'plugin_glpiinventory_deploypackages_id' => $parm->fields['id']
+                    'plugin_glpiinventory_deploypackages_id' => $parm->fields['id']
                 ]
             );
             $DB->delete(
                 'glpi_plugin_glpiinventory_deploypackages_users',
                 [
-                'plugin_glpiinventory_deploypackages_id' => $parm->fields['id']
+                    'plugin_glpiinventory_deploypackages_id' => $parm->fields['id']
                 ]
             );
             break;
@@ -1017,31 +988,32 @@ function plugin_glpiinventory_getDatabaseRelations()
     if ($plugin->isActivated("glpiinventory")) {
         return ["glpi_locations"
                         => ['glpi_plugin_glpiinventory_deploymirrors' => 'locations_id'],
-                   "glpi_entities"
+            "glpi_entities"
                         => [
-                                 "glpi_plugin_glpiinventory_collects"
+                            "glpi_plugin_glpiinventory_collects"
                                     => "entities_id",
-                                 "glpi_plugin_glpiinventory_credentialips"
+                            "glpi_plugin_glpiinventory_credentialips"
                                     => "entities_id",
-                                 "glpi_plugin_glpiinventory_credentials"
+                            "glpi_plugin_glpiinventory_credentials"
                                     => "entities_id",
-                                 "glpi_plugin_glpiinventory_deployfiles"
+                            "glpi_plugin_glpiinventory_deployfiles"
                                     => "entities_id",
-                                 "glpi_plugin_glpiinventory_deploymirrors"
+                            "glpi_plugin_glpiinventory_deploymirrors"
                                     => "entities_id",
-                                 "glpi_plugin_glpiinventory_deploypackages"
+                            "glpi_plugin_glpiinventory_deploypackages"
                                     => "entities_id",
-                                 "glpi_plugin_glpiinventory_ipranges"
+                            "glpi_plugin_glpiinventory_ipranges"
                                     => "entities_id",
-                                 "glpi_plugin_glpiinventory_tasks"
+                            "glpi_plugin_glpiinventory_tasks"
                                     => "entities_id",
-                                 "glpi_plugin_glpiinventory_timeslotentries"
+                            "glpi_plugin_glpiinventory_timeslotentries"
                                     => "entities_id",
-                                 "glpi_plugin_glpiinventory_timeslots"
+                            "glpi_plugin_glpiinventory_timeslots"
                                     => "entities_id",
-                                 "glpi_plugin_glpiinventory_deployuserinteractiontemplates"
+                            "glpi_plugin_glpiinventory_deployuserinteractiontemplates"
                                     => "entities_id",
-                                 ]];
+                        ]
+        ];
     }
     return [];
 }

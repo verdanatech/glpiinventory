@@ -47,7 +47,7 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
     */
     public static $rightname = 'plugin_glpiinventory_collect';
 
-    public $type = '';
+    public $collect_type = '';
 
    /**
     * Get name of this type by language of the user connected
@@ -73,7 +73,7 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
     {
         /** @var CommonDBTM $item */
         if ($item->fields['id'] > 0) {
-            if ($item->fields['type'] == $this->type) {
+            if ($item->fields['type'] == $this->collect_type) {
                 return __('Collect configuration');
             }
         }
@@ -109,7 +109,7 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
     public function getListHeaders()
     {
         return [
-         __('Name')
+            __('Name')
         ];
     }
 
@@ -123,7 +123,7 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
     public function displayOneRow($row = [])
     {
         return [
-         $row['name']
+            $row['name']
         ];
     }
 
@@ -136,8 +136,8 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
     {
         global $DB;
         $params = [
-         'FROM'  => $this->getTable(),
-         'WHERE' => ['plugin_glpiinventory_collects_id' => $collects_id]
+            'FROM'  => $this->getTable(),
+            'WHERE' => ['plugin_glpiinventory_collects_id' => $collects_id]
         ];
         $iterator = $DB->request($params);
 
@@ -215,16 +215,16 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
         $tab = [];
 
         $tab[] = [
-         'id'           => 'common',
-         'name'         => __('Characteristics')
+            'id'           => 'common',
+            'name'         => __('Characteristics')
         ];
 
         $tab[] = [
-         'id'           => '1',
-         'table'        => $this->getTable(),
-         'field'        => 'name',
-         'name'         => __('Name'),
-         'datatype'     => 'itemlink'
+            'id'           => '1',
+            'table'        => $this->getTable(),
+            'field'        => 'name',
+            'name'         => __('Name'),
+            'datatype'     => 'itemlink'
         ];
 
         return $tab;

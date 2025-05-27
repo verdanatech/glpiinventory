@@ -42,7 +42,7 @@ class PluginGlpiinventoryCollect_File_Content extends PluginGlpiinventoryCollect
 {
     public $collect_itemtype = 'PluginGlpiinventoryCollect_File';
     public $collect_table    = 'glpi_plugin_glpiinventory_collects_files';
-    public $type             = 'file';
+    public $collect_type     = 'file';
 
    /**
     * Update computer files (add and update files) related to this
@@ -57,10 +57,10 @@ class PluginGlpiinventoryCollect_File_Content extends PluginGlpiinventoryCollect
     {
         foreach ($file_data as $key => $value) {
             $input = [
-            'computers_id' => $computers_id,
-            'plugin_glpiinventory_collects_files_id' => $collects_files_id,
-            'pathfile'     => str_replace(['\\', '//'], ['/', '/'], $value['path']),
-            'size'         => $value['size']
+                'computers_id' => $computers_id,
+                'plugin_glpiinventory_collects_files_id' => $collects_files_id,
+                'pathfile'     => str_replace(['\\', '//'], ['/', '/'], $value['path']),
+                'size'         => $value['size']
             ];
             $this->add($input);
         }
@@ -147,7 +147,7 @@ class PluginGlpiinventoryCollect_File_Content extends PluginGlpiinventoryCollect
             echo "<tr class='tab_bg_1'>";
             echo '<td>';
             $computer->getFromDB($data['computers_id']);
-            echo $computer->getLink(1);
+            echo $computer->getLink();
             echo '</td>';
             echo '<td>';
             echo $data['pathfile'];

@@ -40,7 +40,7 @@ if (!defined('GLPI_ROOT')) {
  */
 class PluginGlpiinventoryCollect_Wmi extends PluginGlpiinventoryCollectCommon
 {
-    public $type = 'wmi';
+    public $collect_type = 'wmi';
 
    /**
     * Get name of this type by language of the user connected
@@ -56,27 +56,27 @@ class PluginGlpiinventoryCollect_Wmi extends PluginGlpiinventoryCollectCommon
     public function getListHeaders()
     {
         return [
-         __("Name"),
-         __("Moniker", "glpiinventory"),
-         __("Class", "glpiinventory"),
-         __("Properties", "glpiinventory"),
-         __("Action")
+            __("Name"),
+            "Moniker",
+            __("Class", "glpiinventory"),
+            __("Properties", "glpiinventory"),
+            __("Action")
         ];
     }
 
     public function displayOneRow($row = [])
     {
         return [
-         $row['name'],
-         $row['moniker'],
-         $row['class'],
-         $row['properties']
+            $row['name'],
+            $row['moniker'],
+            $row['class'],
+            $row['properties']
         ];
     }
 
     public function displayNewSpecificities()
     {
-        echo "<td>" . __('moniker', 'glpiinventory') . "</td>";
+        echo "<td>moniker</td>";
         echo "<td>";
         echo "<input type='text' name='moniker' value='' size='50' />";
         echo "</td>";

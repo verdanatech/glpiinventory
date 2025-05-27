@@ -48,7 +48,7 @@ class PluginGlpiinventoryCollectContentCommon extends CommonDBTM
     public static $rightname        = 'plugin_glpiinventory_collect';
     public $collect_itemtype = '';
     public $collect_table    = '';
-    public $type             = '';
+    public $collect_type     = '';
 
    /**
     * Get name of this type by language of the user connected
@@ -110,7 +110,7 @@ class PluginGlpiinventoryCollectContentCommon extends CommonDBTM
             $collect = $this->getCollectClass();
             switch (get_class($item)) {
                 case 'PluginGlpiinventoryCollect':
-                    if ($item->fields['type'] == $this->type) {
+                    if ($item->fields['type'] == $this->collect_type) {
                         $a_colfiles = getAllDataFromTable(
                             $collect::getTable(),
                             ['plugin_glpiinventory_collects_id' => $item->fields['id']]
@@ -118,13 +118,13 @@ class PluginGlpiinventoryCollectContentCommon extends CommonDBTM
                         if (count($a_colfiles) == 0) {
                              return '';
                         }
-                         $in = array_keys($a_colfiles);
-                         $fk = getForeignKeyFieldForItemType($collect);
+                        $in = array_keys($a_colfiles);
+                        $fk = getForeignKeyFieldForItemType($collect);
                         if (
-                            $nb = countElementsInTable(
+                            ($nb = countElementsInTable(
                                 $this->getTable(),
                                 [$fk => $in]
-                            ) > 0
+                            )) > 0
                         ) {
                             return self::createTabEntry($collect::getTypeName(Session::getPluralNumber()), $nb);
                         }
@@ -158,13 +158,13 @@ class PluginGlpiinventoryCollectContentCommon extends CommonDBTM
         global $DB;
         $class  = $this->collect_itemtype;
         $params = [
-         'FROM'   => $class::getTable(),
-         'FIELDS' => [
-            'id'
-         ],
-         'WHERE'  => [
-            'plugin_glpiinventory_collects_id' => $collects_id
-         ]
+            'FROM'   => $class::getTable(),
+            'FIELDS' => [
+                'id'
+            ],
+            'WHERE'  => [
+                'plugin_glpiinventory_collects_id' => $collects_id
+            ]
         ];
         $iterator = $DB->request($params);
         foreach ($iterator as $data) {

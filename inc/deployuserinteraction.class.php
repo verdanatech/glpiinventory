@@ -68,7 +68,7 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
    //The agent notice that the job must be canceled
     const RESPONSE_STOP            = 'stop';
 
-   //The agent recieved a malformed or non existing event
+   //The agent received a malformed or non existing event
     const RESPONSE_BAD_EVENT       = 'error_bad_event';
 
    //String to replace a \r\n, to avoid stripcslashes issue
@@ -100,11 +100,11 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
     public function getTypes()
     {
         return [self::EVENT_BEFORE_DOWNLOAD  => __("Before download", 'glpiinventory'),
-              self::EVENT_AFTER_DOWNLOAD   => __("After download", 'glpiinventory'),
-              self::EVENT_AFTER_ACTIONS    => __("After actions", 'glpiinventory'),
-              self::EVENT_DOWNLOAD_FAILURE => __("On download failure", 'glpiinventory'),
-              self::EVENT_ACTION_FAILURE   => __("On actions failure", 'glpiinventory')
-             ];
+            self::EVENT_AFTER_DOWNLOAD   => __("After download", 'glpiinventory'),
+            self::EVENT_AFTER_ACTIONS    => __("After actions", 'glpiinventory'),
+            self::EVENT_DOWNLOAD_FAILURE => __("On download failure", 'glpiinventory'),
+            self::EVENT_ACTION_FAILURE   => __("On actions failure", 'glpiinventory')
+        ];
     }
 
 
@@ -116,11 +116,7 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
     public function getLabelForAType($event)
     {
         $events = $this->getTypes();
-        if (isset($events[$event])) {
-            return $events[$event];
-        } else {
-            return false;
-        }
+        return $events[$event] ?? '';
     }
 
 
@@ -135,8 +131,6 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
     */
     public function displayAjaxValues($config, $request_data, $rand, $mode)
     {
-        global $CFG_GLPI;
-
         $pfDeployPackage = new PluginGlpiinventoryDeployPackage();
 
         if (isset($request_data['packages_id'])) {
@@ -158,9 +152,6 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
         }
 
         $values = $this->getValues($type, $config_data, $mode);
-        if ($values === false) {
-            return false;
-        }
 
         echo "<table class='package_item'>";
         echo "<tr>";
@@ -203,25 +194,25 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
     * @param array $data fields yet defined in edit mode
     * @param string $mode mode in use (create, edit...)
     *
-    * @return string|false
+    * @return array
     */
     public function getValues($type, $data, $mode)
     {
         $values = [
-         'name_value'          => "",
-         'name_label'          => __('Interaction label', 'glpiinventory'),
-         'name_type'           => "input",
-         'title_label'         => __('Title') . $this->getMandatoryMark(),
-         'title_value'         => "",
-         'title_type'          => "input",
-         'description_label'   => __('Message'),
-         'description_type'    => "text",
-         'description_value'   => "",
-         'template_label'
+            'name_value'          => "",
+            'name_label'          => __('Interaction label', 'glpiinventory'),
+            'name_type'           => "input",
+            'title_label'         => __('Title') . $this->getMandatoryMark(),
+            'title_value'         => "",
+            'title_type'          => "input",
+            'description_label'   => __('Message'),
+            'description_type'    => "text",
+            'description_value'   => "",
+            'template_label'
             => PluginGlpiinventoryDeployUserinteractionTemplate::getTypeName(1)
                . $this->getMandatoryMark(),
-         'template_value'      => "",
-         'template_type'       => "dropdown",
+            'template_value'      => "",
+            'template_type'       => "dropdown",
         ];
 
         if ($mode === self::EDIT) {
@@ -260,7 +251,7 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
 
         echo "<table class='tab_cadrehov package_item_list' id='table_userinteractions_$rand'>";
         foreach ($data['jobs']['userinteractions'] as $interaction) {
-            echo Search::showNewLine(Search::HTML_OUTPUT, ($i % 2));
+            echo Search::showNewLine(Search::HTML_OUTPUT, (bool)($i % 2));
             if ($canedit) {
                 echo "<td class='control'>";
                 Html::showCheckbox(['name' => 'userinteractions_entries[' . $i . ']']);
@@ -305,14 +296,14 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
    * Get of a short description of a user interaction
    *
    * @since 9.2
-   * @param string $interaction an array representing an interaction
+   * @param array $interaction an array representing an interaction
    * @return string a short description
    */
     public function getInteractionDescription($interaction)
     {
         $text = '';
 
-        if (isset($interaction['label']) && !empty($interaction['label'])) {
+        if (isset($interaction['label'])) {
             $text = $interaction['label'];
         } elseif (isset($interaction['name'])) {
             $text .= $interaction['name'];
@@ -348,11 +339,11 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
 
        //prepare new check entry to insert in json
         $entry = [
-         'name'        => $params['name'],
-         'title'       => $params['title'],
-         'text'        => $params['text'],
-         'type'        => $params['userinteractionstype'],
-         'template'    => $params['template']
+            'name'        => $params['name'],
+            'title'       => $params['title'],
+            'text'        => $params['text'],
+            'type'        => $params['userinteractionstype'],
+            'template'    => $params['template']
         ];
 
        //Add to package defintion
@@ -375,11 +366,11 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
         }
        //prepare new check entry to insert in json
         $entry = [
-         'name'        => $params['name'],
-         'title'       => $params['title'],
-         'text'        => $params['text'],
-         'type'        => $params['userinteractionstype'],
-         'template'    => $params['template']
+            'name'        => $params['name'],
+            'title'       => $params['title'],
+            'text'        => $params['text'],
+            'type'        => $params['userinteractionstype'],
+            'template'    => $params['template']
         ];
 
        //update order

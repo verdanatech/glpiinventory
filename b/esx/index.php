@@ -33,14 +33,15 @@
 
 use Glpi\Toolbox\Sanitizer;
 
+ob_start();
+include("../../../../inc/includes.php");
+ob_end_clean();
+
 //This call is to check that the ESX inventory service is up and running
 $fi_status = Sanitizer::sanitize(filter_input(INPUT_GET, "status"));
 if (!empty($fi_status)) {
     return 'ok';
 }
-ob_start();
-include("../../../../inc/includes.php");
-ob_end_clean();
 
 $response = false;
 //Agent communication using REST protocol
@@ -65,12 +66,12 @@ if (!empty($fi_machineid)) {
 
                 $module = new PluginGlpiinventoryInventoryComputerESX();
                 foreach ($taskjobstates as $taskjobstate) {
-                     $order->jobs[] = $module->run($taskjobstate);
+                    $order->jobs[] = $module->run($taskjobstate);
 
-                     $taskjobstate->changeStatus(
-                         $taskjobstate->fields['id'],
-                         $taskjobstate::SERVER_HAS_SENT_DATA
-                     );
+                    $taskjobstate->changeStatus(
+                        $taskjobstate->fields['id'],
+                        $taskjobstate::SERVER_HAS_SENT_DATA
+                    );
                 }
 
                 // return an empty dictionnary if there are no jobs.
@@ -84,7 +85,7 @@ if (!empty($fi_machineid)) {
             break;
 
         case 'setLog':
-           //Generic method to update logs
+            //Generic method to update logs
             PluginGlpiinventoryCommunicationRest::updateLog($_GET);
             break;
     }
@@ -92,6 +93,6 @@ if (!empty($fi_machineid)) {
     if ($response !== false) {
         echo $response;
     } else {
-        echo json_encode((object)[]);
+        echo json_encode((object) []);
     }
 }

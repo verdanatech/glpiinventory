@@ -31,13 +31,16 @@
  * ---------------------------------------------------------------------
  */
 
+use Glpi\DBAL\QueryExpression;
+
+global $DB;
+
 //Options for GLPI 0.71 and newer : need slave db to access the report
 $USEDBREPLICATE = 1;
 $DBCONNECTION_REQUIRED = 0;
 
-include("../../../inc/includes.php");
 
-Html::header(__('GLPI Inventory', 'glpiinventory'), $_SERVER['PHP_SELF'], "utils", "report");
+Html::header(__('GLPI Inventory', 'glpiinventory'), '', "utils", "report");
 
 Session::checkRight('computer', READ);
 
@@ -51,7 +54,7 @@ if (!is_numeric($state)) {
     $state = 0;
 }
 
-echo "<form action='" . $_SERVER['PHP_SELF'] . "' method='get'>";
+echo "<form action='' method='get'>";
 echo "<table class='tab_cadre' cellpadding='5'>";
 
 echo "<tr>";
@@ -94,7 +97,7 @@ Html::closeForm();
 $computer = new Computer();
 
 $state_where = [];
-if (($state != "") and ($state != "0")) {
+if ($state != 0) {
     $state_where = ['states_id' => $state];
 }
 
@@ -114,7 +117,7 @@ $iterator = $DB->request([
     ],
     'WHERE' => [
         'OR' => [
-            new \QueryExpression("NOW() > ADDDATE(last_inventory_update, INTERVAL " . $nbdays . " DAY"),
+            new QueryExpression("NOW() > ADDDATE(last_inventory_update, INTERVAL " . $nbdays . " DAY"),
             ['last_inventory_update' => null],
         ],
     ] + $state_where + getEntitiesRestrictCriteria('glpi_computers'),
@@ -141,7 +144,7 @@ foreach ($iterator as $data) {
     echo "<tr class='tab_bg_1'>";
     echo "<td>";
     $computer->getFromDB($data['computers_id']);
-    echo $computer->getLink(1);
+    echo $computer->getLink();
     echo "</td>";
     echo "<td>" . Html::convDateTime($data['last_inventory_update']) . "</td>";
     echo "<td>" . $computer->fields['serial'] . "</td>";

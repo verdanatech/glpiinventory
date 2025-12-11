@@ -31,10 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
  * Manage the visibility of package by entity.
  */
@@ -71,7 +67,7 @@ class PluginGlpiinventoryDeployPackage_Entity extends CommonDBRelation
     /**
      * Set we don't check parent right of the second item
      *
-     * @var integer
+     * @var self::DONT_CHECK_ITEM_RIGHTS|self::HAVE_VIEW_RIGHT_ON_ITEM|self::HAVE_SAME_RIGHT_ON_ITEM
      */
     public static $checkItem_2_Rights = self::DONT_CHECK_ITEM_RIGHTS;
 
@@ -86,12 +82,12 @@ class PluginGlpiinventoryDeployPackage_Entity extends CommonDBRelation
     /**
      * Get entities for a deploypackage
      *
-     * @global object $DB
      * @param integer $deploypackages_id ID of the deploypackage
      * @return array list of of entities linked to a deploypackage
     **/
     public static function getEntities($deploypackages_id)
     {
+        /** @var DBmysql $DB */
         global $DB;
 
         $ent   = [];

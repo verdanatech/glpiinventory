@@ -31,15 +31,13 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
  * Manage the credentials for inventory VMWARE ESX.
  */
 class PluginGlpiinventoryCredential extends CommonDropdown
 {
+    public $can_be_translated = false;
+
     /**
      * Define first level menu name
      *
@@ -89,15 +87,19 @@ class PluginGlpiinventoryCredential extends CommonDropdown
     public function getAdditionalFields()
     {
 
-        return [['name'  => 'itemtype',
-            'label' => __('Type'),
-            'type'  => 'credential_itemtype',
-        ],
-            ['name'  => 'username',
+        return [
+            [
+                'name'  => 'itemtype',
+                'label' => __('Type'),
+                'type'  => 'credential_itemtype',
+            ],
+            [
+                'name'  => 'username',
                 'label' => __('Login'),
                 'type'  => 'text',
             ],
-            ['name'  => 'password',
+            [
+                'name'  => 'password',
                 'label' => __('Password'),
                 'type'  => 'password',
             ],
@@ -114,10 +116,8 @@ class PluginGlpiinventoryCredential extends CommonDropdown
     public function displaySpecificTypeField($ID, $field = [], array $options = [])
     {
 
-        switch ($field['type']) {
-            case 'credential_itemtype':
-                $this->showItemtype($ID);
-                break;
+        if ($field['type'] == 'credential_itemtype') {
+            $this->showItemtype($ID);
         }
     }
 
@@ -312,8 +312,8 @@ class PluginGlpiinventoryCredential extends CommonDropdown
      */
     public static function getCredentialsItemTypes()
     {
-        return ['PluginGlpiinventoryInventoryComputerESX' =>
-                           __('VMware host', 'glpiinventory'),
+        return [
+            PluginGlpiinventoryInventoryComputerESX::class => __('VMware host', 'glpiinventory'),
         ];
     }
 
@@ -344,7 +344,6 @@ class PluginGlpiinventoryCredential extends CommonDropdown
     /**
      * Display dropdown with credentials
      *
-     * @global array $CFG_GLPI
      * @param array $params
      */
     public static function dropdownCredentials($params = [])
@@ -372,7 +371,7 @@ class PluginGlpiinventoryCredential extends CommonDropdown
         $ajparams = ['itemtype' => '__VALUE__',
             'id'       => $p['id'],
         ];
-        $url       = Plugin::getWebDir('glpiinventory') . "/ajax/dropdownCredentials.php";
+        $url       = $CFG_GLPI['root_doc'] . "/plugins/glpiinventory/ajax/dropdownCredentials.php";
         Ajax::updateItemOnSelectEvent(
             "dropdown_plugin_glpiinventory_credentials_id$rand",
             "span_credentials",
@@ -402,8 +401,8 @@ class PluginGlpiinventoryCredential extends CommonDropdown
 
         // params
         // Array([itemtype] => PluginGlpiinventoryInventoryComputerESX [id] => 0)
-        if ($params['itemtype'] == 'PluginGlpiinventoryInventoryComputerESX') {
-            $params['itemtype'] = 'PluginGlpiinventoryCredential';
+        if ($params['itemtype'] == PluginGlpiinventoryInventoryComputerESX::class) {
+            $params['itemtype'] = PluginGlpiinventoryCredential::class;
         }
         $value = 0;
         if (isset($params['id'])) {
@@ -430,10 +429,10 @@ class PluginGlpiinventoryCredential extends CommonDropdown
     /**
      * Display a specific header
      */
-    public function displayHeader()
+    public static function displayCentralHeader(?string $title = null, ?array $menus = null): void
     {
         //Common dropdown header
-        parent::displayHeader();
+        parent::displayCentralHeader($title, $menus);
 
         PluginGlpiinventoryMenu::displayMenu("mini");
     }
@@ -465,5 +464,10 @@ class PluginGlpiinventoryCredential extends CommonDropdown
 
         $key = new GLPIKey();
         $this->fields['password'] = $key->decrypt($password);
+    }
+
+    public static function getIcon()
+    {
+        return "ti ti-lock";
     }
 }

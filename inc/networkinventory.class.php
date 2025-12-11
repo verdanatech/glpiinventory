@@ -31,9 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access this file directly");
-}
+use Glpi\DBAL\QueryExpression;
 
 /**
  * Manage network inventory task jobs.
@@ -44,12 +42,12 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
      * Get all devices and put in taskjobstate each task for each device for
      * each agent
      *
-     * @global object $DB
      * @param integer $taskjobs_id
      * @return string
      */
     public function prepareRun($taskjobs_id)
     {
+        /** @var DBmysql $DB */
         global $DB;
 
         $pfTask = new PluginGlpiinventoryTask();
@@ -82,8 +80,8 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
         // get items_id by type
         $a_iprange = [];
         $devices = [
-            NetworkEquipment::getType() => [],
-            Printer::getType() => [],
+            NetworkEquipment::class => [],
+            Printer::class => [],
         ];
         $a_definition = importArrayFromDB($pfTaskjob->fields['definition']);
         foreach ($a_definition as $datas) {
@@ -91,12 +89,12 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
             $items_id = current($datas);
 
             switch ($itemtype) {
-                case 'PluginGlpiinventoryIPRange':
+                case PluginGlpiinventoryIPRange::class:
                     $a_iprange[] = $items_id;
                     break;
 
-                case 'NetworkEquipment':
-                case 'Printer':
+                case NetworkEquipment::class:
+                case Printer::class:
                     $iterator = $DB->request([
                         'SELECT' => [
                             $itemtype::getTable() . '.id AS gID',
@@ -120,7 +118,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                                     'glpi_networknames' => 'items_id',
                                     'glpi_networkports' => 'id',[
                                         'AND' => [
-                                            'glpi_networknames.itemtype' => 'NetworkPort',
+                                            'glpi_networknames.itemtype' => NetworkPort::class,
                                         ],
                                     ],
                                 ],
@@ -130,7 +128,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                                     'glpi_ipaddresses' => 'items_id',
                                     'glpi_networknames' => 'id',[
                                         'AND' => [
-                                            'glpi_ipaddresses.itemtype' => 'NetworkName',
+                                            'glpi_ipaddresses.itemtype' => NetworkName::class,
                                         ],
                                     ],
                                 ],
@@ -148,7 +146,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                     foreach ($iterator as $data) {
                         if (isset($a_snmpauth[$data['snmpcredentials_id']])) {
                             $input = [];
-                            $input['TYPE'] = ($itemtype === NetworkEquipment::getType() ? 'NETWORKING' : 'PRINTER');
+                            $input['TYPE'] = ($itemtype === NetworkEquipment::class ? 'NETWORKING' : 'PRINTER');
                             $input['ID'] = $data['gID'];
                             $input['IP'] = $data['gnifaddr'];
                             $input['AUTHSNMP_ID'] = $data['snmpcredentials_id'];
@@ -164,7 +162,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
         foreach ($a_iprange as $items_id) {
             $pfIPRange->getFromDB($items_id);
 
-            foreach ([NetworkEquipment::getType(), Printer::getType()] as $cur_itemtype) {
+            foreach ([NetworkEquipment::class, Printer::class] as $cur_itemtype) {
                 // Search NetworkEquipment
                 $criteria = [
                     'SELECT' => [
@@ -189,7 +187,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                                 'glpi_networknames' => 'items_id',
                                 'glpi_networkports' => 'id',[
                                     'AND' => [
-                                        'glpi_networknames.itemtype' => 'NetworkPort',
+                                        'glpi_networknames.itemtype' => NetworkPort::class,
                                     ],
                                 ],
                             ],
@@ -199,7 +197,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                                 'glpi_ipaddresses' => 'items_id',
                                 'glpi_networknames' => 'id',[
                                     'AND' => [
-                                        'glpi_ipaddresses.itemtype' => 'NetworkName',
+                                        'glpi_ipaddresses.itemtype' => NetworkName::class,
                                     ],
                                 ],
                             ],
@@ -208,7 +206,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                     'WHERE' => [
                         $cur_itemtype::getTable() . '.is_deleted' => 0,
                         'snmpcredentials_id' => ['!=', 0],
-                        new \QueryExpression('inet_aton(' . $DB->quoteName('glpi_ipaddresses.name') . ') BETWEEN inet_aton(' . $DB->quote($pfIPRange->fields['ip_start']) . ') AND inet_aton(' . $DB->quote($pfIPRange->fields['ip_end']) . ')'),
+                        new QueryExpression('inet_aton(' . $DB->quoteName('glpi_ipaddresses.name') . ') BETWEEN inet_aton(' . $DB->quote($pfIPRange->fields['ip_start']) . ') AND inet_aton(' . $DB->quote($pfIPRange->fields['ip_end']) . ')'),
                     ],
                     'GROUPBY' => $cur_itemtype::getTable() . '.id',
                 ];
@@ -225,7 +223,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                 foreach ($iterator as $data) {
                     if (isset($a_snmpauth[$data['snmpcredentials_id']])) {
                         $input = [];
-                        $input['TYPE'] = ($cur_itemtype === NetworkEquipment::getType() ? 'NETWORKING' : 'PRINTER');
+                        $input['TYPE'] = ($cur_itemtype === NetworkEquipment::class ? 'NETWORKING' : 'PRINTER');
                         $input['ID'] = $data['gID'];
                         $input['IP'] = $data['gnifaddr'];
                         $input['AUTHSNMP_ID'] = $data['snmpcredentials_id'];
@@ -240,7 +238,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
         if (strstr($pfTaskjob->fields['action'], '".2"')) {
             $a_subnet = [];
             $a_devicesubnet = [];
-            foreach ($devices[NetworkEquipment::getType()] as $items_id) {
+            foreach ($devices[NetworkEquipment::class] as $items_id) {
                 $NetworkEquipment->getFromDB($items_id);
                 $a_ip = explode(".", $NetworkEquipment->fields['ip']);
                 $ip_subnet = $a_ip[0] . "." . $a_ip[1] . "." . $a_ip[2] . ".";
@@ -248,12 +246,12 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                     $a_subnet[$ip_subnet] = 0;
                 }
                 $a_subnet[$ip_subnet]++;
-                $a_devicesubnet[$ip_subnet]['NetworkEquipment'][$items_id] = 1;
+                $a_devicesubnet[$ip_subnet][NetworkEquipment::class][$items_id] = 1;
             }
-            foreach ($devices[Printer::getType()] as $items_id) {
+            foreach ($devices[Printer::class] as $items_id) {
                 $a_ports = $NetworkPort->find(
                     [
-                        'itemtype' => 'Printer',
+                        'itemtype' => Printer::class,
                         'items_id' => $items_id,
                         'ip'       => ['!=', '127.0.0.1'],
                     ]
@@ -281,12 +279,12 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
             foreach (array_keys($a_subnet) as $subnet) {
                 // No agent available for this subnet
                 for ($i = 0; $i < 2; $i++) {
-                    $itemtype = 'Printer';
+                    $itemtype = Printer::class;
                     if ($i == '0') {
-                        $itemtype = 'NetworkEquipment';
+                        $itemtype = NetworkEquipment::class;
                     }
                     if (isset($a_devicesubnet[$subnet][$itemtype])) {
-                        foreach ($a_devicesubnet[$subnet][$itemtype] as $items_id => $num) {
+                        foreach (array_keys($a_devicesubnet[$subnet][$itemtype]) as $items_id) {
                             $a_input['itemtype'] = $itemtype;
                             $a_input['items_id'] = $items_id;
                             $a_input['specificity'] = exportArrayToDB(
@@ -303,8 +301,8 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                                 0,
                                 '',
                                 1,
-                                "Unable to find agent to inventory " .
-                                "this " . $itemtype
+                                "Unable to find agent to inventory "
+                                . "this " . $itemtype
                             );
                             $a_input['state'] = 1;
                         }
@@ -386,25 +384,25 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
             return [];
         } else {
             // Use general config when threads number is set to 0 on the agent
-            $param_attrs['THREADS_QUERY'] = $agent->fields["threads_networkinventory"] == 0 ?
-            $pfConfig->getValue('threads_networkinventory') :
-            $agent->fields["threads_networkinventory"];
+            $param_attrs['THREADS_QUERY'] = $agent->fields["threads_networkinventory"] == 0
+            ? $pfConfig->getValue('threads_networkinventory')
+            : $agent->fields["threads_networkinventory"];
 
             // Use general config when timeout is set to 0 on the agent
-            $param_attrs['TIMEOUT'] = $agent->fields["timeout_networkinventory"] == 0 ?
-            $pfConfig->getValue('timeout_networkinventory') :
-            $agent->fields["timeout_networkinventory"];
+            $param_attrs['TIMEOUT'] = $agent->fields["timeout_networkinventory"] == 0
+            ? $pfConfig->getValue('timeout_networkinventory')
+            : $agent->fields["timeout_networkinventory"];
 
             $param_attrs['PID'] = $current->fields['id'];
 
             $taskjobstatedatas = $jobstate->fields;
 
             $a_extended = ['snmpcredentials_id' => 0];
-            if ($jobstate->fields['itemtype'] == 'Printer') {
+            if ($jobstate->fields['itemtype'] == Printer::class) {
                 $device_attrs['TYPE'] = 'PRINTER';
                 $printer = new Printer();
                 $a_extended = current($printer->find(['id' => $jobstate->fields['items_id']], [], 1));
-            } elseif ($jobstate->fields['itemtype'] == 'NetworkEquipment') {
+            } elseif ($jobstate->fields['itemtype'] == NetworkEquipment::class) {
                 $device_attrs['TYPE'] = 'NETWORKING';
                 $neteq = new NetworkEquipment();
                 $a_extended = current($neteq->find(['id' => $jobstate->fields['items_id']], [], 1));
@@ -418,10 +416,10 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
             $pfTaskjoblog->addTaskjoblog(
                 $taskjobstatedatas['id'],
                 0,
-                'Agent',
+                Agent::class,
                 '1',
-                $param_attrs['THREADS_QUERY'] . ' threads ' .
-                $param_attrs['TIMEOUT'] . ' timeout'
+                $param_attrs['THREADS_QUERY'] . ' threads '
+                . $param_attrs['TIMEOUT'] . ' timeout'
             );
 
             // Only keep required snmp credentials
@@ -453,12 +451,12 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
     /**
      * Get the devices have an IP in the IP range
      *
-     * @global object $DB
      * @param integer $ipranges_id
      * @return array
      */
     public function getDevicesOfIPRange($ipranges_id, bool $restrict_entity = true)
     {
+        /** @var DBmysql $DB */
         global $DB;
 
         $devicesList = [];
@@ -469,7 +467,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
 
         $pfIPRange->getFromDB($ipranges_id);
 
-        foreach ([NetworkEquipment::getType(), Printer::getType()] as $itemtype) {
+        foreach ([NetworkEquipment::class, Printer::class] as $itemtype) {
             $criteria = [
                 'SELECT' => [
                     $itemtype::getTable() . '.id AS gID',
@@ -494,7 +492,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                             'glpi_networknames' => 'items_id',
                             'glpi_networkports' => 'id', [
                                 'AND' => [
-                                    'glpi_networknames.itemtype' => 'NetworkPort',
+                                    'glpi_networknames.itemtype' => NetworkPort::class,
                                 ],
                             ],
                         ],
@@ -504,7 +502,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                             'glpi_ipaddresses' => 'items_id',
                             'glpi_networknames' => 'id',[
                                 'AND' => [
-                                    'glpi_ipaddresses.itemtype' => 'NetworkName',
+                                    'glpi_ipaddresses.itemtype' => NetworkName::class,
                                 ],
                             ],
                         ],
@@ -514,10 +512,10 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                     $itemtype::getTable() . '.is_deleted' => 0,
                     'snmpcredentials_id' => ['!=', '0'],
                     'glpi_ipaddresses.version' => 4,
-                    new \QueryExpression(
-                        'inet_aton(' . $DB->quoteName('glpi_ipaddresses.name') . ') BETWEEN ' .
-                        'inet_aton(' . $DB->quote($pfIPRange->fields['ip_start']) . ') AND inet_aton(' .
-                        $DB->quote($pfIPRange->fields['ip_end']) . ')'
+                    new QueryExpression(
+                        'inet_aton(' . $DB->quoteName('glpi_ipaddresses.name') . ') BETWEEN '
+                        . 'inet_aton(' . $DB->quote($pfIPRange->fields['ip_start']) . ') AND inet_aton('
+                        . $DB->quote($pfIPRange->fields['ip_end']) . ')'
                     ),
                 ],
                 'GROUPBY' => 'gID',
@@ -546,7 +544,6 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
     /**
     * Get the device IP in the IP range
     *
-    * @global object $DB
     * @param string $job_itemtype
     * @param integer $job_items_id
     * @param integer $tasks_id
@@ -571,7 +568,7 @@ class PluginGlpiinventoryNetworkinventory extends PluginGlpiinventoryCommunicati
                 $items_id = current($datas);
 
                 switch ($itemtype) {
-                    case 'PluginGlpiinventoryIPRange':
+                    case PluginGlpiinventoryIPRange::class:
                         $pfIPRange->getFromDB($items_id);
                         foreach ($device_ips as $device_ip) {
                             if ($pfIPRange->getIp2long($device_ip) <= $pfIPRange->getIp2long($pfIPRange->fields['ip_end']) && $pfIPRange->getIp2long($pfIPRange->fields['ip_start']) <= $pfIPRange->getIp2long($device_ip)) {

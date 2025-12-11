@@ -31,10 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 use Glpi\Application\View\TemplateRenderer;
 
 /**
@@ -94,12 +90,15 @@ class PluginGlpiinventoryDeployMirror extends CommonDBTM
      * Get and filter mirrors list by computer agent and location.
      * Location is retrieved from the computer data.
      *
-     * @global array $PF_CONFIG
      * @param ?integer $agents_id
      * @return array
      */
     public static function getList($agents_id)
     {
+        /**
+         * @var array $PF_CONFIG
+         * @var DBmysql $DB
+         */
         global $PF_CONFIG, $DB;
 
         if (is_null($agents_id)) {
@@ -216,7 +215,6 @@ class PluginGlpiinventoryDeployMirror extends CommonDBTM
     /**
      * Display form
      *
-     * @global array $CFG_GLPI
      * @param integer $id
      * @param array $options
      * @return true
@@ -254,7 +252,7 @@ class PluginGlpiinventoryDeployMirror extends CommonDBTM
             'field'         => 'name',
             'name'          => __('Name'),
             'datatype'      => 'itemlink',
-            'itemlink_type' => $this->getType(),
+            'itemlink_type' => $this::class,
         ];
 
         $tab[] = [
@@ -325,7 +323,7 @@ class PluginGlpiinventoryDeployMirror extends CommonDBTM
      */
     public function getSpecificMassiveActions($checkitem = null)
     {
-        return [__CLASS__ . MassiveAction::CLASS_ACTION_SEPARATOR . 'transfer'
+        return [self::class . MassiveAction::CLASS_ACTION_SEPARATOR . 'transfer'
                => __('Transfer'),
         ];
     }
@@ -340,7 +338,7 @@ class PluginGlpiinventoryDeployMirror extends CommonDBTM
     public static function showMassiveActionsSubForm(MassiveAction $ma)
     {
         if ($ma->getAction() == 'transfer') {
-            Dropdown::show('Entity');
+            Dropdown::show(Entity::class);
             echo Html::submit(_x('button', 'Post'), ['name' => 'massiveaction']);
             return true;
         }
@@ -371,14 +369,19 @@ class PluginGlpiinventoryDeployMirror extends CommonDBTM
                         $input['entities_id'] = $_POST['entities_id'];
                         if ($pfDeployMirror->update($input)) {
                             //set action massive ok for this item
-                            $ma->itemDone($item->getType(), $key, MassiveAction::ACTION_OK);
+                            $ma->itemDone($item::class, $key, MassiveAction::ACTION_OK);
                         } else {
                             // KO
-                            $ma->itemDone($item->getType(), $key, MassiveAction::ACTION_KO);
+                            $ma->itemDone($item::class, $key, MassiveAction::ACTION_KO);
                         }
                     }
                 }
                 break;
         }
+    }
+
+    public static function getIcon()
+    {
+        return "ti ti-copy";
     }
 }

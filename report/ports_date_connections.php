@@ -32,12 +32,15 @@
  */
 
 //Options for GLPI 0.71 and newer : need slave db to access the report
+use Glpi\Application\View\TemplateRenderer;
+
+global $DB;
+
 $USEDBREPLICATE = 1;
 $DBCONNECTION_REQUIRED = 0;
 
-include("../../../inc/includes.php");
 
-Html::header(__('GLPI Inventory', 'glpiinventory'), $_SERVER['PHP_SELF'], "utils", "report");
+Html::header(__('GLPI Inventory', 'glpiinventory'), '', "utils", "report");
 
 Session::checkRight('plugin_glpiinventory_reportnetworkequipment', READ);
 
@@ -117,9 +120,9 @@ Html::footer();
  */
 function displaySearchForm()
 {
-    global $_SERVER, $_GET, $CFG_GLPI;
+    global $CFG_GLPI;
 
-    echo "<form action='" . $_SERVER["PHP_SELF"] . "' method='post'>";
+    echo "<form action='' method='post'>";
     echo "<table class='tab_cadre' cellpadding='5'>";
     echo "<tr class='tab_bg_1' align='center'>";
     echo "<td>";
@@ -186,13 +189,16 @@ function displaySearchForm()
 
     // Display Reset search
     echo "<td>";
-    echo "<a href='" . Plugin::getWebDir('glpiinventory') . "/report/ports_date_connections.php?reset_search=reset_search' ><img title=\"" . __('Blank') . "\" alt=\"" . __('Blank') . "\" src='" . $CFG_GLPI["root_doc"] . "/pics/reset.png' class='calendrier'></a>";
+    echo "<a href='" . $CFG_GLPI['root_doc'] . "/plugins/glpiinventory/report/ports_date_connections.php?reset_search=reset_search' ><img title=\"" . __('Blank') . "\" alt=\"" . __('Blank') . "\" src='" . $CFG_GLPI["root_doc"] . "/pics/reset.png' class='calendrier'></a>";
     echo "</td>";
 
     echo "<td>";
     //Add parameters to uri to be saved as SavedSearch
     $_SERVER["REQUEST_URI"] = buildSavedSearchUrl($_SERVER["REQUEST_URI"], $_GET);
-    SavedSearch::showSaveButton(SavedSearch::SEARCH, 'PluginGlpiinventoryNetworkport2');
+    TemplateRenderer::getInstance()->render('pages/tools/savedsearch/save_button.html.twig', [
+        'type' => SavedSearch::SEARCH,
+        'itemtype' => 'PluginGlpiinventoryNetworkport2',
+    ]);
     echo "</td>";
 
     echo "<td>";
@@ -225,6 +231,7 @@ function getContainsArray($get)
                 return "<'" . $get["dropdown_calendar"] . " 00:00:00'";
         }
     }
+    return '';
 }
 
 
@@ -253,8 +260,6 @@ function getValues($get, $post)
     $get = array_merge($get, $post);
     if (isset($get["field"])) {
         foreach ($get["field"] as $index => $value) {
-            $get["contains"][$index] = stripslashes($get["contains"][$index]);
-            $get["contains"][$index] = htmlspecialchars_decode($get["contains"][$index]);
             switch ($value) {
                 case 14:
                     if (strpos($get["contains"][$index], "=") == 1) {

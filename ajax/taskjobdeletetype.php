@@ -31,8 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "taskjobdeletetype.php")) {
-    include("../../../inc/includes.php");
+if (plugin_glpiinventory_script_endswith("taskjobdeletetype.php")) {
     header("Content-Type: text/html; charset=UTF-8");
     Html::header_nocache();
 }
@@ -43,5 +42,5 @@ $pfTaskjob = new PluginGlpiinventoryTaskjob();
 $pfTaskjob->deleteitemtodefatc(
     filter_input(INPUT_POST, "type"),
     filter_input(INPUT_POST, filter_input(INPUT_POST, "type") . 'item'),
-    filter_input(INPUT_POST, "taskjobs_id")
+    (int) filter_input(INPUT_POST, "taskjobs_id")
 );

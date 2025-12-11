@@ -5,6 +5,46 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.6.4] - 2025-12-03
+
+- Rework the whole agents module configuration page
+- Fix URL for ressource (ajax/ front/ pics/ etc .. )
+- Fix several wrong URLs (still using PHP_SELF)
+
+## [1.6.3] - 2025-11-25
+
+### Fixed
+
+- Fix SQL error when deploy target option used is 'No restriction' defined with `-1`
+- Fix PHP warning about "Usage of the `$withcomment` parameter is deprecated"
+- Fix retrieval of agents from a dynamic group
+- Migrate dynamic group search from serialized to JSON format
+- Fix static groups search limit to 20 entries
+
+## [1.5.5] - 2025-11-25
+
+### Fixed
+
+- Fix SQL error when deploy target option used is 'No restriction' defined with `-1`
+- Migrate dynamic group search from serialized to JSON format
+
+## [1.6.2] - 2025-11-14
+
+- Fix agent wakeup when no last_agent_wakeup has been set yet
+- Prevent fatal error when a task references an item that no longer exist
+- Fix for adding `targets` and `actors` to a task
+- FIx extra menu entries links
+
+## [1.6.1] - 2025-11-05
+
+- Fix visibility issue on deploy dynamic groups with GLPI v11.0.2
+- Fix deploy ajax action path
+- Prevent fatal errors when ini_set is not allowed
+
+## [1.6.0] - 2025-09-30
+
+- GLPI v11 compatibility
+
 ## [1.5.4] - 2025-09-19
 
 - PHP 8.5 compatibility

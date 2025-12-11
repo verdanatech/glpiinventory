@@ -31,8 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-include('../../../inc/includes.php');
-$dropdown = new PluginGlpiinventoryCredentialIP();
+$dropdown = new PluginGlpiinventoryCredentialIp();
 
 if (!empty($_POST) || isset($_GET['_in_modal'])) {
     if (empty($_POST['plugin_glpiinventory_credentials_id'])) {
@@ -42,7 +41,7 @@ if (!empty($_POST) || isset($_GET['_in_modal'])) {
 } else {
     Html::header(
         __('GLPI Inventory', 'glpiinventory'),
-        $_SERVER["PHP_SELF"],
+        '',
         "admin",
         "pluginglpiinventorymenu",
         "credentialip"

@@ -31,9 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use function Safe\preg_match;
 
 /**
  * Manage the windows registry to get in collect module.
@@ -110,5 +108,17 @@ class PluginGlpiinventoryCollect_Registry extends PluginGlpiinventoryCollectComm
         echo "<td>";
         echo "<input type='text' name='key' value='' />";
         echo "</td>";
+    }
+
+    public function prepareInputForAdd($input)
+    {
+        if (!preg_match('/^\/()/', $input['path'])) {
+            $input['path'] = "/" . $input['path'];
+        }
+        if (!preg_match('/\/$/', $input['path'])) {
+            $input['path'] .= "/";
+        }
+
+        return parent::prepareInputForAdd($input);
     }
 }

@@ -31,13 +31,12 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 
 $pfTaskjob = new PluginGlpiinventoryTaskjob();
 
 Html::header(
     __('GLPI Inventory', 'glpiinventory'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "taskjob"

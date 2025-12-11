@@ -31,9 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use function Safe\json_decode;
 
 /**
  * Manage user interactions.
@@ -70,10 +68,6 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
 
     //The agent received a malformed or non existing event
     public const RESPONSE_BAD_EVENT       = 'error_bad_event';
-
-    //String to replace a \r\n, to avoid stripcslashes issue
-    public const RN_TRANSFORMATION        = "$#r$#n";
-
 
     /**
      * Get name of this type by language of the user connected
@@ -175,7 +169,7 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
         echo "<th>{$values['template_label']}</th>";
         echo "<td>";
         Dropdown::show(
-            'PluginGlpiinventoryDeployUserinteractionTemplate',
+            PluginGlpiinventoryDeployUserinteractionTemplate::class,
             ['value' => $values['template_value'], 'name' => 'template']
         );
         echo "</td>";
@@ -222,12 +216,6 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
             $values['template_value']    = $data['template'] ?? "";
         }
 
-        //Trick to add \r\n in the description text area
-        $values['description_value'] = str_replace(
-            self::RN_TRANSFORMATION,
-            "\r\n",
-            $values['description_value']
-        );
         return $values;
     }
 
@@ -239,12 +227,8 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
      * @param array $data array converted of 'json' field in DB where stored checks
      * @param string $rand unique element id used to identify/update an element
      */
-    public function displayList(PluginGlpiinventoryDeployPackage $package, $data, $rand)
+    public function displayDeployList(PluginGlpiinventoryDeployPackage $package, $data, $rand)
     {
-        /** @var array $CFG_GLPI */
-        global $CFG_GLPI;
-
-        $interaction_types = $this->getTypes();
         $package_id        = $package->getID();
         $canedit           = $package->canUpdateContent();
         $i                 = 0;
@@ -254,7 +238,7 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
             echo Search::showNewLine(Search::HTML_OUTPUT, (bool) ($i % 2));
             if ($canedit) {
                 echo "<td class='control'>";
-                Html::showCheckbox(['name' => 'userinteractions_entries[' . $i . ']']);
+                Html::showCheckbox(['name' => 'userinteractions_entries[' . $i . ']', 'class' => 'massive_action_checkbox']);
                 echo "</td>";
             }
 
@@ -273,8 +257,8 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
 
             echo "</td>";
             if ($canedit) {
-                echo "<td class='rowhandler control' title='" . __('drag', 'glpiinventory') .
-                "'><div class='drag row'></div></td>";
+                echo "<td class='rowhandler control' title='" . __('drag', 'glpiinventory')
+                . "'><div class='drag row'></div></td>";
             }
             echo "</tr>";
             $i++;
@@ -286,8 +270,8 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
         }
         echo "</table>";
         if ($canedit) {
-            echo "<input type='submit' name='delete' value=\"" .
-            __('Delete', 'glpiinventory') . "\" class='submit' />";
+            echo "<input type='submit' name='delete' value=\""
+            . __('Delete', 'glpiinventory') . "\" class='submit' />";
         }
     }
 
@@ -491,5 +475,10 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
             case 'on_multiusers':
                 return __('Multiple users connected', 'glpiinventory');
         }
+    }
+
+    public static function getIcon()
+    {
+        return "ti ti-hand-finger";
     }
 }

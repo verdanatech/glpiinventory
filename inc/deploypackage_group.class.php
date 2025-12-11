@@ -31,10 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
  * Manage the visibility of package by group.
  */
@@ -45,7 +41,7 @@ class PluginGlpiinventoryDeployPackage_Group extends CommonDBRelation
      *
      * @var string
      */
-    public static $itemtype_1          = 'PluginGlpiinventoryDeployPackage';
+    public static $itemtype_1          = PluginGlpiinventoryDeployPackage::class;
 
     /**
      * id field name for the first part of relation
@@ -71,7 +67,7 @@ class PluginGlpiinventoryDeployPackage_Group extends CommonDBRelation
     /**
      * Set we don't check parent right of the second item
      *
-     * @var integer
+     * @var self::DONT_CHECK_ITEM_RIGHTS|self::HAVE_VIEW_RIGHT_ON_ITEM|self::HAVE_SAME_RIGHT_ON_ITEM
      */
     public static $checkItem_2_Rights  = self::DONT_CHECK_ITEM_RIGHTS;
 
@@ -86,12 +82,12 @@ class PluginGlpiinventoryDeployPackage_Group extends CommonDBRelation
     /**
      * Get groups for a deploypackage
      *
-     * @global object $DB
      * @param integer $deploypackages_id ID of the deploypackage
      * @return array list of groups linked to a deploypackage
     **/
     public static function getGroups($deploypackages_id)
     {
+        /** @var DBmysql $DB */
         global $DB;
 
         $groups = [];

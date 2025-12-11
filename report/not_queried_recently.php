@@ -31,15 +31,16 @@
  * ---------------------------------------------------------------------
  */
 
+global $DB;
+
 //Options for GLPI 0.71 and newer : need slave db to access the report
 $USEDBREPLICATE = 1;
 $DBCONNECTION_REQUIRED = 0;
 
 $NEEDED_ITEMS = ["search", "computer", "infocom", "setup", "networking", "printer"];
 
-include("../../../inc/includes.php");
 
-Html::header(__('GLPI Inventory', 'glpiinventory'), $_SERVER['PHP_SELF'], "utils", "report");
+Html::header(__('GLPI Inventory', 'glpiinventory'), '', "utils", "report");
 
 Session::checkRight('plugin_glpiinventory_reportnetworkequipment', READ);
 
@@ -49,7 +50,7 @@ if ($nbdays == '') {
 }
 $state = filter_input(INPUT_GET, "state");
 
-echo "<form action='" . $_SERVER['PHP_SELF'] . "' method='get'>";
+echo "<form action='' method='get'>";
 echo "<table class='tab_cadre' cellpadding='5'>";
 
 echo "<tr class='tab_bg_1' align='center'>";
@@ -145,16 +146,19 @@ echo "</tr>";
 
 if ($result = $DB->doQuery($query)) {
     while ($data = $DB->fetchArray($result)) {
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>";
         if ($data['network_id'] > 0) {
             $class = new NetworkEquipment();
             $class->getFromDB($data['network_id']);
         } elseif ($data['printer_id'] > 0) {
             $class = new Printer();
             $class->getFromDB($data['printer_id']);
+        } else {
+            continue;
         }
-        echo $class->getLink(1);
+
+        echo "<tr class='tab_bg_1'>";
+        echo "<td>";
+        echo $class->getLink();
         echo "</td>";
         echo "<td>" . Html::convDateTime($data['last_inventory_update']) . "</td>";
         echo "<td>";
@@ -168,15 +172,15 @@ if ($result = $DB->doQuery($query)) {
         echo "<td>" . $data['serial'] . "</td>";
         echo "<td>" . $data['otherserial'] . "</td>";
         if ($data['network_id'] > 0) {
-            echo "<td>" . Dropdown::getDropdownName("glpi_networkequipmentmodels", $data['networkequipmentmodels_id']) . "</td>";
+            echo "<td>" . Dropdown::getDropdownName("glpi_networkequipmentmodels", (int) $data['networkequipmentmodels_id']) . "</td>";
         } elseif ($data['printer_id'] > 0) {
-            echo "<td>" . Dropdown::getDropdownName("glpi_printermodels", $data['printermodels_id']) . "</td>";
+            echo "<td>" . Dropdown::getDropdownName("glpi_printermodels", (int) $data['printermodels_id']) . "</td>";
         }
         echo "<td>";
-        echo Dropdown::getDropdownName('glpi_plugin_glpiinventory_configsecurities', $data['plugin_glpiinventory_configsecurities_id']);
+        echo Dropdown::getDropdownName('glpi_plugin_glpiinventory_configsecurities', (int) $data['plugin_glpiinventory_configsecurities_id']);
         echo "</td>";
         echo "<td>";
-        echo Dropdown::getDropdownName(getTableForItemType("State"), $data['states_id']);
+        echo Dropdown::getDropdownName(getTableForItemType("State"), (int) $data['states_id']);
         echo "</td>";
         echo "</tr>";
     }

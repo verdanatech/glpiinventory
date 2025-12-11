@@ -31,10 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 use Glpi\Application\View\TemplateRenderer;
 
 /**
@@ -60,9 +56,9 @@ class PluginGlpiinventoryIPRange extends CommonDBTM
     /**
      * Check if can create an IP range
      *
-     * @return true
+    * @return bool
      */
-    public static function canCreate()
+    public static function canCreate(): bool
     {
         return true;
     }
@@ -77,11 +73,11 @@ class PluginGlpiinventoryIPRange extends CommonDBTM
     public static function getTypeName($nb = 0)
     {
 
-        if (isset($_SERVER['HTTP_REFERER']) and strstr($_SERVER['HTTP_REFERER'], 'iprange')) {
-            if ((isset($_POST['glpi_tab'])) and ($_POST['glpi_tab'] == 1)) {
+        if (isset($_SERVER['HTTP_REFERER']) && strstr($_SERVER['HTTP_REFERER'], 'iprange')) {
+            if (isset($_POST['glpi_tab']) && $_POST['glpi_tab'] == 1) {
                 // Permanent task discovery
                 return __('Communication mode', 'glpiinventory');
-            } elseif ((isset($_POST['glpi_tab'])) and ($_POST['glpi_tab'] == 2)) {
+            } elseif (isset($_POST['glpi_tab']) && $_POST['glpi_tab'] == 2) {
                 // Permanent task inventory
                 return __('See all informations of task', 'glpiinventory');
             } else {
@@ -219,7 +215,7 @@ class PluginGlpiinventoryIPRange extends CommonDBTM
         $count = 0;
         foreach ($a_input as $num => $value) {
             if (strstr($num, "ip_")) {
-                if (($value > 255) or (!is_numeric($value)) or strstr($value, ".")) {
+                if ($value > 255 || !is_numeric($value) || strstr($value, ".")) {
                     $count++;
                     $a_input[$num] = "<font color='#ff0000'>" . $a_input[$num] . "</font>";
                 }
@@ -229,14 +225,14 @@ class PluginGlpiinventoryIPRange extends CommonDBTM
         if ($count == '0') {
             return true;
         } else {
-            Session::addMessageAfterRedirect("<font color='#ff0000'>" . __('Bad IP', 'glpiinventory') .
-            "</font><br/>" .
-            __('Start of IP range', 'glpiinventory') . " : " .
-            $a_input['ip_start0'] . "." . $a_input['ip_start1'] . "." .
-            $a_input['ip_start2'] . "." . $a_input['ip_start3'] . "<br/>" .
-            __('End of IP range', 'glpiinventory') . " : " .
-            $a_input['ip_end0'] . "." . $a_input['ip_end1'] . "." .
-            $a_input['ip_end2'] . "." . $a_input['ip_end3']);
+            Session::addMessageAfterRedirect("<font color='#ff0000'>" . __('Bad IP', 'glpiinventory')
+            . "</font><br/>"
+            . __('Start of IP range', 'glpiinventory') . " : "
+            . $a_input['ip_start0'] . "." . $a_input['ip_start1'] . "."
+            . $a_input['ip_start2'] . "." . $a_input['ip_start3'] . "<br/>"
+            . __('End of IP range', 'glpiinventory') . " : "
+            . $a_input['ip_end0'] . "." . $a_input['ip_end1'] . "."
+            . $a_input['ip_end2'] . "." . $a_input['ip_end3']);
             return false;
         }
     }
@@ -289,5 +285,10 @@ class PluginGlpiinventoryIPRange extends CommonDBTM
             $actions['PluginGlpiinventoryTask' . MassiveAction::CLASS_ACTION_SEPARATOR . 'addtojob_target'] = __('Target a task', 'glpiinventory');
         }
         return $actions;
+    }
+
+    public static function getIcon()
+    {
+        return "ti ti-viewfinder";
     }
 }

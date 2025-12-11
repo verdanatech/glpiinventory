@@ -31,11 +31,10 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 use Glpi\Application\View\TemplateRenderer;
+
+use function Safe\json_decode;
+use function Safe\json_encode;
 
 /**
  * Manage user interactions templates.
@@ -88,7 +87,7 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
     {
 
         $ong = [];
-        $this->addStandardTab(__CLASS__, $ong, $options)
+        $this->addStandardTab(self::class, $ong, $options)
          ->addStandardTab(Log::class, $ong, $options);
 
         return $ong;
@@ -97,8 +96,8 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
 
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
-        $tabs[1] = __('General');
-        $tabs[2] = _n('Behavior', 'Behaviors', 2, 'glpiinventory');
+        $tabs[1] =  self::createTabEntry(__('General'), 0, icon: 'ti ti-hand-click');
+        $tabs[2] = self::createTabEntry(_n('Behavior', 'Behaviors', 2, 'glpiinventory'), 0, icon: 'ti ti-settings');
         return $tabs;
     }
 
@@ -343,7 +342,7 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
     {
         $this->initForm($id, $options);
 
-        $json_data = json_decode($this->fields['json'], true);
+        $json_data = !empty($this->fields['json']) ? json_decode($this->fields['json'], true) : [];
         $json_data = $this->initializeJsonFields($json_data);
 
         TemplateRenderer::getInstance()->display('@glpiinventory/forms/deployuserinteractiontemplate.html.twig', [
@@ -437,7 +436,8 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
     */
     public function getEvents()
     {
-        return ['on_ok'       => __('Button ok', 'glpiinventory'),
+        return [
+            'on_ok'       => __('Button ok', 'glpiinventory'),
             'on_yes'      => __('Button yes', 'glpiinventory'),
             'on_continue' => __('Button continue', 'glpiinventory'),
             'on_retry'    => __('Button retry', 'glpiinventory'),
@@ -584,7 +584,7 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
                 echo "</td>";
                 echo "</tr>";
             } else {
-                echo Html::hidden($event, $json_data[$event]);
+                echo Html::hidden($event, ['value' => $json_data[$event]]);
             }
         }
 
@@ -619,4 +619,5 @@ class PluginGlpiinventoryDeployUserinteractionTemplate extends CommonDropdown
     {
         return json_decode($this->fields['json'], true);
     }
+
 }

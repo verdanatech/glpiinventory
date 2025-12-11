@@ -31,8 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "taskjobaddtype.php")) {
-    include("../../../inc/includes.php");
+if (plugin_glpiinventory_script_endswith("taskjobaddtype.php")) {
     header("Content-Type: text/html; charset=UTF-8");
     Html::header_nocache();
 }
@@ -43,6 +42,6 @@ $pfTaskjob = new PluginGlpiinventoryTaskjob();
 $pfTaskjob->additemtodefatc(
     filter_input(INPUT_POST, "type"),
     filter_input(INPUT_POST, "itemtype"),
-    filter_input(INPUT_POST, "items_id"),
-    filter_input(INPUT_POST, "taskjobs_id")
+    (int) filter_input(INPUT_POST, "items_id"),
+    (int) filter_input(INPUT_POST, "taskjobs_id")
 );

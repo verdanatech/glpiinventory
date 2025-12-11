@@ -31,7 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 
 $pfTask = new PluginGlpiinventoryTask();
 
@@ -40,7 +39,7 @@ $pfTask->submitForm($_REQUEST);
 
 Html::header(
     __('GLPI Inventory', 'glpiinventory'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "task"

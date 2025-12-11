@@ -31,10 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
  * It's a common code for display information in GLPI.
  */
@@ -70,16 +66,15 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
 
 
     /**
-     * __contruct function and the different base URLs
-     *
-     * @global array $CFG_GLPI
+     * __construct function and the different base URLs
      */
     public function __construct()
     {
+        /** @var array $CFG_GLPI */
         global $CFG_GLPI;
         parent::__construct();
 
-        $fi_path = Plugin::getWebDir('glpiinventory');
+        $fi_path = Html::getPrefixedUrl("/plugins/glpiinventory");
 
         $this->base_urls = [
             'fi.base'   => $fi_path,
@@ -104,8 +99,8 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
             return $this->base_urls[$name];
         }
         trigger_error(
-            "The requested url type '$name' doesn't exists. " .
-            "Maybe the developer have forgotten to register it in the 'base_urls' variable."
+            "The requested url type '$name' doesn't exists. "
+            . "Maybe the developer have forgotten to register it in the 'base_urls' variable."
         );
         return "";
     }
@@ -250,8 +245,7 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
         } else {
             // Else set default value to current date and time
             if (
-                array_key_exists('maybeempty', $options)
-                 and $options['maybeempty']
+                array_key_exists('maybeempty', $options) && $options['maybeempty']
             ) {
                 $value = "";
             } else {
@@ -284,9 +278,9 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
         echo "<label class='form-label col-sm-4 col-form-label text-sm-end'>" . $title . "</label>";
         echo "<div class='col-sm-6'>";
         echo
-         "<textarea class='autogrow form-control' name='" . $varname . "' >" .
-         $this->fields[$varname] .
-         "</textarea>";
+         "<textarea class='autogrow form-control' name='" . $varname . "' >"
+         . $this->fields[$varname]
+         . "</textarea>";
         echo "</div>";
         echo "</div>";
     }

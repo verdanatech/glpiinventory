@@ -31,10 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
 * Manage the checks before deploy a package.
 */
@@ -44,7 +40,7 @@ class PluginGlpiinventoryDashboard
     {
         $default_params = [
             'label'                 => "",
-            'itemtype'              => Agent::getType(),
+            'itemtype'              => Agent::class,
             'icon'                  => Agent::getIcon(),
             'apply_filters'         => [],
         ];

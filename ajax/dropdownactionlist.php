@@ -31,13 +31,9 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "dropdownactionlist.php")) {
-    include("../../../inc/includes.php");
+if (plugin_glpiinventory_script_endswith("dropdownactionlist.php")) {
     header("Content-Type: text/html; charset=UTF-8");
     Html::header_nocache();
-}
-if (!defined('GLPI_ROOT')) {
-    die("Can not acces directly to this file");
 }
 
 Session::checkCentralAccess();

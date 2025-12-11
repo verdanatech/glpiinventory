@@ -31,11 +31,11 @@
  * ---------------------------------------------------------------------
  */
 
-use Glpi\Toolbox\Sanitizer;
+use Safe\Exceptions\FilesystemException;
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use function Safe\fclose;
+use function Safe\fopen;
+use function Safe\json_decode;
 
 /**
  * Manage the prepare task job and give the data to the agent when request what
@@ -70,12 +70,12 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
      * Prepare a takjob, get all devices and put in taskjobstate each task
      * for each device for each agent
      *
-     * @global object $DB
      * @param integer $taskjob_id id of the taskjob
      * @param null|array $definitions_filter
      */
     public function prepareRun($taskjob_id, $definitions_filter = null)
     {
+        /** @var DBmysql $DB */
         global $DB;
 
         $task       = new PluginGlpiinventoryTask();
@@ -98,15 +98,15 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
             $items_id = current($action);
 
             switch ($itemtype) {
-                case 'Computer':
-                    if ($this->definitionFiltered("Computer", $definitions_filter)) {
+                case Computer::class:
+                    if ($this->definitionFiltered($itemtype, $definitions_filter)) {
                         break;
                     }
                     $computers[] = $items_id;
                     break;
 
-                case 'Group':
-                    if ($this->definitionFiltered("Group", $definitions_filter)) {
+                case Group::class:
+                    if ($this->definitionFiltered($itemtype, $definitions_filter)) {
                         break;
                     }
                     $computer_object = new Computer();
@@ -148,13 +148,13 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
                     $computers = array_unique(array_merge($computers_a_1, $computers_a_2));
                     break;
 
-                case 'PluginGlpiinventoryDeployGroup':
+                case PluginGlpiinventoryDeployGroup::class:
                     $group = new PluginGlpiinventoryDeployGroup();
                     $group->getFromDB($items_id);
 
                     switch ($group->getField('type')) {
                         case 'STATIC':
-                            if ($this->definitionFiltered("PluginGlpiinventoryDeployGroupStatic", $definitions_filter)) {
+                            if ($this->definitionFiltered(PluginGlpiinventoryDeployGroup_Staticdata::class, $definitions_filter)) {
                                 break;
                             }
                             $iterator = $DB->request([
@@ -170,7 +170,7 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
                             }
                             break;
                         case 'DYNAMIC':
-                            if ($this->definitionFiltered("PluginGlpiinventoryDeployGroupDynamic", $definitions_filter)) {
+                            if ($this->definitionFiltered(PluginGlpiinventoryDeployGroup_Dynamicdata::class, $definitions_filter)) {
                                 break;
                             }
 
@@ -196,11 +196,11 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
                             $row = $iterator->current();
 
                             $get_tmp = $_GET;
-                            if (isset($_SESSION["glpisearchcount"]['Computer'])) {
-                                unset($_SESSION["glpisearchcount"]['Computer']);
+                            if (isset($_SESSION["glpisearchcount"][Computer::class])) {
+                                unset($_SESSION["glpisearchcount"][Computer::class]);
                             }
-                            if (isset($_SESSION["glpisearchcount2"]['Computer'])) {
-                                unset($_SESSION["glpisearchcount2"]['Computer']);
+                            if (isset($_SESSION["glpisearchcount2"][Computer::class])) {
+                                unset($_SESSION["glpisearchcount2"][Computer::class]);
                             }
 
                             $_GET = importArrayFromDB($row['fields_array']);
@@ -210,11 +210,10 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
                                 $_GET["glpisearchcount2"] = count($_GET['field2']);
                             }
 
-                            $pfSearch = new Search();
                             $glpilist_limit             = $_SESSION['glpilist_limit'];
                             $_SESSION['glpilist_limit'] = 999999999;
-                            $search_params = Search::manageParams('Computer', $_GET);
-                            $results = Search::getDatas('Computer', $search_params);
+                            $search_params = Search::manageParams(Computer::class, $_GET);
+                            $results = Search::getDatas(Computer::class, $search_params);
                             $_SESSION['glpilist_limit'] = $glpilist_limit;
                             foreach ($results as $result) {
                                 $computers[] = $result['id'];
@@ -252,16 +251,16 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
 
             foreach ($definitions as $definition) {
                 $uniqid = uniqid();
-                $package->getFromDB($definition['PluginGlpiinventoryDeployPackage']);
+                $package->getFromDB($definition[PluginGlpiinventoryDeployPackage::class]);
 
                 $c_input['state']    = 0;
-                $c_input['itemtype'] = 'PluginGlpiinventoryDeployPackage';
+                $c_input['itemtype'] = PluginGlpiinventoryDeployPackage::class;
                 $c_input['items_id'] = $package->fields['id'];
                 $c_input['date']     = date("Y-m-d H:i:s");
                 $c_input['uniqid']   = $uniqid;
 
                 //get agent for this computer
-                $agent->getFromDBByCrit(['itemtype' => 'Computer', 'items_id' => $computer_id]);
+                $agent->getFromDBByCrit(['itemtype' => Computer::class, 'items_id' => $computer_id]);
                 $agents_id = $agent->fields['id'] ?? false;
                 if ($agents_id === false) {
                     $jobstates_id = $jobstate->add($c_input);
@@ -277,7 +276,8 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
                         $c_input['agents_id'] = $agents_id;
 
                         $jobstates_running = $jobstate->find(
-                            ['itemtype'                         => 'PluginGlpiinventoryDeployPackage',
+                            [
+                                'itemtype'                         => PluginGlpiinventoryDeployPackage::class,
                                 'items_id'                         => $package->fields['id'],
                                 'state'                            => ['!=', PluginGlpiinventoryTaskjobstate::FINISHED],
                                 'agents_id' => $agents_id,
@@ -329,7 +329,19 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
 
         //get order by type and package id
         $pfDeployPackage = new PluginGlpiinventoryDeployPackage();
-        $pfDeployPackage->getFromDB($taskjobstate->fields['items_id']);
+        if (!$pfDeployPackage->getFromDB($taskjobstate->fields['items_id'])) {
+            //entry no longer exists
+            trigger_error(
+                sprintf(
+                    'Item "%1$s" #%2$s does not exists in %3$s table.',
+                    $taskjobstate->fields['itemtype'],
+                    $taskjobstate->fields['items_id'],
+                    $pfDeployPackage->getTable()
+                ),
+                E_USER_WARNING
+            );
+            return false;
+        }
         //decode order data
         $order_data = json_decode($pfDeployPackage->fields['json'], true);
 
@@ -364,12 +376,14 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
             $manifest = PLUGIN_GLPI_INVENTORY_MANIFESTS_DIR . $hash;
             $order_files[$hash]['multiparts'] = [];
             if (file_exists($manifest)) {
-                $handle = fopen($manifest, "r");
-                if ($handle) {
+                try {
+                    $handle = fopen($manifest, "r");
                     while (($buffer = fgets($handle)) !== false) {
                         $order_files[$hash]['multiparts'][] = trim($buffer);
                     }
                     fclose($handle);
+                } catch (FilesystemException $e) {
+                    //empty catch
                 }
             }
         }
@@ -382,7 +396,7 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
         if (isset($order_job['actions'])) {
             foreach ($order_job['actions'] as $key => $value) {
                 if (isset($value['cmd']) && isset($value['cmd']['exec'])) {
-                    $order_job['actions'][$key]['cmd']['exec'] = Sanitizer::unsanitize($value['cmd']['exec']);
+                    $order_job['actions'][$key]['cmd']['exec'] = $value['cmd']['exec'];
                 }
             }
         }

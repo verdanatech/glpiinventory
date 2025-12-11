@@ -31,10 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
  * Manage the configuration of the plugin.
  */
@@ -182,13 +178,13 @@ class PluginGlpiinventoryConfig extends CommonDBTM
 
         $ong        = [];
         $moduleTabs = [];
-        $this->addStandardTab("PluginGlpiinventoryConfig", $ong, $options);
-        $this->addStandardTab("PluginGlpiinventoryAgentmodule", $ong, $options);
+        $this->addStandardTab(PluginGlpiinventoryConfig::class, $ong, $options);
+        $this->addStandardTab(PluginGlpiinventoryAgentmodule::class, $ong, $options);
 
         if (isset($_SESSION['glpi_plugin_glpiinventory']['configuration']['moduletabforms'])) {
             $plugin_tabs = $ong;
-            $moduleTabForms =
-                  $_SESSION['glpi_plugin_glpiinventory']['configuration']['moduletabforms'];
+            $moduleTabForms
+                  = $_SESSION['glpi_plugin_glpiinventory']['configuration']['moduletabforms'];
             if (count($moduleTabForms)) {
                 foreach ($moduleTabForms as $module => $form) {
                     if ($plugin->isActivated($module)) {
@@ -213,11 +209,11 @@ class PluginGlpiinventoryConfig extends CommonDBTM
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
 
-        if ($item->getType() == __CLASS__) {
+        if ($item instanceof self) {
             return [
-                __('General setup'),
-                __('Network Inventory', 'glpiinventory'),
-                __('Package management', 'glpiinventory'),
+                self::createTabEntry(__('General setup'), 0, icon: 'ti ti-settings'),
+                self::createTabEntry(__('Network Inventory', 'glpiinventory'), 0, icon: 'ti ti-network'),
+                self::createTabEntry(__('Package management', 'glpiinventory'), 0, icon: 'ti ti-package'),
             ];
         }
         return '';
@@ -255,12 +251,12 @@ class PluginGlpiinventoryConfig extends CommonDBTM
     /**
      * Get configuration value with name
      *
-     * @global array $PF_CONFIG
      * @param string $name name in configuration
      * @return null|string|integer
      */
     public function getValue($name)
     {
+        /** @var array $PF_CONFIG */
         global $PF_CONFIG;
 
         if (isset($PF_CONFIG[$name])) {
@@ -268,10 +264,7 @@ class PluginGlpiinventoryConfig extends CommonDBTM
         }
 
         $config = current($this->find(['type' => $name]));
-        if (isset($config['value'])) {
-            return $config['value'];
-        }
-        return null;
+        return $config['value'] ?? null;
     }
 
 
@@ -392,8 +385,6 @@ class PluginGlpiinventoryConfig extends CommonDBTM
      */
     public static function showFormNetworkInventory($options = [])
     {
-        global $CFG_GLPI;
-
         $pfConfig     = new PluginGlpiinventoryConfig();
         $pfsnmpConfig = new self();
 
@@ -407,8 +398,8 @@ class PluginGlpiinventoryConfig extends CommonDBTM
         echo "</tr>";
 
         echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Threads number', 'glpiinventory') . "&nbsp;" .
-              "(" . strtolower(__('Network discovery', 'glpiinventory')) . ")</td>";
+        echo "<td>" . __('Threads number', 'glpiinventory') . "&nbsp;"
+              . "(" . strtolower(__('Network discovery', 'glpiinventory')) . ")</td>";
         echo "<td align='center'>";
         Dropdown::showNumber("threads_networkdiscovery", [
             'value' => $pfConfig->getValue('threads_networkdiscovery'),
@@ -417,8 +408,8 @@ class PluginGlpiinventoryConfig extends CommonDBTM
         ]);
         echo "</td>";
 
-        echo "<td>" . __('Threads number', 'glpiinventory') . "&nbsp;" .
-              "(" . strtolower(__('Network inventory (SNMP)', 'glpiinventory')) . ")</td>";
+        echo "<td>" . __('Threads number', 'glpiinventory') . "&nbsp;"
+              . "(" . strtolower(__('Network inventory (SNMP)', 'glpiinventory')) . ")</td>";
         echo "<td align='center'>";
         Dropdown::showNumber("threads_networkinventory", [
             'value' => $pfConfig->getValue('threads_networkinventory'),
@@ -429,8 +420,8 @@ class PluginGlpiinventoryConfig extends CommonDBTM
         echo "</tr>";
 
         echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('SNMP timeout', 'glpiinventory') . "&nbsp;" .
-              "(" . strtolower(__('Network discovery', 'glpiinventory')) . ")</td>";
+        echo "<td>" . __('SNMP timeout', 'glpiinventory') . "&nbsp;"
+              . "(" . strtolower(__('Network discovery', 'glpiinventory')) . ")</td>";
         echo "<td align='center'>";
         Dropdown::showNumber("timeout_networkdiscovery", [
             'value' => $pfConfig->getValue('timeout_networkdiscovery'),
@@ -438,8 +429,8 @@ class PluginGlpiinventoryConfig extends CommonDBTM
             'max'   => 60,
         ]);
         echo "</td>";
-        echo "<td>" . __('SNMP timeout', 'glpiinventory') . "&nbsp;" .
-              "(" . strtolower(__('Network inventory (SNMP)', 'glpiinventory')) . ")</td>";
+        echo "<td>" . __('SNMP timeout', 'glpiinventory') . "&nbsp;"
+              . "(" . strtolower(__('Network inventory (SNMP)', 'glpiinventory')) . ")</td>";
         echo "<td align='center'>";
         Dropdown::showNumber("timeout_networkinventory", [
             'value' => $pfConfig->getValue('timeout_networkinventory'),
@@ -542,6 +533,7 @@ class PluginGlpiinventoryConfig extends CommonDBTM
      */
     public function updateValue($name, $value)
     {
+        /** @var array $PF_CONFIG */
         global $PF_CONFIG;
 
         // retrieve current config
@@ -598,12 +590,11 @@ class PluginGlpiinventoryConfig extends CommonDBTM
      * Test if table exists before loading cache
      * The only case where table doesn't exist is when you click on
      * uninstall the plugin and it's already uninstalled
-     *
-     * @global object $DB
-     * @global array $PF_CONFIG
      */
     public static function loadCache()
     {
+        /** @var DBmysql $DB */
+        /** @var array $PF_CONFIG */
         global $DB, $PF_CONFIG;
 
         if ($DB->tableExists('glpi_plugin_glpiinventory_configs')) {
@@ -613,5 +604,10 @@ class PluginGlpiinventoryConfig extends CommonDBTM
                 $PF_CONFIG[$data['type']] = $data['value'];
             }
         }
+    }
+
+    public static function getIcon()
+    {
+        return "ti ti-settings";
     }
 }

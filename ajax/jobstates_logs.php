@@ -31,8 +31,9 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "jobstates_logs.php")) {
-    include("../../../inc/includes.php");
+use function Safe\session_write_close;
+
+if (plugin_glpiinventory_script_endswith("jobstates_logs.php")) {
     Session::checkCentralAccess();
 }
 //unlock session since access checks have been done

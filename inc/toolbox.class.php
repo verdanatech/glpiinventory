@@ -31,9 +31,9 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use function Safe\json_decode;
+use function Safe\json_encode;
+use function Safe\preg_match;
 
 /**
  * Manage the functions used in many classes.
@@ -79,7 +79,7 @@ class PluginGlpiinventoryToolbox
                 $indent = 0;
                 // 2. closing tag - outdent now
             } elseif (preg_match('/^<\/\w/', $token, $matches)) {
-                $pad = $pad - 3;
+                $pad -= 3;
                 // 3. opening tag - don't pad this one, only subsequent tags
             } elseif (preg_match('/^<\w[^>]*[^\/]>.*$/', $token, $matches)) {
                 $indent = 3;
@@ -293,7 +293,7 @@ class PluginGlpiinventoryToolbox
 
         $values   = [];
 
-        $p['step'] = $p['step'] * 60; // to have in seconds
+        $p['step'] *= 60; // to have in seconds
         for ($s = $p['begin']; $s <= $p['end']; $s += $p['step']) {
             $values[$s] = PluginGlpiinventoryToolbox::getHourMinute($s);
         }
@@ -348,9 +348,13 @@ class PluginGlpiinventoryToolbox
         $_SESSION['glpiID']   = $users_id;
         $_SESSION['glpiname'] = $user->getField('name');
         $_SESSION['glpiactiveentities'] = getSonsOf('glpi_entities', 0);
-        $_SESSION['glpiactiveentities_string'] =
-         "'" . implode("', '", $_SESSION['glpiactiveentities']) . "'";
+        $_SESSION['glpiactiveentities_string']
+         = "'" . implode("', '", $_SESSION['glpiactiveentities']) . "'";
         $_SESSION['glpiparententities'] = [];
+
+        $_SESSION['glpiactiveprofile']['interface'] = 'central';
+
+        $_SESSION["glpiactiveprofile"]["computer"] = 1;
 
         // Execute function with impersonated SESSION
         $result = call_user_func_array($function, $args);
@@ -375,17 +379,17 @@ class PluginGlpiinventoryToolbox
     */
     public static function isAnInventoryDevice($item)
     {
-        switch ($item->getType()) {
-            case 'Computer':
-            case 'NetworkEquipment':
-            case 'Printer':
+        switch ($item::class) {
+            case Computer::class:
+            case NetworkEquipment::class:
+            case Printer::class:
                 return $item->isDynamic();
         }
 
         return $item->isDynamic()
          && countElementsInTable(
              RuleMatchedLog::getTable(),
-             ['itemtype' => $item->getType(), 'items_id' => $item->fields['id']]
+             ['itemtype' => $item::class, 'items_id' => $item->fields['id']]
          );
     }
 }

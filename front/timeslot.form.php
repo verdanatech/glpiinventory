@@ -31,7 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 
 Session::checkRight('plugin_glpiinventory_task', READ);
 
@@ -57,7 +56,7 @@ if (isset($_POST["add"])) {
     $pfTimeslot->redirectToList();
 } elseif (isset($_POST["purge"])) {
     $pfTimeslot->check($_POST['id'], PURGE);
-    $pfTimeslot->delete($_POST, 1);
+    $pfTimeslot->delete($_POST, true);
     $pfTimeslot->redirectToList();
 
     //update a timeslot
@@ -68,7 +67,7 @@ if (isset($_POST["add"])) {
 } else {//print timeslot information
     Html::header(
         PluginGlpiinventoryTimeslot::getTypeName(2),
-        $_SERVER['PHP_SELF'],
+        '',
         "admin",
         "pluginglpiinventorymenu",
         "timeslot"

@@ -31,8 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "taskjob_logs.php")) {
-    include("../../../inc/includes.php");
+if (plugin_glpiinventory_script_endswith("taskjob_logs.php")) {
     Session::checkCentralAccess();
 }
 

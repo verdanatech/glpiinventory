@@ -31,10 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
  * Manage SNMP credentials associated with IP ranges.
  */
@@ -45,7 +41,7 @@ class PluginGlpiinventoryIPRange_SNMPCredential extends CommonDBRelation
      *
      * @var string
      */
-    public static $itemtype_1    = 'PluginGlpiinventoryIPRange';
+    public static $itemtype_1    = PluginGlpiinventoryIPRange::class;
 
     /**
      * id field name for the first part of relation
@@ -66,7 +62,7 @@ class PluginGlpiinventoryIPRange_SNMPCredential extends CommonDBRelation
      *
      * @var string
      */
-    public static $itemtype_2    = 'SNMPCredential';
+    public static $itemtype_2    = SNMPCredential::class;
 
     /**
      * id field name for the second part of relation
@@ -87,7 +83,7 @@ class PluginGlpiinventoryIPRange_SNMPCredential extends CommonDBRelation
      * Get the tab name used for item
      *
      * @param CommonGLPI $item the item object
-     * @param integer $withtemplate 1 if is a template form
+     * @param int $withtemplate 1 if is a template form
      * @return string name of the tab
      */
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
@@ -113,8 +109,8 @@ class PluginGlpiinventoryIPRange_SNMPCredential extends CommonDBRelation
      * Display the content of the tab
      *
      * @param CommonGLPI $item
-     * @param integer $tabnum number of the tab to display
-     * @param integer $withtemplate 1 if is a template form
+     * @param int $tabnum number of the tab to display
+     * @param int $withtemplate 1 if is a template form
      * @return true
      */
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
@@ -129,7 +125,7 @@ class PluginGlpiinventoryIPRange_SNMPCredential extends CommonDBRelation
     /**
      * Get standard massive action forbidden (hide in massive action list)
      *
-     * @return array
+     * @return array<string>
      */
     public function getForbiddenStandardMassiveAction()
     {
@@ -143,10 +139,10 @@ class PluginGlpiinventoryIPRange_SNMPCredential extends CommonDBRelation
      * Display form
      *
      * @param CommonDBTM $item
-     * @param array $options
-     * @return boolean
+     * @param array<string,mixed> $options
+     * @return bool
      */
-    public function showItemForm(CommonDBTM $item, array $options = [])
+    public function showItemForm(CommonDBTM $item, array $options = []): bool
     {
 
         $ID = $item->getField('id');
@@ -183,15 +179,15 @@ class PluginGlpiinventoryIPRange_SNMPCredential extends CommonDBRelation
         echo "</tr>";
         echo "<tr class='tab_bg_2'>";
         echo "<td>";
-        Dropdown::show(SNMPCredential::getType(), ['used' => $a_used]);
+        Dropdown::show(SNMPCredential::class, ['used' => $a_used]);
         echo "</td>";
         echo "<td>";
         echo Html::hidden(
             'plugin_glpiinventory_ipranges_id',
             ['value' => $item->getID()]
         );
-        echo "<input type='submit' name='add' value=\"" .
-          _sx('button', 'Associate') . "\" class='submit'>";
+        echo "<input type='submit' name='add' value=\""
+          . _sx('button', 'Associate') . "\" class='submit'>";
         echo "</td>";
         echo "</tr>";
 
@@ -203,13 +199,13 @@ class PluginGlpiinventoryIPRange_SNMPCredential extends CommonDBRelation
         $rand = mt_rand();
 
         echo "<div class='spaced'>";
-        Html::openMassiveActionsForm('mass' . __CLASS__ . $rand);
-        $massiveactionparams = ['container' => 'mass' . __CLASS__ . $rand];
+        Html::openMassiveActionsForm('mass' . self::class . $rand);
+        $massiveactionparams = ['container' => 'mass' . self::class . $rand];
         Html::showMassiveActions($massiveactionparams);
 
         echo "<table class='tab_cadre_fixe'>";
         echo "<tr class='tab_bg_2'>";
-        echo "<th width='10'>" . Html::getCheckAllAsCheckbox('mass' . __CLASS__ . $rand) . "</th>";
+        echo "<th width='10'>" . Html::getCheckAllAsCheckbox('mass' . self::class . $rand) . "</th>";
         echo "<th>";
         echo __('SNMP credentials', 'glpiinventory');
         echo "</th>";
@@ -226,7 +222,7 @@ class PluginGlpiinventoryIPRange_SNMPCredential extends CommonDBRelation
             if ($credentials->getFromDB($data['snmpcredentials_id'])) {
                 echo "<tr class='tab_bg_2'>";
                 echo "<td>";
-                Html::showMassiveActionCheckBox(__CLASS__, $data["id"]);
+                Html::showMassiveActionCheckBox(self::class, $data["id"]);
                 echo "</td>";
                 echo "<td>";
                 echo $credentials->getLink();
@@ -245,5 +241,10 @@ class PluginGlpiinventoryIPRange_SNMPCredential extends CommonDBRelation
         Html::showMassiveActions($massiveactionparams);
         echo "</div>";
         return true;
+    }
+
+    public static function getIcon()
+    {
+        return SNMPCredential::getIcon();
     }
 }

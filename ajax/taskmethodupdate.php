@@ -31,8 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "taskmethodupdate.php")) {
-    include("../../../inc/includes.php");
+if (plugin_glpiinventory_script_endswith("taskmethodupdate.php")) {
     header("Content-Type: text/html; charset=UTF-8");
     Html::header_nocache();
 }
@@ -43,6 +42,6 @@ if (filter_input(INPUT_POST, "method") != '') {
     $pfTaskjob = new PluginGlpiinventoryTaskjob();
     $pfTaskjob->updateMethod(
         filter_input(INPUT_POST, "method"),
-        filter_input(INPUT_POST, "taskjobs_id")
+        (int) filter_input(INPUT_POST, "taskjobs_id")
     );
 }

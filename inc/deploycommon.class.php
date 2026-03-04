@@ -31,11 +31,11 @@
  * ---------------------------------------------------------------------
  */
 
-use Glpi\Toolbox\Sanitizer;
+use Safe\Exceptions\FilesystemException;
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use function Safe\fclose;
+use function Safe\fopen;
+use function Safe\json_decode;
 
 /**
  * Manage the prepare task job and give the data to the agent when request what
@@ -44,275 +44,10 @@ if (!defined('GLPI_ROOT')) {
 class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
 {
     /**
-     * Check if definition_type is present in definitions_filter array.
-     * This function returns true if the definition_type is not in
-     * definitions_filter array.
-     * If definitions_filter is NULL, this check is inhibited and return false.
-     *
-     * @param string $definition_type
-     * @param null|array $definitions_filter
-     * @return boolean
-     */
-    public function definitionFiltered($definition_type, $definitions_filter)
-    {
-        if (
-            is_array($definitions_filter)
-            && count($definitions_filter) > 0
-            && !in_array($definition_type, $definitions_filter)
-        ) {
-            return true;
-        }
-        return false;
-    }
-
-
-    /**
-     * Prepare a takjob, get all devices and put in taskjobstate each task
-     * for each device for each agent
-     *
-     * @global object $DB
-     * @param integer $taskjob_id id of the taskjob
-     * @param null|array $definitions_filter
-     */
-    public function prepareRun($taskjob_id, $definitions_filter = null)
-    {
-        global $DB;
-
-        $task       = new PluginGlpiinventoryTask();
-        $job        = new PluginGlpiinventoryTaskjob();
-        $joblog     = new PluginGlpiinventoryTaskjoblog();
-        $jobstate   = new PluginGlpiinventoryTaskjobstate();
-        $agent      = new Agent();
-        $agentmodule = new PluginGlpiinventoryAgentmodule();
-
-        $job->getFromDB($taskjob_id);
-        $task->getFromDB($job->fields['plugin_glpiinventory_tasks_id']);
-
-        $actions     = importArrayFromDB($job->fields['action']);
-        $definitions = importArrayFromDB($job->fields['definition']);
-        $taskvalid   = 0;
-
-        $computers = [];
-        foreach ($actions as $action) {
-            $itemtype = key($action);
-            $items_id = current($action);
-
-            switch ($itemtype) {
-                case 'Computer':
-                    if ($this->definitionFiltered("Computer", $definitions_filter)) {
-                        break;
-                    }
-                    $computers[] = $items_id;
-                    break;
-
-                case 'Group':
-                    if ($this->definitionFiltered("Group", $definitions_filter)) {
-                        break;
-                    }
-                    $computer_object = new Computer();
-
-                    //find computers by user associated with this group
-                    $group_users   = new Group_User();
-                    $group         = new Group();
-                    $group->getFromDB($items_id);
-
-                    $computers_a_1 = [];
-                    $computers_a_2 = [];
-
-                    $members = $group_users->getGroupUsers($items_id);
-
-                    foreach ($members as $member) {
-                        $computers = $computer_object->find(
-                            ['users_id'    => $member['id'],
-                                'is_deleted'  => 0,
-                                'is_template' => 0,
-                            ]
-                        );
-                        foreach ($computers as $computer) {
-                            $computers_a_1[] = $computer['id'];
-                        }
-                    }
-
-                    //find computers directly associated with this group
-                    $computers = $computer_object->find(
-                        ['groups_id'   => $items_id,
-                            'is_deleted'  => 0,
-                            'is_template' => 0,
-                        ]
-                    );
-                    foreach ($computers as $computer) {
-                        $computers_a_2[] = $computer['id'];
-                    }
-
-                    //merge two previous array and deduplicate entries
-                    $computers = array_unique(array_merge($computers_a_1, $computers_a_2));
-                    break;
-
-                case 'PluginGlpiinventoryDeployGroup':
-                    $group = new PluginGlpiinventoryDeployGroup();
-                    $group->getFromDB($items_id);
-
-                    switch ($group->getField('type')) {
-                        case 'STATIC':
-                            if ($this->definitionFiltered("PluginGlpiinventoryDeployGroupStatic", $definitions_filter)) {
-                                break;
-                            }
-                            $iterator = $DB->request([
-                                'SELECT' => 'items_id',
-                                'FROM'   => 'glpi_plugin_glpiinventory_deploygroups_staticdatas',
-                                'WHERE'  => [
-                                    'groups_id' => $items_id,
-                                    'itemtype'  => 'Computer',
-                                ],
-                            ]);
-                            foreach ($iterator as $row) {
-                                $computers[] = $row['items_id'];
-                            }
-                            break;
-                        case 'DYNAMIC':
-                            if ($this->definitionFiltered("PluginGlpiinventoryDeployGroupDynamic", $definitions_filter)) {
-                                break;
-                            }
-
-                            //$definitions_filter is NULL = update by crontask !
-                            $where = [];
-                            if ($definitions_filter != null) {
-                                $where['can_update_group'] = 1;
-                            }
-
-                            $iterator = $DB->request([
-                                'SELECT' => 'fields_array',
-                                'FROM'   => 'glpi_plugin_glpiinventory_deploygroups_dynamicdatas',
-                                'WHERE'  => [
-                                    'groups_id' => $items_id,
-                                ] + $where,
-                                'LIMIT'  => 1,
-                            ]);
-
-                            //No dynamic groups have been found : break
-                            if (count($iterator) == 0) {
-                                break;
-                            }
-                            $row = $iterator->current();
-
-                            $get_tmp = $_GET;
-                            if (isset($_SESSION["glpisearchcount"]['Computer'])) {
-                                unset($_SESSION["glpisearchcount"]['Computer']);
-                            }
-                            if (isset($_SESSION["glpisearchcount2"]['Computer'])) {
-                                unset($_SESSION["glpisearchcount2"]['Computer']);
-                            }
-
-                            $_GET = importArrayFromDB($row['fields_array']);
-
-                            $_GET["glpisearchcount"] = count($_GET['field']);
-                            if (isset($_GET['field2'])) {
-                                $_GET["glpisearchcount2"] = count($_GET['field2']);
-                            }
-
-                            $pfSearch = new Search();
-                            $glpilist_limit             = $_SESSION['glpilist_limit'];
-                            $_SESSION['glpilist_limit'] = 999999999;
-                            $search_params = Search::manageParams('Computer', $_GET);
-                            $results = Search::getDatas('Computer', $search_params);
-                            $_SESSION['glpilist_limit'] = $glpilist_limit;
-                            foreach ($results as $result) {
-                                $computers[] = $result['id'];
-                            }
-                            if (count($get_tmp) > 0) {
-                                $_GET = $get_tmp;
-                            }
-                            break;
-                    }
-                    break;
-            }
-        }
-
-        //Remove duplicatas from array
-        //We are using isset for faster processing than array_unique because we might have many
-        //entries in this list.
-        $tmp_computers = [];
-        foreach ($computers as $computer) {
-            if (!isset($tmp_computers[$computer])) {
-                $tmp_computers[$computer] = 1;
-            }
-        }
-        $computers = array_keys($tmp_computers);
-
-        $c_input = [];
-        $c_input['plugin_glpiinventory_taskjobs_id'] = $job->fields['id'];
-        $c_input['state']                              = 0;
-        $c_input['agents_id']   = 0;
-        $c_input['execution_id']                       = $task->fields['execution_id'];
-
-        $package = new PluginGlpiinventoryDeployPackage();
-
-        foreach ($computers as $computer_id) {
-            //Unique Id match taskjobstatuses for an agent(computer)
-
-            foreach ($definitions as $definition) {
-                $uniqid = uniqid();
-                $package->getFromDB($definition['PluginGlpiinventoryDeployPackage']);
-
-                $c_input['state']    = 0;
-                $c_input['itemtype'] = 'PluginGlpiinventoryDeployPackage';
-                $c_input['items_id'] = $package->fields['id'];
-                $c_input['date']     = date("Y-m-d H:i:s");
-                $c_input['uniqid']   = $uniqid;
-
-                //get agent for this computer
-                $agent->getFromDBByCrit(['itemtype' => 'Computer', 'items_id' => $computer_id]);
-                $agents_id = $agent->fields['id'] ?? false;
-                if ($agents_id === false) {
-                    $jobstates_id = $jobstate->add($c_input);
-                    $jobstate->changeStatusFinish(
-                        $jobstates_id,
-                        0,
-                        '',
-                        1,
-                        "No agent found for [[Computer::" . $computer_id . "]]"
-                    );
-                } else {
-                    if ($agentmodule->isAgentCanDo('DEPLOY', $agents_id)) {
-                        $c_input['agents_id'] = $agents_id;
-
-                        $jobstates_running = $jobstate->find(
-                            ['itemtype'                         => 'PluginGlpiinventoryDeployPackage',
-                                'items_id'                         => $package->fields['id'],
-                                'state'                            => ['!=', PluginGlpiinventoryTaskjobstate::FINISHED],
-                                'agents_id' => $agents_id,
-                            ]
-                        );
-
-                        if (count($jobstates_running) == 0) {
-                            $jobstates_id = $jobstate->add($c_input);
-
-                            //Add log of taskjob
-                            $c_input['plugin_glpiinventory_taskjobstates_id'] = $jobstates_id;
-                            $c_input['state'] = PluginGlpiinventoryTaskjoblog::TASK_PREPARED;
-                            $taskvalid++;
-                            $joblog->add($c_input);
-                            unset($c_input['state']);
-                            unset($c_input['agents_id']);
-                        }
-                    }
-                }
-            }
-        }
-        if ($taskvalid > 0) {
-            $job->fields['status'] = 1;
-            $job->update($job->fields);
-        } else {
-            $job->reinitializeTaskjobs($job->fields['plugin_glpiinventory_tasks_id']);
-        }
-    }
-
-
-    /**
      * run function, so return data to send to the agent for deploy
      *
      * @param PluginGlpiinventoryTaskjobstate $taskjobstate PluginGlpiinventoryTaskjobstate instance
-     * @return false|array
+     * @return false|array<string,mixed>
      */
     public function run($taskjobstate)
     {
@@ -329,7 +64,19 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
 
         //get order by type and package id
         $pfDeployPackage = new PluginGlpiinventoryDeployPackage();
-        $pfDeployPackage->getFromDB($taskjobstate->fields['items_id']);
+        if (!$pfDeployPackage->getFromDB($taskjobstate->fields['items_id'])) {
+            //entry no longer exists
+            trigger_error(
+                sprintf(
+                    'Item "%1$s" #%2$s does not exists in %3$s table.',
+                    $taskjobstate->fields['itemtype'],
+                    $taskjobstate->fields['items_id'],
+                    $pfDeployPackage->getTable()
+                ),
+                E_USER_WARNING
+            );
+            return false;
+        }
         //decode order data
         $order_data = json_decode($pfDeployPackage->fields['json'], true);
 
@@ -364,12 +111,14 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
             $manifest = PLUGIN_GLPI_INVENTORY_MANIFESTS_DIR . $hash;
             $order_files[$hash]['multiparts'] = [];
             if (file_exists($manifest)) {
-                $handle = fopen($manifest, "r");
-                if ($handle) {
+                try {
+                    $handle = fopen($manifest, "r");
                     while (($buffer = fgets($handle)) !== false) {
                         $order_files[$hash]['multiparts'][] = trim($buffer);
                     }
                     fclose($handle);
+                } catch (FilesystemException $e) {
+                    //empty catch
                 }
             }
         }
@@ -382,7 +131,7 @@ class PluginGlpiinventoryDeployCommon extends PluginGlpiinventoryCommunication
         if (isset($order_job['actions'])) {
             foreach ($order_job['actions'] as $key => $value) {
                 if (isset($value['cmd']) && isset($value['cmd']['exec'])) {
-                    $order_job['actions'][$key]['cmd']['exec'] = Sanitizer::unsanitize($value['cmd']['exec']);
+                    $order_job['actions'][$key]['cmd']['exec'] = $value['cmd']['exec'];
                 }
             }
         }

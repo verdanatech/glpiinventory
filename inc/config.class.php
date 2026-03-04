@@ -31,9 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use Glpi\Application\View\TemplateRenderer;
 
 /**
  * Manage the configuration of the plugin.
@@ -43,7 +41,7 @@ class PluginGlpiinventoryConfig extends CommonDBTM
     /**
      * Initialize the displaylist public variable
      *
-     * @var boolean
+     * @var bool
      */
     public $displaylist = false;
 
@@ -57,14 +55,14 @@ class PluginGlpiinventoryConfig extends CommonDBTM
     /**
      * Define number to the action 'clean' of agents
      *
-     * @var integer
+     * @var int
      */
     public const ACTION_CLEAN = 0;
 
     /**
      * Define number to the action 'change status' of agents
      *
-     * @var integer
+     * @var int
      */
     public const ACTION_STATUS = 1;
 
@@ -72,10 +70,10 @@ class PluginGlpiinventoryConfig extends CommonDBTM
     /**
      * Initialize config values of  plugin
      *
-     * @param boolean $getOnly
-     * @return array
+     * @param bool $getOnly
+     * @return array<string,string|int>
      */
-    public function initConfigModule($getOnly = false)
+    public function initConfigModule(bool $getOnly = false): array
     {
 
         $pfSetup  = new PluginGlpiinventorySetup();
@@ -83,12 +81,12 @@ class PluginGlpiinventoryConfig extends CommonDBTM
         $input    = [];
 
         $input['version']                = PLUGIN_GLPIINVENTORY_VERSION;
-        $input['ssl_only']               = '0';
-        $input['delete_task']            = '20';
-        $input['agent_port']             = '62354';
-        $input['extradebug']             = '0';
+        $input['ssl_only']               = 0;
+        $input['delete_task']            = 20;
+        $input['agent_port']             = 62354;
+        $input['extradebug']             = 0;
         $input['users_id']               = $users_id;
-        $input['wakeup_agent_max']       = '10';
+        $input['wakeup_agent_max']       = 10;
 
         $input['import_software']        = 1;
         $input['import_volume']          = 1;
@@ -140,7 +138,7 @@ class PluginGlpiinventoryConfig extends CommonDBTM
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -153,28 +151,21 @@ class PluginGlpiinventoryConfig extends CommonDBTM
     /**
      * Add multiple configuration values
      *
-     * @param array $values configuration values, indexed by name
-     * @param boolean $update say if add or update in database
+     * @param array<string,int|string> $values configuration values, indexed by name
+     * @param bool $update say if add or update in database
      */
-    public function addValues($values, $update = true)
+    public function addValues(array $values, bool $update = true): void
     {
 
         foreach ($values as $type => $value) {
             if ($this->getValue($type) === null) {
                 $this->addValue($type, $value);
-            } elseif ($update == true) {
+            } elseif ($update) {
                 $this->updateValue($type, $value);
             }
         }
     }
 
-
-    /**
-     * Define tabs to display on form page
-     *
-     * @param array $options
-     * @return array containing the tabs name
-     */
     public function defineTabs($options = [])
     {
 
@@ -182,13 +173,13 @@ class PluginGlpiinventoryConfig extends CommonDBTM
 
         $ong        = [];
         $moduleTabs = [];
-        $this->addStandardTab("PluginGlpiinventoryConfig", $ong, $options);
-        $this->addStandardTab("PluginGlpiinventoryAgentmodule", $ong, $options);
+        $this->addStandardTab(PluginGlpiinventoryConfig::class, $ong, $options);
+        $this->addStandardTab(PluginGlpiinventoryAgentmodule::class, $ong, $options);
 
         if (isset($_SESSION['glpi_plugin_glpiinventory']['configuration']['moduletabforms'])) {
             $plugin_tabs = $ong;
-            $moduleTabForms =
-                  $_SESSION['glpi_plugin_glpiinventory']['configuration']['moduletabforms'];
+            $moduleTabForms
+                  = $_SESSION['glpi_plugin_glpiinventory']['configuration']['moduletabforms'];
             if (count($moduleTabForms)) {
                 foreach ($moduleTabForms as $module => $form) {
                     if ($plugin->isActivated($module)) {
@@ -202,36 +193,19 @@ class PluginGlpiinventoryConfig extends CommonDBTM
         return $ong;
     }
 
-
-    /**
-     * Get the tab name used for item
-     *
-     * @param CommonGLPI $item the item object
-     * @param integer $withtemplate 1 if is a template form
-     * @return string|array name of the tab
-     */
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
 
-        if ($item->getType() == __CLASS__) {
+        if ($item instanceof self) {
             return [
-                __('General setup'),
-                __('Network Inventory', 'glpiinventory'),
-                __('Package management', 'glpiinventory'),
+                self::createTabEntry(__('General setup'), 0, icon: 'ti ti-settings'),
+                self::createTabEntry(__('Network Inventory', 'glpiinventory'), 0, icon: 'ti ti-network'),
+                self::createTabEntry(__('Package management', 'glpiinventory'), 0, icon: 'ti ti-package'),
             ];
         }
         return '';
     }
 
-
-    /**
-     * Display the content of the tab
-     *
-     * @param CommonGLPI $item
-     * @param integer $tabnum number of the tab to display
-     * @param integer $withtemplate 1 if is a template form
-     * @return boolean
-     */
     public static function displayTabContentForItem($item, $tabnum = 1, $withtemplate = 0)
     {
         /** @var PluginGlpiinventoryConfig $item */
@@ -255,12 +229,12 @@ class PluginGlpiinventoryConfig extends CommonDBTM
     /**
      * Get configuration value with name
      *
-     * @global array $PF_CONFIG
      * @param string $name name in configuration
-     * @return null|string|integer
+     * @return null|string|int
      */
-    public function getValue($name)
+    public function getValue(string $name): string|int|null
     {
+        /** @var array<string,string|int> $PF_CONFIG */
         global $PF_CONFIG;
 
         if (isset($PF_CONFIG[$name])) {
@@ -268,10 +242,7 @@ class PluginGlpiinventoryConfig extends CommonDBTM
         }
 
         $config = current($this->find(['type' => $name]));
-        if (isset($config['value'])) {
-            return $config['value'];
-        }
-        return null;
+        return $config['value'] ?? null;
     }
 
 
@@ -279,9 +250,11 @@ class PluginGlpiinventoryConfig extends CommonDBTM
      * Give state of a config field for plugin
      *
      * @param string $name name in configuration
-     * @return boolean
+     * @return bool
+     * @used-by templates/forms/config/main.html.twig
+     * @used-by templates/forms/config/deploy.html.twig
      */
-    public function isFieldActive($name)
+    public function isFieldActive(string $name): bool
     {
         if (!($this->getValue($name))) {
             return false;
@@ -290,87 +263,22 @@ class PluginGlpiinventoryConfig extends CommonDBTM
         }
     }
 
-
-    /**
-     * Display form
-     *
-     * @param array $options
-     * @return true
-     */
-    public function showConfigForm($options = [])
+    public function showConfigForm(): void
     {
-
-        $this->showFormHeader($options);
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('SSL-only for agent', 'glpiinventory') . "</td>";
-        echo "<td width='20%'>";
-        Dropdown::showYesNo("ssl_only", $this->isFieldActive('ssl_only'));
-        echo "</td>";
-        echo "</tr>";
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Delete tasks logs after', 'glpiinventory') . "</td>";
-        echo "<td>";
-        Dropdown::showNumber(
-            "delete_task",
-            [
-                'value' => $this->getValue('delete_task'),
-                'min'   => 1,
-                'max'   => 240,
-                'unit'  => 'day',
-            ]
-        );
-        echo "</td>";
-
-        echo "<td>" . __('Agent port', 'glpiinventory') . "</td>";
-        echo "<td>";
-        echo "<input type='text' class='form-control' name='agent_port' value='" . $this->getValue('agent_port') . "'/>";
-        echo "</td>";
-        echo "</tr>";
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Extra-debug', 'glpiinventory') . "</td>";
-        echo "<td>";
-        Dropdown::showYesNo("extradebug", $this->isFieldActive('extradebug'));
-        echo "</td>";
-
-        echo "<td>" . __('Re-prepare successful jobs', 'glpiinventory') . "</td>";
-        echo "<td>";
-        Dropdown::showYesNo("reprepare_job", $this->isFieldActive('reprepare_job'));
-        echo "</td>";
-        echo "</tr>";
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td colspan =2></td>";
-        echo "<td>" . __('Maximum number of agents to wake up in a task', 'glpiinventory') . "</td>";
-        echo "<td width='20%'>";
-        Dropdown::showNumber(
-            "wakeup_agent_max",
-            [
-                'value' => $this->getValue('wakeup_agent_max'),
-                'min' => 1,
-                'max' => 100,
-            ]
-        );
-        echo "</td>";
-
-        echo "</tr>";
-
-        $options['candel'] = false;
-        $this->showFormButtons($options);
-
-        return true;
+        TemplateRenderer::getInstance()->display('@glpiinventory/forms/config/main.html.twig', [
+            'canedit' => true,
+            'item' => $this,
+        ]);
     }
 
 
     /**
      * Get the action for agent action
      *
-     * @param integer $action
+     * @param int $action
      * @return string
      */
-    public static function getActions($action)
+    public static function getActions(int $action): string
     {
         switch ($action) {
             case self::ACTION_STATUS:
@@ -386,147 +294,40 @@ class PluginGlpiinventoryConfig extends CommonDBTM
 
     /**
      * Display form for tab 'Network inventory'
-     *
-     * @param array $options
-     * @return true
      */
-    public static function showFormNetworkInventory($options = [])
+    public function showFormNetworkInventory(): void
     {
-        global $CFG_GLPI;
-
-        $pfConfig     = new PluginGlpiinventoryConfig();
-        $pfsnmpConfig = new self();
-
-        $pfsnmpConfig->fields['id'] = 1;
-        $pfsnmpConfig->showFormHeader($options);
-
-        echo "<tr>";
-        echo "<th colspan='4'>";
-        echo __('Network options', 'glpiinventory');
-        echo "</th>";
-        echo "</tr>";
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('Threads number', 'glpiinventory') . "&nbsp;" .
-              "(" . strtolower(__('Network discovery', 'glpiinventory')) . ")</td>";
-        echo "<td align='center'>";
-        Dropdown::showNumber("threads_networkdiscovery", [
-            'value' => $pfConfig->getValue('threads_networkdiscovery'),
-            'min'   => 1,
-            'max'   => 400,
+        TemplateRenderer::getInstance()->display('@glpiinventory/forms/config/netinv.html.twig', [
+            'canedit' => true,
+            'item' => $this,
         ]);
-        echo "</td>";
-
-        echo "<td>" . __('Threads number', 'glpiinventory') . "&nbsp;" .
-              "(" . strtolower(__('Network inventory (SNMP)', 'glpiinventory')) . ")</td>";
-        echo "<td align='center'>";
-        Dropdown::showNumber("threads_networkinventory", [
-            'value' => $pfConfig->getValue('threads_networkinventory'),
-            'min'   => 1,
-            'max'   => 400,
-        ]);
-        echo "</td>";
-        echo "</tr>";
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>" . __('SNMP timeout', 'glpiinventory') . "&nbsp;" .
-              "(" . strtolower(__('Network discovery', 'glpiinventory')) . ")</td>";
-        echo "<td align='center'>";
-        Dropdown::showNumber("timeout_networkdiscovery", [
-            'value' => $pfConfig->getValue('timeout_networkdiscovery'),
-            'min'   => 1,
-            'max'   => 60,
-        ]);
-        echo "</td>";
-        echo "<td>" . __('SNMP timeout', 'glpiinventory') . "&nbsp;" .
-              "(" . strtolower(__('Network inventory (SNMP)', 'glpiinventory')) . ")</td>";
-        echo "<td align='center'>";
-        Dropdown::showNumber("timeout_networkinventory", [
-            'value' => $pfConfig->getValue('timeout_networkinventory'),
-            'min'   => 1,
-            'max'   => 60,
-        ]);
-        echo "</td>";
-        echo "</tr>";
-
-        $options['candel'] = false;
-        $pfsnmpConfig->showFormButtons($options);
-
-        return true;
     }
 
 
     /**
      * Display form for tab 'Deploy'
-     *
-     * @param array $options
-     * @return true
      */
-    public static function showFormDeploy($options = [])
+    public function showFormDeploy(): void
     {
-
-        $pfConfig = new PluginGlpiinventoryConfig();
-        $pfConfig->fields['id'] = 1;
-        $options['colspan'] = 1;
-        $pfConfig->showFormHeader($options);
-
-        echo "<tr>";
-        echo "<td>" . __('Use this GLPI server as a mirror server', 'glpiinventory') . "</td>";
-        echo "<td>";
-        Dropdown::showYesNo("server_as_mirror", $pfConfig->getValue('server_as_mirror'));
-        echo "</td>";
-        echo "</tr>";
-
-        echo "<tr>";
-        echo "<td>" . __('Match mirrors to agents', 'glpiinventory') . "</td>";
-        echo "<td>";
-        $mirror_options = [
-            PluginGlpiinventoryDeployMirror::MATCH_LOCATION => __('with location', 'glpiinventory'),
-            PluginGlpiinventoryDeployMirror::MATCH_ENTITY   => __('with entity', 'glpiinventory'),
-            PluginGlpiinventoryDeployMirror::MATCH_BOTH     => __('with both', 'glpiinventory'),
-        ];
-        Dropdown::showFromArray(
-            'mirror_match',
-            $mirror_options,
-            ['value' => $pfConfig->getValue('mirror_match')]
-        );
-        echo "</td>";
-        echo "</tr>";
-
-        echo "<tr>";
-        echo "<td>" . __('Delete successful on demand tasks after (in days)', 'glpiinventory') . "</td>";
-        echo "<td width='20%'>";
-        $toadd = [-1 => __('Never')];
-        Dropdown::showNumber("clean_on_demand_tasks", [
-            'value' => $pfConfig->getValue('clean_on_demand_tasks'),
-            'min'   => 1,
-            'max'   => 1000,
-            'toadd' => $toadd,
+        TemplateRenderer::getInstance()->display('@glpiinventory/forms/config/deploy.html.twig', [
+            'canedit' => true,
+            'item' => $this,
+            'mirror_values' => [
+                PluginGlpiinventoryDeployMirror::MATCH_LOCATION => __('with location', 'glpiinventory'),
+                PluginGlpiinventoryDeployMirror::MATCH_ENTITY   => __('with entity', 'glpiinventory'),
+                PluginGlpiinventoryDeployMirror::MATCH_BOTH     => __('with both', 'glpiinventory'),
+            ],
         ]);
-        echo "</td>";
-        echo "</tr>";
-
-        $options['candel'] = false;
-        $pfConfig->showFormButtons($options);
-
-        return true;
     }
 
 
     /**
      * Add name + value in configuration if not exist
-     *
-     * @param string $name
-     * @param string $value
-     * @return integer|false integer is the id of this configuration name
      */
-    public function addValue($name, $value)
+    private function addValue(string $name, string|int $value): void
     {
-        $existing_value = $this->getValue($name);
-        if (!is_null($existing_value)) {
-            return $existing_value;
-        } else {
-            return $this->add(['type'  => $name,
+        if (is_null($this->getValue($name))) {
+            $this->add(['type'  => $name,
                 'value' => $value,
             ]);
         }
@@ -537,11 +338,12 @@ class PluginGlpiinventoryConfig extends CommonDBTM
      * Update configuration value
      *
      * @param string $name name of configuration
-     * @param string $value
-     * @return boolean
+     * @param string|int $value
+     * @return bool
      */
-    public function updateValue($name, $value)
+    public function updateValue(string $name, string|int $value): bool
     {
+        /** @var array<string,string|int> $PF_CONFIG */
         global $PF_CONFIG;
 
         // retrieve current config
@@ -566,7 +368,7 @@ class PluginGlpiinventoryConfig extends CommonDBTM
     /**
      * Check if extradebug mode is active
      *
-     * @return null|integer the integer is 1 or 0 (it's like boolean)
+     * @return null|int the integer is 1 or 0 (it's like boolean)
      */
     public static function isExtradebugActive()
     {
@@ -574,36 +376,16 @@ class PluginGlpiinventoryConfig extends CommonDBTM
         return $fConfig->getValue('extradebug');
     }
 
-
-    /**
-     * Log when extra-debug is activated
-     *
-     * @param string $file name of log file to update
-     * @param string|string[] $message the message to put in log file
-     */
-    public static function logIfExtradebug($file, $message)
-    {
-        if (self::isExtradebugActive()) {
-            if (is_array($message)) {
-                $message = print_r($message, true);
-            }
-            Toolbox::logInFile($file, $message);
-        }
-    }
-
-
     /**
      * Load all configuration in global variable $PF_CONFIG
      *
      * Test if table exists before loading cache
      * The only case where table doesn't exist is when you click on
      * uninstall the plugin and it's already uninstalled
-     *
-     * @global object $DB
-     * @global array $PF_CONFIG
      */
-    public static function loadCache()
+    public static function loadCache(): void
     {
+        /** @var array<string,string|int> $PF_CONFIG */
         global $DB, $PF_CONFIG;
 
         if ($DB->tableExists('glpi_plugin_glpiinventory_configs')) {
@@ -613,5 +395,10 @@ class PluginGlpiinventoryConfig extends CommonDBTM
                 $PF_CONFIG[$data['type']] = $data['value'];
             }
         }
+    }
+
+    public static function getIcon()
+    {
+        return "ti ti-settings";
     }
 }

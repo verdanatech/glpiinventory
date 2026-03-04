@@ -31,12 +31,11 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 Session::checkLoginUser();
 
 Html::header(
     __('Mirror servers'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "deploymirror"
@@ -44,5 +43,5 @@ Html::header(
 
 PluginGlpiinventoryMenu::displayMenu("mini");
 
-Search::show('PluginGlpiinventoryDeployMirror');
+Search::show(PluginGlpiinventoryDeployMirror::class);
 Html::footer();

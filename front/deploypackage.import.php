@@ -31,7 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 
 Session::checkLoginUser();
 
@@ -39,7 +38,7 @@ Session::checkRight('plugin_glpiinventory_package', CREATE);
 
 Html::header(
     __('GLPI Inventory DEPLOY'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "deploypackage"

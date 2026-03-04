@@ -31,9 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use Glpi\Application\View\TemplateRenderer;
 
 /**
  * Manage the wmi information found by the collect module of agent.
@@ -41,21 +39,21 @@ if (!defined('GLPI_ROOT')) {
 
 class PluginGlpiinventoryCollect_Wmi_Content extends PluginGlpiinventoryCollectContentCommon
 {
-    public $collect_itemtype = 'PluginGlpiinventoryCollect_Wmi';
-    public $collect_table    = 'glpi_plugin_glpiinventory_collects_wmis';
+    public string $collect_itemtype = PluginGlpiinventoryCollect_Wmi::class;
+    public string $collect_table    = 'glpi_plugin_glpiinventory_collects_wmis';
 
-    public $collect_type = 'wmi';
+    public string $collect_type = 'wmi';
 
     /**
      * update wmi data to compute (add and update) with data sent by the agent
      *
-     * @global object $DB
-     * @param integer $computers_id id of the computer
-     * @param array $wmi_data
-     * @param integer $collects_wmis_id
+     * @param int $computers_id id of the computer
+     * @param array<string,mixed> $wmi_data
+     * @param int $collects_wmis_id
      */
-    public function updateComputer($computers_id, $wmi_data, $collects_wmis_id)
+    public function updateComputer($computers_id, $wmi_data, $collects_wmis_id): void
     {
+        /** @var DBmysql $DB */
         global $DB;
 
         $db_wmis = [];
@@ -72,8 +70,7 @@ class PluginGlpiinventoryCollect_Wmi_Content extends PluginGlpiinventoryCollectC
         foreach ($iterator as $data) {
             $wmi_id = $data['id'];
             unset($data['id']);
-            $data1 = Toolbox::addslashes_deep($data);
-            $db_wmis[$wmi_id] = $data1;
+            $db_wmis[$wmi_id] = $data;
         }
 
         unset($wmi_data['_sid']);
@@ -92,7 +89,7 @@ class PluginGlpiinventoryCollect_Wmi_Content extends PluginGlpiinventoryCollectC
             }
         }
 
-        foreach ($db_wmis as $id => $data) {
+        foreach (array_keys($db_wmis) as $id) {
             $this->delete(['id' => $id], true);
         }
         foreach ($wmi_data as $key => $value) {
@@ -109,9 +106,9 @@ class PluginGlpiinventoryCollect_Wmi_Content extends PluginGlpiinventoryCollectC
     /**
      * Display wmi information of computer
      *
-     * @param integer $computers_id id of computer
+     * @param int $computers_id id of computer
      */
-    public function showForComputer($computers_id)
+    public function showForComputer(int $computers_id): void
     {
 
         $pfCollect_Wmi = new PluginGlpiinventoryCollect_Wmi();
@@ -152,47 +149,49 @@ class PluginGlpiinventoryCollect_Wmi_Content extends PluginGlpiinventoryCollectC
     /**
      * Display wmi information of collect_wmi_id
      *
-     * @param integer $collects_wmis_id
+     * @param int $id
+     *
+     * @return void
      */
-    public function showContent($collects_wmis_id)
+    public function showContent(int $id): void
     {
-        $pfCollect_Wmi = new PluginGlpiinventoryCollect_Wmi();
+        $collect_wmi = new PluginGlpiinventoryCollect_Wmi();
         $computer = new Computer();
+        $collect_wmi->getFromDB($id);
 
-        $pfCollect_Wmi->getFromDB($collects_wmis_id);
-
-        echo "<table class='tab_cadre_fixe'>";
-
-        echo "<tr>";
-        echo "<th colspan='3'>";
-        echo $pfCollect_Wmi->fields['class'];
-        echo "</th>";
-        echo "</tr>";
-
-        echo "<tr>";
-        echo "<th>" . __('Computer') . "</th>";
-        echo "<th>" . __('Property', 'glpiinventory') . "</th>";
-        echo "<th>" . __('Value', 'glpiinventory') . "</th>";
-        echo "</tr>";
-
-        $a_data = $this->find(
-            ['plugin_glpiinventory_collects_wmis_id' => $collects_wmis_id],
+        $data = $this->find(
+            ['plugin_glpiinventory_collects_wmis_id' => $id],
             ['property']
         );
-        foreach ($a_data as $data) {
-            echo "<tr class='tab_bg_1'>";
-            echo '<td>';
-            $computer->getFromDB($data['computers_id']);
-            echo $computer->getLink();
-            echo '</td>';
-            echo '<td>';
-            echo $data['property'];
-            echo '</td>';
-            echo '<td>';
-            echo $data['value'];
-            echo '</td>';
-            echo "</tr>";
+        $entries = [];
+        foreach ($data as $row) {
+            $computer->getFromDB($row['computers_id']);
+            $entry = [
+                'computer' => $computer->getLink(),
+                'property' => $row['property'],
+                'value'     => $row['value'],
+            ];
+            $entries[] = $entry;
         }
-        echo '</table>';
+
+        echo '<div class="card">
+            <div class="card-body">
+                <h3 class="card-title">' . $collect_wmi->fields['name'] . ' - ' . $collect_wmi->fields['class'] . '</h3>';
+        TemplateRenderer::getInstance()->display('components/datatable.html.twig', [
+            'is_tab' => true,
+            'nofilter' => true,
+            'columns' => [
+                'computer' => Computer::getTypeName(1),
+                'property' => __('Property', 'glpiinventory'),
+                'value' => __('Value', 'glpiinventory'),
+            ],
+            'formatters' => [
+                'computer' => 'raw_html',
+            ],
+            'entries' => $entries,
+            'total_number' => count($entries),
+            'filtered_number' => count($entries),
+        ]);
+        echo '</div></div>';
     }
 }

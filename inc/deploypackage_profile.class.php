@@ -31,10 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
  * Manage the visibility of package by profile.
  */
@@ -45,7 +41,7 @@ class PluginGlpiinventoryDeployPackage_Profile extends CommonDBRelation
      *
      * @var string
      */
-    public static $itemtype_1          = 'PluginGlpiinventoryDeployPackage';
+    public static $itemtype_1          = PluginGlpiinventoryDeployPackage::class;
 
     /**
      * id field name for the first part of relation
@@ -59,7 +55,7 @@ class PluginGlpiinventoryDeployPackage_Profile extends CommonDBRelation
      *
      * @var string
      */
-    public static $itemtype_2          = 'Profile';
+    public static $itemtype_2          = Profile::class;
 
     /**
      * id field name for the second part of relation
@@ -71,14 +67,14 @@ class PluginGlpiinventoryDeployPackage_Profile extends CommonDBRelation
     /**
      * Set we don't check parent right of the second item
      *
-     * @var integer
+     * @var self::DONT_CHECK_ITEM_RIGHTS|self::HAVE_VIEW_RIGHT_ON_ITEM|self::HAVE_SAME_RIGHT_ON_ITEM
      */
     public static $checkItem_2_Rights  = self::DONT_CHECK_ITEM_RIGHTS;
 
     /**
      * Logs for the second item are disabled
      *
-     * @var boolean
+     * @var bool
      */
     public static $logs_for_item_2     = false;
 
@@ -86,12 +82,12 @@ class PluginGlpiinventoryDeployPackage_Profile extends CommonDBRelation
     /**
      * Get profiles for a deploypackage
      *
-     * @global object $DB
-     * @param integer $deploypackages_id ID of the deploypackage
-     * @return array list of profiles linked to a deploypackage
+     * @param int $deploypackages_id ID of the deploypackage
+     * @return array<int,mixed> list of profiles linked to a deploypackage
     **/
     public static function getProfiles($deploypackages_id)
     {
+        /** @var DBmysql $DB */
         global $DB;
 
         $prof  = [];

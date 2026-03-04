@@ -31,7 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 
 $pfTask = new PluginGlpiinventoryTask();
 
@@ -40,7 +39,7 @@ $pfTask->submitForm($_REQUEST);
 
 Html::header(
     __('GLPI Inventory', 'glpiinventory'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "task"
@@ -48,7 +47,7 @@ Html::header(
 
 // Manage forcetab : non standard system (file name <> class name)
 if (isset($_GET['forcetab'])) {
-    Session::setActiveTab('PluginGlpiinventoryTask', $_GET['forcetab']);
+    Session::setActiveTab(PluginGlpiinventoryTask::class, $_GET['forcetab']);
     unset($_GET['forcetab']);
 }
 

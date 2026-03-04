@@ -31,12 +31,11 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 Session::checkLoginUser();
 
 Html::header(
     _n('User interaction template', 'User interaction templates', 1, 'glpiinventory'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "deployuserinteractiontemplate"
@@ -45,6 +44,6 @@ Html::header(
 
 PluginGlpiinventoryMenu::displayMenu("mini");
 
-Search::show('PluginGlpiinventoryDeployUserinteractionTemplate');
+Search::show(PluginGlpiinventoryDeployUserinteractionTemplate::class);
 
 Html::footer();

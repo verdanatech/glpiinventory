@@ -31,9 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use function Safe\strtotime;
 
 /**
  * Manage the wake up the agents remotely.
@@ -51,7 +49,7 @@ class PluginGlpiinventoryAgentWakeup extends CommonDBTM
     /**
      * Get cron task's description
      *
-     * @return array
+     * @return array<string, string>
      */
     public static function cronInfo(): array
     {
@@ -64,7 +62,7 @@ class PluginGlpiinventoryAgentWakeup extends CommonDBTM
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -76,9 +74,9 @@ class PluginGlpiinventoryAgentWakeup extends CommonDBTM
     /**
      * Check if can wake up an agent
      *
-     * @return true
+    * @return bool
      */
-    public static function canCreate()
+    public static function canCreate(): bool
     {
         return true;
     }
@@ -93,12 +91,13 @@ class PluginGlpiinventoryAgentWakeup extends CommonDBTM
     /**
      * Cron task: wake up agents. Configuration is in each tasks
      *
-     * @global object $DB
-     * @param object $crontask
-     * @return boolean true if successfully, otherwise false
+     * @param CronTask $crontask
+     *
+     * @return bool
      */
-    public static function cronWakeupAgents($crontask)
+    public static function cronWakeupAgents($crontask): bool
     {
+        /** @var DBmysql $DB */
         global $DB;
 
         $wakeupArray       = [];
@@ -118,9 +117,9 @@ class PluginGlpiinventoryAgentWakeup extends CommonDBTM
             'plugin_glpiinventory_timeslots_exec_id'   => 0,
         ];
         if (!empty($timeslots)) {
-            array_push($query_timeslots, [
+            $query_timeslots[] = [
                 'plugin_glpiinventory_timeslots_exec_id' => $timeslots,
-            ]);
+            ];
         }
         //Get all active task requiring an agent wakeup
         //Check all tasks without timeslot or task with a current active timeslot
@@ -138,7 +137,7 @@ class PluginGlpiinventoryAgentWakeup extends CommonDBTM
         ]);
 
         foreach ($iterator as $task) {
-            if (!is_null($task['wakeup_agent_time'])) {
+            if (!is_null($task['wakeup_agent_time']) && !is_null($task['last_agent_wakeup'])) {
                 //Do not wake up is last wake up in inferior to the minimum wake up interval
                 $interval   = time() - strtotime($task['last_agent_wakeup']);
                 if ($interval < ($task['wakeup_agent_time'] * MINUTE_TIMESTAMP)) {
@@ -208,8 +207,8 @@ class PluginGlpiinventoryAgentWakeup extends CommonDBTM
 
         //Number of agents successfully woken up
         $wokeup = 0;
-        if (!empty($tasks)) {
-            //Update last wake up time each task
+        if ($tasks !== []) {
+            //Update last wake-up time each task
             $DB->update(
                 'glpi_plugin_glpiinventory_tasks',
                 [
@@ -235,10 +234,8 @@ class PluginGlpiinventoryAgentWakeup extends CommonDBTM
 
     /**
      * Send a request to the remote agent to run now
-     *
-     * @return boolean true if send successfully, otherwise false
      */
-    public static function wakeUp(Agent $agent)
+    public static function wakeUp(Agent $agent): bool
     {
         try {
             $agent->requestAgent('now');

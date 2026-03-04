@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## [1.5.7] - 2026-02-18
+
+- Remove the `Cancel Job` button for 'self-deploy' users, as they do not have the necessary permissions.
+
+## [1.5.6] - 2025-11-28
+
+- Fix ajax scripts inclusion paths
+
+## [1.5.5] - 2025-11-25
+
+### Fixed
+
+- Fix SQL error when deploy target option used is 'No restriction' defined with `-1`
+- Migrate dynamic group search from serialized to JSON format
+
 ## [1.5.4] - 2025-09-19
 
 - PHP 8.5 compatibility

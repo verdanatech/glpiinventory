@@ -1147,7 +1147,7 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
             Ajax::updateItemOnSelectEvent(
                 "dropdown__type" . $addrand,
                 "visibility$rand",
-                $CFG_GLPI["root_doc"] . "/ajax/visibility.php",
+                Plugin::getWebDir('glpiinventory') . "/ajax/visibility.php",
                 $params
             );
 
@@ -1492,15 +1492,6 @@ class PluginGlpiinventoryDeployPackage extends CommonDBTM
                                  title='" . __("Restart job", 'glpiinventory') . "'
                                  id='restart_run_$taskjob_id'>
                               <i class='fa fa-bolt'></i></a>";
-                            }
-
-                            // if job has not started, user can cancel it
-                            if ($package_info['last_taskjobstate']['state'] == "agents_prepared") {
-                                echo "<a class='cancel btn'
-                                 href='#'
-                                 title='" . __("Cancel job", 'glpiinventory') . "'
-                                 id='cancel_run_$taskjob_id'>
-                              <i class='fa fa-stop'></i></a>";
                             }
 
                             // permits to "soft" refresh

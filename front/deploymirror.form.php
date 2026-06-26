@@ -31,12 +31,11 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 Session::checkLoginUser();
 
 Html::header(
     __('Mirror servers'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "deploymirror"
@@ -58,7 +57,7 @@ if (isset($_POST["add"])) {
     Html::back();
 } elseif (isset($_POST["delete"])) {
     $mirror->delete($_POST);
-    Html::redirect(Toolbox::getItemTypeFormURL('PluginGlpiinventoryDeployMirror'));
+    Html::redirect(Toolbox::getItemTypeFormURL(PluginGlpiinventoryDeployMirror::class));
 }
 
 $id = "";

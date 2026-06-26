@@ -30,10 +30,11 @@
  * along with GLPI Inventory Plugin. If not, see <https://www.gnu.org/licenses/>.
  * ---------------------------------------------------------------------
  */
+use Safe\Exceptions\FilesystemException;
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use function Safe\fclose;
+use function Safe\fopen;
+use function Safe\ini_get;
 
 /**
  * Manage the communication in REST with the agents.
@@ -43,8 +44,8 @@ class PluginGlpiinventoryCommunicationRest
     /**
      * Manage communication between agent and server
      *
-     * @param array $params
-     * @return array|false array return jobs ready for the agent
+     * @param array<string,mixed> $params
+     * @return array<string,mixed>|false array return jobs ready for the agent
      */
     public static function communicate($params = [])
     {
@@ -78,8 +79,8 @@ class PluginGlpiinventoryCommunicationRest
     /**
      * Get configuration for an agent and for modules requested
      *
-     * @param array $params
-     * @return array
+     * @param array<string,mixed> $params
+     * @return array<string,mixed>
      */
     public static function getConfigByAgent($params = [])
     {
@@ -90,23 +91,23 @@ class PluginGlpiinventoryCommunicationRest
             $a_agent       = $params['agent']->fields;
 
             foreach (array_keys($params['task']) as $task) {
-                foreach (PluginGlpiinventoryStaticmisc::getmethods() as $method) {
-                    switch (strtolower($task)) {
-                        case 'deploy':
-                            $classname = 'PluginGlpiinventoryDeployPackage';
-                            break;
-                        case 'esx':
-                            $classname = 'PluginGlpiinventoryCredentialIp';
-                            break;
-                        case 'collect':
-                            $classname = 'PluginGlpiinventoryCollect';
-                            break;
-                        default:
-                            $classname = '';
-                    }
+                switch (strtolower($task)) {
+                    case 'deploy':
+                        $classname = PluginGlpiinventoryDeployPackage::class;
+                        break;
+                    case 'esx':
+                        $classname = PluginGlpiinventoryCredentialIp::class;
+                        break;
+                    case 'collect':
+                        $classname = PluginGlpiinventoryCollect::class;
+                        break;
+                    default:
+                        $classname = '';
+                }
 
+                foreach (PluginGlpiinventoryStaticmisc::getmethods() as $method) {
                     $taskname = $method['method'];
-                    if (strstr($taskname, 'deploy')) {
+                    if (str_contains($taskname, 'deploy')) {
                         $taskname = $method['task'];
                     }
                     $class = PluginGlpiinventoryStaticmisc::getStaticMiscClass($method['module']);
@@ -128,8 +129,7 @@ class PluginGlpiinventoryCommunicationRest
                         * Since migration, there is only one plugin in one directory
                         * It's maybe time to redo this function -- kiniou
                         */
-                        $schedule[]
-                        = call_user_func(
+                        $schedule[] = call_user_func(
                             [$class, self::getMethodForParameters($task)],
                             $a_agent['entities_id']
                         );
@@ -148,7 +148,7 @@ class PluginGlpiinventoryCommunicationRest
      * to fully support agent REST API for every task's types
      *       -- kiniou
      *
-     * @param array $params
+     * @param array<string,mixed> $params
      * @return false
      */
     public static function getJobsByAgent($params = [])
@@ -167,7 +167,7 @@ class PluginGlpiinventoryCommunicationRest
     /**
      * Send to the agent an OK code
      */
-    public static function sendOk()
+    public static function sendOk(): void
     {
         header("HTTP/1.1 200", true, 200);
     }
@@ -177,7 +177,7 @@ class PluginGlpiinventoryCommunicationRest
      * Send to the agent an error code
      * when the request sent by the agent is invalid
      */
-    public static function sendError()
+    public static function sendError(): void
     {
         header("HTTP/1.1 400", true, 400);
     }
@@ -198,11 +198,11 @@ class PluginGlpiinventoryCommunicationRest
     /**
      * Update agent status for a taskjob
      *
-     * @global object $DB
-     * @param array $params
+     * @param array<string,mixed> $params
      */
-    public static function updateLog($params = [])
+    public static function updateLog($params = []): void
     {
+        /** @var DBmysql $DB */
         global $DB;
 
         $p              = [];
@@ -230,7 +230,8 @@ class PluginGlpiinventoryCommunicationRest
         $taskjobstate = new PluginGlpiinventoryTaskjobstate();
 
         //Get task job status : identifier is the uuid given by the agent
-        $params = ['FROM' => getTableForItemType("PluginGlpiinventoryTaskjobstate"),
+        $params = [
+            'FROM' => getTableForItemType("PluginGlpiinventoryTaskjobstate"),
             'FIELDS' => 'id',
             'WHERE' => ['uniqid' => $p['uuid']],
         ];
@@ -272,7 +273,7 @@ class PluginGlpiinventoryCommunicationRest
      * Test a given url
      *
      * @param string $url
-     * @return boolean
+     * @return bool
      */
     public static function testRestURL($url)
     {
@@ -282,26 +283,12 @@ class PluginGlpiinventoryCommunicationRest
             return true;
         }
 
-        $handle = fopen($url, 'rb');
-        if (!$handle) {
-            return false;
-        } else {
+        try {
+            $handle = fopen($url, 'rb');
             fclose($handle);
             return true;
-        }
-    }
-
-
-    /**
-     * Manage REST parameters
-     **/
-    public static function handleFusionCommunication()
-    {
-        $response = PluginGlpiinventoryCommunicationRest::communicate($_GET);
-        if ($response) {
-            echo json_encode($response);
-        } else {
-            PluginGlpiinventoryCommunicationRest::sendError();
+        } catch (FilesystemException $e) {
+            return false;
         }
     }
 }

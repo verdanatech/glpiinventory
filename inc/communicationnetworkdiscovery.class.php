@@ -33,10 +33,6 @@
 
 use Glpi\Inventory\Inventory;
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access this file directly");
-}
-
 /**
  * Manage the communication of network discovery feature with the agents.
  */
@@ -48,7 +44,8 @@ class PluginGlpiinventoryCommunicationNetworkDiscovery
      * @param string $p_DEVICEID device_id of agent
      * @param object $a_CONTENT
      * @param Inventory $inventory
-     * @return array
+     *
+     * @return array<string,mixed>
      */
     public function import($p_DEVICEID, $a_CONTENT, Inventory $inventory): array
     {
@@ -79,7 +76,7 @@ class PluginGlpiinventoryCommunicationNetworkDiscovery
                     $nb_devices = 1;
                     $_SESSION['plugin_glpiinventory_taskjoblog']['taskjobs_id'] = $a_CONTENT->jobid;
                     $_SESSION['plugin_glpiinventory_taskjoblog']['items_id'] = $agent->fields['id'];
-                    $_SESSION['plugin_glpiinventory_taskjoblog']['itemtype'] = 'Agent';
+                    $_SESSION['plugin_glpiinventory_taskjoblog']['itemtype'] = Agent::class;
                     $_SESSION['plugin_glpiinventory_taskjoblog']['state'] = PluginGlpiinventoryTaskjoblog::TASK_RUNNING;
                     $_SESSION['plugin_glpiinventory_taskjoblog']['comment'] = $nb_devices . ' ==devicesfound==';
                     $this->addtaskjoblog();
@@ -120,7 +117,7 @@ class PluginGlpiinventoryCommunicationNetworkDiscovery
                     $pfTaskjobstate->changeStatusFinish(
                         $a_CONTENT->jobid,
                         $agent->fields['id'],
-                        'Agent',
+                        Agent::class,
                         0,
                         $message
                     );
@@ -129,9 +126,7 @@ class PluginGlpiinventoryCommunicationNetworkDiscovery
                     $inventory->setDiscovery(true);
                     $inventory->doInventory();
                     if ($inventory->inError()) {
-                        foreach ($inventory->getErrors() as $error) {
-                            $response = ['response' => ['ERROR' => $error]];
-                        }
+                        $response = ['ERROR' => implode(' | ', $inventory->getErrors())];
                     } else {
                         $refused = $inventory->getMainAsset()->getRefused();
                         $device = $a_CONTENT->content->network_device;
@@ -157,10 +152,14 @@ class PluginGlpiinventoryCommunicationNetworkDiscovery
                         } else {
                             $item = $inventory->getMainAsset()->getItem();
                             $what = $inventory->getMainAsset()->isNew() ? '==addtheitem==' : '==updatetheitem==' ;
-                            $_SESSION['plugin_glpiinventory_taskjoblog']['comment'] =
-                                '[==detail==] ' . $what . ' ' . $item->getTypeName() .
-                                ' [[' . $item::getType() . '::' . $item->getID() . ']]';
+                            $_SESSION['plugin_glpiinventory_taskjoblog']['comment']
+                                = '[==detail==] ' . $what . ' ' . $item->getTypeName()
+                                . ' [[' . $item::class . '::' . $item->getID() . ']]';
                             $this->addtaskjoblog();
+                            Plugin::doHookFunction('glpiinventory_post_network_discovery', [
+                                'item'     => $item,
+                                'raw_data' => $a_CONTENT,
+                            ]);
                         }
                         $response = ['response' => ['RESPONSE' => 'SEND']];
                     }
@@ -172,6 +171,8 @@ class PluginGlpiinventoryCommunicationNetworkDiscovery
             } else {
                 $response = ['response' => ['ERROR' => 'Task is already finished!']];
             }
+        } else {
+            $response['response'] = ['ERROR' => 'Task not found'];
         }
         return $response;
     }
@@ -179,7 +180,7 @@ class PluginGlpiinventoryCommunicationNetworkDiscovery
     /**
      * Used to add log in the taskjob
      */
-    public function addtaskjoblog()
+    public function addtaskjoblog(): void
     {
 
         $pfTaskjoblog = new PluginGlpiinventoryTaskjoblog();

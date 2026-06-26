@@ -31,9 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use function Safe\json_encode;
 
 /**
  * Manage the hours in the timeslot.
@@ -43,7 +41,7 @@ class PluginGlpiinventoryTimeslotEntry extends CommonDBTM
     /**
      * We activate the history.
      *
-     * @var boolean
+     * @var bool
      */
     public $dohistory = true;
 
@@ -58,7 +56,7 @@ class PluginGlpiinventoryTimeslotEntry extends CommonDBTM
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -70,7 +68,7 @@ class PluginGlpiinventoryTimeslotEntry extends CommonDBTM
     /**
      * Get search function for the class
      *
-     * @return array
+     * @return array<array<string,mixed>>
      */
     public function rawSearchOptions()
     {
@@ -121,9 +119,9 @@ class PluginGlpiinventoryTimeslotEntry extends CommonDBTM
     /**
      * Display form to add a new time entry in timeslot
      *
-     * @param integer $timeslots_id
+     * @param int $timeslots_id
      */
-    public function formEntry($timeslots_id)
+    public function formEntry(int $timeslots_id): void
     {
         $ID = 0;
         $options = [];
@@ -182,9 +180,9 @@ class PluginGlpiinventoryTimeslotEntry extends CommonDBTM
      * @todo rename this method in showTimeslots() since it's not only used to delete but also to
      *       show the list of Timeslot Entries. -- Kevin 'kiniou' Roy
      *
-     * @param integer $timeslots_id
+     * @param int $timeslots_id
      */
-    public function formDeleteEntry($timeslots_id)
+    public function formDeleteEntry($timeslots_id): void
     {
 
         $dbentries = getAllDataFromTable(
@@ -232,9 +230,9 @@ class PluginGlpiinventoryTimeslotEntry extends CommonDBTM
      * directly to a TimeslotEntry. The Timeslot class must be the entry point of any other class.
      * -- Kevin 'kiniou' Roy
      *
-     * @param integer $timeslots_id
+     * @param int $timeslots_id
      */
-    public function showTimeSlot($timeslots_id)
+    public function showTimeSlot(int $timeslots_id): void
     {
         echo "<div id='chart'></div>";
         echo "<div id='startperiod'></div>";
@@ -278,16 +276,26 @@ class PluginGlpiinventoryTimeslotEntry extends CommonDBTM
     /**
      * Add a new entry
      *
-     * @param array $data
+     * @param array<string,int> $data
      */
-    public function addEntry($data)
+    public function addEntry(array $data): void
     {
         if ($data['lastday'] < $data['beginday']) {
+            Session::addMessageAfterRedirect(
+                __('End day must be after start day', 'glpiinventory'),
+                true,
+                ERROR
+            );
             return;
         } elseif (
             $data['lastday'] == $data['beginday']
               && $data['lasthours'] <= $data['beginhours']
         ) {
+            Session::addMessageAfterRedirect(
+                __('End time must be after start time', 'glpiinventory'),
+                true,
+                ERROR
+            );
             return;
         }
         // else ok, we can update DB

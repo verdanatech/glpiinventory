@@ -31,9 +31,10 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use Glpi\DBAL\QueryExpression;
+use Safe\DateTime;
+
+use function Safe\date_create;
 
 /**
  * Manage the timeslot for tasks. It's the time in the week the task run.
@@ -43,7 +44,7 @@ class PluginGlpiinventoryTimeslot extends CommonDBTM
     /**
      * We activate the history.
      *
-     * @var boolean
+     * @var bool
      */
     public $dohistory = true;
 
@@ -58,7 +59,7 @@ class PluginGlpiinventoryTimeslot extends CommonDBTM
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -70,7 +71,7 @@ class PluginGlpiinventoryTimeslot extends CommonDBTM
     /**
      * Get search function for the class
      *
-     * @return array
+     * @return array<array<string,mixed>>
      */
     public function rawSearchOptions()
     {
@@ -121,8 +122,8 @@ class PluginGlpiinventoryTimeslot extends CommonDBTM
     /**
      * Define tabs to display on form page
      *
-     * @param array $options
-     * @return array containing the tabs name
+     * @param array<string,mixed> $options
+     * @return array<string,string> containing the tabs name
      */
     public function defineTabs($options = [])
     {
@@ -137,11 +138,9 @@ class PluginGlpiinventoryTimeslot extends CommonDBTM
     /**
      * Get Timeslot entries according to the requested day of week.
      *
-     * @since 0.85+1.0
-     *
-     * @param array $timeslot_ids  A list of timeslot's ids.
-     * @param string $weekdays      The day of week (ISO-8601 numeric representation).
-     * return array the list of timeslots entries organized by timeslots ids :
+     * @param array<int> $timeslot_ids  A list of timeslot's ids.
+     * @param ?string $weekdays      The day of week (ISO-8601 numeric representation).
+     * @return array<int,mixed> the list of timeslots entries organized by timeslots ids:
      *    array(
      *       [timeslot #0] => array(
      *          [timeslot_entry #2] => array(
@@ -196,10 +195,7 @@ class PluginGlpiinventoryTimeslot extends CommonDBTM
     /**
      * Get all current active timeslots
      *
-     * @since 0.85+1.0
-     *
-     * @global object $DB
-     * @return array
+     * @return array<int>
      */
     public function getCurrentActiveTimeslots()
     {
@@ -243,11 +239,11 @@ class PluginGlpiinventoryTimeslot extends CommonDBTM
      *
      * @since 0.85+1.0
      *
-     * @param ?DateTime $datetime The date and time we want to transform into
+     * @param ?\DateTime $datetime The date and time we want to transform into
      *                              cursor. If null the default value is now()
-     * @return integer
+     * @return int
      */
-    public function getTimeslotCursor(?DateTime $datetime = null)
+    public function getTimeslotCursor(?\DateTime $datetime = null)
     {
         if (is_null($datetime)) {
             $datetime = new DateTime();
@@ -261,8 +257,8 @@ class PluginGlpiinventoryTimeslot extends CommonDBTM
     /**
     *  Display form for agent configuration
      *
-     * @param integer $ID ID of the agent
-     * @param array $options
+     * @param int $ID ID of the agent
+     * @param array<string,mixed> $options
      * @return true
      *
      */
@@ -277,8 +273,8 @@ class PluginGlpiinventoryTimeslot extends CommonDBTM
             __('%1$s%2$s'),
             __('Name'),
             (isset($options['withtemplate']) && $options['withtemplate'] ? "*" : "")
-        ) .
-           "</td>";
+        )
+           . "</td>";
         echo "<td>";
         echo Html::input('name', ['value' => $this->fields["name"]]);
         echo "</td>";

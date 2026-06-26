@@ -31,11 +31,10 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 
 Html::header(
     __('GLPI Inventory', 'glpiinventory'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "collect"
@@ -45,6 +44,6 @@ Session::checkRight("plugin_glpiinventory_collect", READ);
 
 PluginGlpiinventoryMenu::displayMenu("mini");
 
-Search::show('PluginGlpiinventoryCollect');
+Search::show(PluginGlpiinventoryCollect::class);
 
 Html::footer();

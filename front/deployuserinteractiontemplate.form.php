@@ -31,7 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 Session::checkLoginUser();
 
 if (!isset($_GET["id"])) {
@@ -50,16 +49,16 @@ if (isset($_POST["add"])) {
     Html::back();
 } elseif (isset($_POST["purge"])) {
     Session::checkRight('plugin_glpiinventory_userinteractiontemplate', PURGE);
-    $template->delete($_POST, 1);
+    $template->delete($_POST, true);
     $template->redirectToList();
 }
 
 if (isset($_GET['_in_modal']) && $_GET['_in_modal']) {
-    Html::nullHeader(__('GLPI Inventory DEPLOY'), $_SERVER["PHP_SELF"]);
+    Html::nullHeader(__('GLPI Inventory DEPLOY'));
 } else {
     Html::header(
         __('GLPI Inventory DEPLOY'),
-        $_SERVER["PHP_SELF"],
+        '',
         "admin",
         "pluginglpiinventorymenu",
         "deployuserinteractiontemplate"

@@ -31,8 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "dropdownlocation.php")) {
-    include("../../../inc/includes.php");
+if (plugin_glpiinventory_script_endswith("dropdownlocation.php")) {
     header("Content-Type: text/html; charset=UTF-8");
     Html::header_nocache();
 }

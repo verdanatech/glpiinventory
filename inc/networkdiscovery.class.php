@@ -31,10 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access this file directly");
-}
-
 /**
  * Manage network discovery prepare the task and give the configuration to the
  * agent.
@@ -42,130 +38,10 @@ if (!defined('GLPI_ROOT')) {
 class PluginGlpiinventoryNetworkdiscovery extends PluginGlpiinventoryCommunication
 {
     /**
-     * Prepare network discovery.
-     * Get all devices and put in taskjobstat each task for each device for each
-     * agent
-     *
-     * @param integer $taskjobs_id
-     * @return string
-     */
-    public function prepareRun($taskjobs_id)
-    {
-
-        $pfTask = new PluginGlpiinventoryTask();
-        $pfTaskjob = new PluginGlpiinventoryTaskjob();
-        $pfTaskjoblog = new PluginGlpiinventoryTaskjoblog();
-        $pfTaskjobstate = new PluginGlpiinventoryTaskjobstate();
-        $pfAgentmodule = new PluginGlpiinventoryAgentmodule();
-        $pfIPRange = new PluginGlpiinventoryIPRange();
-        $agent = new Agent();
-
-        $uniqid = uniqid();
-
-        $pfTaskjob->getFromDB($taskjobs_id);
-        $pfTask->getFromDB($pfTaskjob->fields['plugin_glpiinventory_tasks_id']);
-
-        //list all iprange
-        $a_iprange = importArrayFromDB($pfTaskjob->fields['definition']);
-        $count_ip = 0;
-        $a_iprangelist = [];
-        $a_subnet_nbip = [];
-        foreach ($a_iprange as $iprange) {
-            $iprange_id = current($iprange);
-            $a_iprangelist[] = $iprange_id;
-            $pfIPRange->getFromDB($iprange_id);
-            $s = $pfIPRange->getIp2long($pfIPRange->fields['ip_start']);
-            $e = $pfIPRange->getIp2long($pfIPRange->fields['ip_end']);
-            $a_subnet_nbip[$iprange_id] = $e - $s;
-            $count_ip += $e - $s;
-        }
-
-        //list all agents
-        $a_agent = importArrayFromDB($pfTaskjob->fields['action']);
-        $dynagent = 0;
-        foreach ($a_agent as $agent) {
-            $agent_id = current($agent);
-            if ($agent_id == '.1') {
-                $dynagent = 1;
-            } elseif ($agent_id == '.2') {
-                $dynagent = 2;
-            }
-        }
-
-        if ($dynagent == '2') {
-            // Dynamic with subnet
-            foreach ($a_subnet_nbip as $iprange_id => $nbips) {
-                //$maxagentpossible = $nbips/10;
-                $pfIPRange->getFromDB($iprange_id);
-
-                $a_input = [];
-                $a_input['plugin_glpiinventory_taskjobs_id'] = $taskjobs_id;
-                $a_input['agents_id'] = 0;
-                $a_input['state']        = 1;
-                $a_input['itemtype']     = 'PluginGlpiinventoryIPRange';
-                $a_input['items_id']     = $iprange_id;
-                $a_input['uniqid']       = $uniqid;
-                $a_input['execution_id'] = $pfTask->fields['execution_id'];
-
-                $Taskjobstates_id = $pfTaskjobstate->add($a_input);
-                //Add log of taskjob
-                $a_input['plugin_glpiinventory_taskjobstates_id'] = $Taskjobstates_id;
-                $a_input['state'] = 7;
-                $a_input['date'] = date("Y-m-d H:i:s");
-                $pfTaskjoblog->add($a_input);
-
-                $pfTaskjobstate->changeStatusFinish(
-                    $Taskjobstates_id,
-                    0,
-                    'PluginGlpiinventoryIPRange',
-                    1,
-                    "Unable to find agent to run this job"
-                );
-                $input_taskjob = [];
-                $input_taskjob['id'] = $pfTaskjob->fields['id'];
-                //$input_taskjob['status'] = 1;
-                $pfTaskjob->update($input_taskjob);
-            }
-            $pfTaskjob->reinitializeTaskjobs($pfTaskjob->fields['plugin_glpiinventory_tasks_id']);
-            // *** Add jobstate
-        } else {
-            $a_input = [];
-            $a_input['plugin_glpiinventory_taskjobs_id'] = $taskjobs_id;
-            $a_input['state'] = 1;
-            $a_input['agents_id'] = 0;
-            $a_input['itemtype'] = 'PluginGlpiinventoryIPRange';
-            $a_input['items_id'] = 0;
-            $a_input['uniqid'] = $uniqid;
-            $a_input['execution_id'] = $pfTask->fields['execution_id'];
-
-            $Taskjobstates_id = $pfTaskjobstate->add($a_input);
-            //Add log of taskjob
-            $a_input['plugin_glpiinventory_taskjobstates_id'] = $Taskjobstates_id;
-            $a_input['state'] = 7;
-            $a_input['date'] = date("Y-m-d H:i:s");
-            $pfTaskjoblog->add($a_input);
-
-            $pfTaskjobstate->changeStatusFinish(
-                $Taskjobstates_id,
-                0,
-                'PluginGlpiinventoryIPRange',
-                1,
-                "Unable to find agent to run this job"
-            );
-            $input_taskjob = [];
-            $input_taskjob['id'] = $pfTaskjob->fields['id'];
-            //$input_taskjob['status'] = 1;
-            $pfTaskjob->update($input_taskjob);
-        }
-        return $uniqid;
-    }
-
-
-    /**
      * When agent contact server, this function send job data to agent
      *
-     * @param object $jobstate PluginGlpiinventoryTaskjobstate instance
-     * @return array
+     * @param PluginGlpiinventoryTaskjobstate $jobstate PluginGlpiinventoryTaskjobstate instance
+     * @return array<string, mixed>
      */
     public function run($jobstate)
     {
@@ -182,14 +58,14 @@ class PluginGlpiinventoryNetworkdiscovery extends PluginGlpiinventoryCommunicati
         $param_attrs = [];
 
         // Use general config when threads number is set to 0 on the agent
-        $param_attrs['THREADS_DISCOVERY'] = $agent->fields["threads_networkdiscovery"] == 0 ?
-         $pfConfig->getValue('threads_networkdiscovery') :
-         $agent->fields["threads_networkdiscovery"];
+        $param_attrs['THREADS_DISCOVERY'] = $agent->fields["threads_networkdiscovery"] == 0
+        ? $pfConfig->getValue('threads_networkdiscovery')
+        : $agent->fields["threads_networkdiscovery"];
 
         // Use general config when timeout is set to 0 on the agent
-        $param_attrs['TIMEOUT'] = $agent->fields["timeout_networkdiscovery"] == 0 ?
-         $pfConfig->getValue('timeout_networkdiscovery') :
-         $agent->fields["timeout_networkdiscovery"];
+        $param_attrs['TIMEOUT'] = $agent->fields["timeout_networkdiscovery"] == 0
+        ? $pfConfig->getValue('timeout_networkdiscovery')
+        : $agent->fields["timeout_networkdiscovery"];
 
         $param_attrs['PID'] = $jobstate->fields['id'];
 
@@ -223,10 +99,10 @@ class PluginGlpiinventoryNetworkdiscovery extends PluginGlpiinventoryCommunicati
         $pfTaskjoblog->addTaskjoblog(
             $pfTaskjobstate->fields['id'],
             0,
-            'Agent',
+            Agent::class,
             '1',
-            $agent->fields["threads_networkdiscovery"] . ' threads ' .
-                             $agent->fields["timeout_networkdiscovery"] . ' timeout'
+            $agent->fields["threads_networkdiscovery"] . ' threads '
+                             . $agent->fields["timeout_networkdiscovery"] . ' timeout'
         );
 
         $iprange_credentials = new PluginGlpiinventoryIPRange_SNMPCredential();

@@ -31,8 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "taskjob_moduleitems.php")) {
-    include("../../../inc/includes.php");
+if (plugin_glpiinventory_script_endswith("taskjob_moduleitems.php")) {
     header("Content-Type: text/html; charset=UTF-8");
     Html::header_nocache();
 }
@@ -42,9 +41,9 @@ Session::checkCentralAccess();
 $pfTaskjob = new PluginGlpiinventoryTaskjob();
 
 $params = [
-    "moduletype" => filter_input(INPUT_GET, "moduletype"),
-    "itemtype"   => filter_input(INPUT_GET, "itemtype"),
-    "method"     => filter_input(INPUT_GET, "method"),
+    "moduletype" => filter_input(INPUT_POST, "moduletype"),
+    "itemtype"   => filter_input(INPUT_POST, "itemtype"),
+    "method"     => filter_input(INPUT_POST, "method"),
 ];
 
 $pfTaskjob->ajaxModuleItemsDropdown($params);

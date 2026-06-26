@@ -31,12 +31,13 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
+
+use Glpi\Exception\Http\AccessDeniedHttpException;
 
 if (PluginGlpiinventoryMenu::canView()) {
     Html::header(
         __('GLPI Inventory', 'glpiinventory'),
-        $_SERVER["PHP_SELF"],
+        '',
         "admin",
         "glpiinventory",
         "menu"
@@ -45,7 +46,7 @@ if (PluginGlpiinventoryMenu::canView()) {
     PluginGlpiinventoryMenu::displayMenu();
     PluginGlpiinventoryMenu::displayMenuSNMPInventory();
 } else {
-    Html::displayRightError();
+    throw new AccessDeniedHttpException();
 }
 
 Html::footer();

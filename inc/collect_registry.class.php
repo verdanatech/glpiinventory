@@ -31,21 +31,19 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use function Safe\preg_match;
 
 /**
  * Manage the windows registry to get in collect module.
  */
 class PluginGlpiinventoryCollect_Registry extends PluginGlpiinventoryCollectCommon
 {
-    public $collect_type = 'registry';
+    public string $collect_type = 'registry';
 
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -53,62 +51,50 @@ class PluginGlpiinventoryCollect_Registry extends PluginGlpiinventoryCollectComm
         return _n('Found entry', 'Found entries', $nb, 'glpiinventory');
     }
 
+    public static function getIcon()
+    {
+        return "ti ti-settings-search";
+    }
+
     /**
      * Get Hives of the registry
      *
-     * @return array list of hives
+     * @return array<string,string> list of hives
      */
-    public static function getHives()
+    public static function getHives(): array
     {
         return [
             "HKEY_LOCAL_MACHINE"  => "HKEY_LOCAL_MACHINE",
         ];
     }
 
-    public function getListHeaders()
+    public function getListHeaders(): array
     {
         return [
-            __('Name'),
-            __('Hive', 'glpiinventory'),
-            __("Path", "glpiinventory"),
-            __("Key", "glpiinventory"),
-            __("Action"),
+            'hive' => __('Hive', 'glpiinventory'),
+            'path' => __("Path", "glpiinventory"),
+            'key' => __("Key", "glpiinventory"),
         ];
     }
 
-    public function displayOneRow($row = [])
+    public function displayOneRow(array $row = []): array
     {
         return [
-            $row['name'],
-            $row['hive'],
-            $row['path'],
-            $row['key'],
+            'hive' => $row['hive'],
+            'path' => $row['path'],
+            'key' => $row['key'],
         ];
     }
 
-    public function displayNewSpecificities()
+    public function prepareInputForAdd($input)
     {
-        echo "<td>" . __('Hive', 'glpiinventory') . "</td>";
-        echo "<td>";
-        Dropdown::showFromArray(
-            'hive',
-            PluginGlpiinventoryCollect_Registry::getHives()
-        );
-        echo "</td>";
-        echo "</tr>\n";
+        if (!preg_match('/^\/()/', $input['path'])) {
+            $input['path'] = "/" . $input['path'];
+        }
+        if (!preg_match('/\/$/', $input['path'])) {
+            $input['path'] .= "/";
+        }
 
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>";
-        echo __('Path', 'glpiinventory');
-        echo "</td>";
-        echo "<td>";
-        echo "<input type='text' name='path' value='' size='80' />";
-        echo "</td>";
-        echo "<td>";
-        echo __('Key', 'glpiinventory');
-        echo "</td>";
-        echo "<td>";
-        echo "<input type='text' name='key' value='' />";
-        echo "</td>";
+        return parent::prepareInputForAdd($input);
     }
 }

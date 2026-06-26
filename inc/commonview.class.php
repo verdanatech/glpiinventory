@@ -31,10 +31,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
  * It's a common code for display information in GLPI.
  */
@@ -43,43 +39,41 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
     /**
      * Define the number for the message information constant
      *
-     * @var integer
+     * @var int
      */
     public const MSG_INFO = 0;
 
     /**
      * Define the number for the message warning constant
      *
-     * @var integer
+     * @var int
      */
     public const MSG_WARNING = 1;
 
     /**
      * Define the number for the message error constant
      *
-     * @var integer
+     * @var int
      */
     public const MSG_ERROR = 2;
 
     /**
      * Define default value for the base URLs
      *
-     * @var array
+     * @var array<string>
      */
     public $base_urls = [];
 
 
     /**
-     * __contruct function and the different base URLs
-     *
-     * @global array $CFG_GLPI
+     * __construct function and the different base URLs
      */
     public function __construct()
     {
         global $CFG_GLPI;
         parent::__construct();
 
-        $fi_path = Plugin::getWebDir('glpiinventory');
+        $fi_path = Html::getPrefixedUrl("/plugins/glpiinventory");
 
         $this->base_urls = [
             'fi.base'   => $fi_path,
@@ -104,8 +98,8 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
             return $this->base_urls[$name];
         }
         trigger_error(
-            "The requested url type '$name' doesn't exists. " .
-            "Maybe the developer have forgotten to register it in the 'base_urls' variable."
+            "The requested url type '$name' doesn't exists. "
+            . "Maybe the developer have forgotten to register it in the 'base_urls' variable."
         );
         return "";
     }
@@ -114,7 +108,7 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
     /**
      * Show Search list for this itemtype
      */
-    public function showList()
+    public function showList(): void
     {
         Search::show(get_class($this));
     }
@@ -126,7 +120,7 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
      * @param string $title
      * @param string $varname
      */
-    public function showTextField($title, $varname)
+    public function showTextField($title, $varname): void
     {
         echo "<div class='mb-2 row col-12 col-sm-6'>";
         echo "<label class='form-label col-sm-4 col-form-label text-sm-end'>" . $title . "</label>";
@@ -142,9 +136,9 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
      *
      * @param string $title
      * @param string $varname
-     * @param array $options
+     * @param array<string,mixed> $options
      */
-    public function showIntegerField($title, $varname, $options = [])
+    public function showIntegerField($title, $varname, $options = []): void
     {
         echo "<div class='mb-2 row col-12 col-sm-6'>";
         echo "<label class='form-label col-sm-4 col-form-label text-sm-end'>" . $title . "</label>";
@@ -160,9 +154,9 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
      *
      * @param string $title
      * @param string $varname
-     * @param array $options
+     * @param array<string,mixed> $options
      */
-    public function showCheckboxField($title, $varname, $options = [])
+    public function showCheckboxField($title, $varname, $options = []): void
     {
         echo "<div class='mb-2 row col-12 col-sm-6'>";
         echo "<label class='form-label col-sm-4 col-form-label text-sm-end'>" . $title . "</label>";
@@ -181,11 +175,11 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
      * Display dropdown form element for itemtype
      *
      * @param string $title
-     * @param string $itemtype a glpi/plugin itemtype
-     * @param array $options
+     * @param class-string<CommonDBTM> $itemtype a glpi/plugin itemtype
+     * @param array<string,mixed> $options
      * @return string the rand number can be used with ajax to update something
      */
-    public function showDropdownForItemtype($title, $itemtype, $options = [])
+    public function showDropdownForItemtype($title, $itemtype, $options = []): string
     {
         echo "<div class='mb-2 row col-12 col-sm-6'>";
         echo "<label class='form-label col-sm-4 col-form-label text-sm-end'>" . $title . "</label>";
@@ -209,11 +203,11 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
      *
      * @param string $title
      * @param ?string $varname
-     * @param array $values
-     * @param array $options
+     * @param array<int|string,mixed> $values
+     * @param array<string,mixed> $options
      * @return string the rand number can be used with ajax to update something
      */
-    public function showDropdownFromArray($title, $varname, $values = [], $options = [])
+    public function showDropdownFromArray($title, $varname, $values = [], $options = []): string
     {
         echo "<div class='col-lg-4'>";
         echo $title . "&nbsp;";
@@ -239,9 +233,9 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
      *
      * @param string $title
      * @param string $varname
-     * @param array $options
+     * @param array<string,mixed> $options
      */
-    public function showDateTimeField($title, $varname, $options = [])
+    public function showDateTimeField($title, $varname, $options = []): void
     {
 
         // Get datetime value if the object is defined
@@ -250,8 +244,7 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
         } else {
             // Else set default value to current date and time
             if (
-                array_key_exists('maybeempty', $options)
-                 and $options['maybeempty']
+                array_key_exists('maybeempty', $options) && $options['maybeempty']
             ) {
                 $value = "";
             } else {
@@ -278,15 +271,15 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
      * @param string $title
      * @param string $varname
      */
-    public function showTextArea($title, $varname)
+    public function showTextArea($title, $varname): void
     {
         echo "<div class='mb-2 row col-12 col-sm-6'>";
         echo "<label class='form-label col-sm-4 col-form-label text-sm-end'>" . $title . "</label>";
         echo "<div class='col-sm-6'>";
         echo
-         "<textarea class='autogrow form-control' name='" . $varname . "' >" .
-         $this->fields[$varname] .
-         "</textarea>";
+         "<textarea class='autogrow form-control' name='" . $varname . "' >"
+         . $this->fields[$varname]
+         . "</textarea>";
         echo "</div>";
         echo "</div>";
     }
@@ -296,7 +289,7 @@ class PluginGlpiinventoryCommonView extends CommonDBTM
      * Get a HTML message
      *
      * @param string $msg
-     * @param integer $type
+     * @param int $type
      * @return string
      */
     public function getMessage($msg, $type = self::MSG_INFO)

@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,7 +30,7 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
+global $CFG_GLPI;
 
 Session::checkLoginUser();
 
@@ -39,7 +38,7 @@ Session::checkRight('plugin_glpiinventory_package', PURGE);
 
 Html::header(
     __('GLPI Inventory DEPLOY'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "deploypackage"
@@ -57,7 +56,7 @@ PluginGlpiinventoryMenu::displayMenu("mini");
 $pfDeployfile->numberUnusedFiles();
 
 echo "<center>";
-echo "<a href='" . $_SERVER['PHP_SELF'] . "?delete=1' class='vsubmit'>Delete unused files</a>";
+echo "<a href='" . $CFG_GLPI['root_doc'] . "/plugins/glpiinventory/front/deployfile.clean.php?delete=1' class='vsubmit'>" . __('Delete unused files', 'glpiinventory') . "</a>";
 echo "</center>";
 
 Html::footer();

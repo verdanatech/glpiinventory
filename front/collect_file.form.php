@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,46 +30,16 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
+Session::checkLoginUser();
 
 $pfCollect_File = new PluginGlpiinventoryCollect_File();
 
 if (isset($_POST["add"])) {
-    // conversions
-    if (
-        $_POST['sizetype'] != 'none'
-           && $_POST['size'] != ''
-    ) {
-        $_POST['filter_size' . $_POST['sizetype']] = $_POST['size'];
-    }
-    if (
-        $_POST['filter_nametype'] != 'none'
-           && $_POST['filter_name'] != ''
-    ) {
-        $_POST['filter_' . $_POST['filter_nametype']] = $_POST['filter_name'];
-
-        //set null if needed
-        if ($_POST['filter_nametype'] == 'iname') {
-            $_POST['filter_name'] = null;
-        } else {
-            $_POST['filter_iname'] = null;
-        }
-    } else {
-        //if 'none' , name and iname need to be null
-        $_POST['filter_iname'] = null;
-        $_POST['filter_name'] = null;
-    }
-    if ($_POST['type'] == 'file') {
-        $_POST['filter_is_file'] = 1;
-        $_POST['filter_is_dir'] = 0;
-    } else {
-        $_POST['filter_is_file'] = 0;
-        $_POST['filter_is_dir'] = 1;
-    }
-
+    Session::checkRight(PluginGlpiinventoryCollect_File::$rightname, CREATE);
     $pfCollect_File->add($_POST);
     Html::back();
-} elseif (isset($_POST["delete_x"])) {
+} elseif (isset($_POST["delete"])) {
+    Session::checkRight(PluginGlpiinventoryCollect_File::$rightname, PURGE);
     $pfCollect_File->delete($_POST);
     Html::back();
 }

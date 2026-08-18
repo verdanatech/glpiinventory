@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -30,10 +29,6 @@
  * along with GLPI Inventory Plugin. If not, see <https://www.gnu.org/licenses/>.
  * ---------------------------------------------------------------------
  */
-
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
 
 /**
  * Manage the profiles in plugin.
@@ -77,7 +72,7 @@ class PluginGlpiinventoryProfile extends Profile
      * Get the mapping old rights => new rights. Require it for upgrade from old
      * version of plugin
      *
-     * @return array
+     * @return array<string,string|array<string>>
      */
     public static function getOldRightsMappings()
     {
@@ -113,7 +108,7 @@ class PluginGlpiinventoryProfile extends Profile
      * Get the tab name used for item
      *
      * @param CommonGLPI $item the item object
-     * @param integer $withtemplate 1 if is a template form
+     * @param int $withtemplate 1 if is a template form
      * @return string name of the tab
      */
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
@@ -126,9 +121,9 @@ class PluginGlpiinventoryProfile extends Profile
      * Display the content of the tab
      *
      * @param CommonGLPI $item
-     * @param integer $tabnum number of the tab to display
-     * @param integer $withtemplate 1 if is a template form
-     * @return boolean
+     * @param int $tabnum number of the tab to display
+     * @param int $withtemplate 1 if is a template form
+     * @return bool
      */
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
@@ -146,9 +141,9 @@ class PluginGlpiinventoryProfile extends Profile
     /**
      * Display form
      *
-     * @param integer $profiles_id
-     * @param array $options
-     * @return boolean
+     * @param int $profiles_id
+     * @param array<string,mixed> $options
+     * @return bool
      */
     public function showForm($profiles_id, $options = [])
     {
@@ -195,11 +190,11 @@ class PluginGlpiinventoryProfile extends Profile
     /**
      * Display profile form for helpdesk interface
      *
-     * @param integer $profiles_id
-     * @param boolean $openform
-     * @param boolean $closeform
+     * @param int $profiles_id
+     * @param bool $openform
+     * @param bool $closeform
      */
-    public function showFormSelf($profiles_id = 0, $openform = true, $closeform = true)
+    public function showFormSelf($profiles_id = 0, $openform = true, $closeform = true): void
     {
 
         echo "<div class='firstbloc'>";
@@ -243,7 +238,7 @@ class PluginGlpiinventoryProfile extends Profile
     /**
      * Delete profiles
      */
-    public static function uninstallProfile()
+    public static function uninstallProfile(): void
     {
         $pfProfile = new self();
         $a_rights = $pfProfile->getAllRights();
@@ -256,7 +251,7 @@ class PluginGlpiinventoryProfile extends Profile
     /**
      * Get all rights
      *
-     * @return array
+     * @return array<array<string,mixed>>
      */
     public function getAllRights()
     {
@@ -271,27 +266,30 @@ class PluginGlpiinventoryProfile extends Profile
     /**
      * Get rights for deploy part
      *
-     * @return array
+     * @return array<array<string,mixed>>
      */
     public function getRightsDeploy()
     {
         $rights = [
-            ['itemtype'  => 'PluginGlpiinventoryDeployPackage',
+            [
+                'itemtype'  => PluginGlpiinventoryDeployPackage::class,
                 'label'     => __('Manage packages', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_package',
             ],
-            ['itemtype'  => 'PluginGlpiinventoryDeployPackage',
+            [
+                'itemtype'  => PluginGlpiinventoryDeployPackage::class,
                 'label'     => _n('User interaction template', 'User interaction templates', 1, 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_userinteractiontemplate',
             ],
-            ['itemtype'  => 'PluginGlpiinventoryDeployMirror',
+            [
+                'itemtype'  => PluginGlpiinventoryDeployMirror::class,
                 'label'     => __('Mirror servers', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_deploymirror',
             ],
-            ['itemtype'  => 'PluginGlpiinventoryDeployPackage',
+            [
+                'itemtype'  => PluginGlpiinventoryDeployPackage::class,
                 'label'     => __('Deploy packages on demand', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_selfpackage',
-                'rights'    => [READ => __('Read')],
             ],
         ];
         return $rights;
@@ -301,48 +299,59 @@ class PluginGlpiinventoryProfile extends Profile
     /**
      * Get rights for inventory part
      *
-     * @return array
+     * @return array<array<string,mixed>>
      */
     public function getRightsInventory()
     {
         $rights = [
-            ['itemtype'  => 'PluginGlpiinventoryIprange',
+            [
+                'itemtype'  => PluginGlpiinventoryIPRange::class,
                 'label'     => __('IP range configuration', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_iprange',
             ],
-            ['itemtype'  => 'PluginGlpiinventoryCredential',
+            [
+                'itemtype'  => PluginGlpiinventoryCredential::class,
                 'label'     => __('Authentication for remote devices (VMware)', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_credential',
             ],
-            ['itemtype'  => 'PluginGlpiinventoryCredentialip',
+            [
+                'itemtype'  => PluginGlpiinventoryCredentialIp::class,
                 'label'     => __('Remote devices to inventory (VMware)', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_credentialip',
             ],
-            ['itemtype'  => 'PluginGlpiinventoryCredential',
+            [
+                'itemtype'  => PluginGlpiinventoryCredential::class,
                 'label'     => __('VMware host', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_esx',
             ],
-            /*['itemtype'  => 'PluginGlpiinventoryConfigSecurity',
+            /*[
+                'itemtype'  => PluginGlpiinventoryConfigSecurity::class,
                 'label'     => __('SNMP credentials', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_configsecurity'],*/
-            ['rights'    => [CREATE => __('Create')],
+            [
+                'rights'    => [CREATE => __('Create')],
                 'label'     => __('Network equipment SNMP', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_networkequipment',
             ],
-            ['rights'    => [CREATE => __('Create')],
+            [
+                'rights'    => [CREATE => __('Create')],
                 'label'     => __('Printer SNMP', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_printer',
             ],
-            /*['itemtype'  => 'PluginGlpiinventoryUnmanaged',
+            /*[
+                'itemtype'  => Unmanaged::class,
                 'label'     => __('Unmanaged devices', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_unmanaged'],*/
-            /*['itemtype'  => 'PluginGlpiinventoryInventoryComputerImportXML',
+            /*[
+                'itemtype'  => PluginGlpiinventoryInventoryComputerImportXML::class,
                 'label'     => __('computer XML manual import', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_importxml'],*/
-            /*['rights'    => [READ => __('Read')],
+            /*[
+                'rights'    => [READ => __('Read')],
                 'label'     => __('Printers report', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_reportprinter'],*/
-            /*['rights'    => [READ => __('Read')],
+            /*[
+                'rights'    => [READ => __('Read')],
                 'label'     => __('Network report'),
                 'field'     => 'plugin_glpiinventory_reportnetworkequipment']*/
         ];
@@ -353,36 +362,35 @@ class PluginGlpiinventoryProfile extends Profile
     /**
      * Get general rights
      *
-     * @return array
+     * @return array<array<string,mixed>>
      */
     public function getRightsGeneral()
     {
         $rights = [
-            ['rights'    => [READ => __('Read')],
+            [
+                'rights'    => [READ => __('Read')],
                 'label'     => __('Menu', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_menu',
             ],
-            /*['itemtype'  => 'Agent',
-                'label'     => __('Agents', 'glpiinventory'),
-                'field'     => 'plugin_glpiinventory_agent'],*/
-            /*['rights'    => [READ => __('Read')],
-                'label'     => __('Agent remote control', 'glpiinventory'),
-                'field'     => 'plugin_glpiinventory_remotecontrol'],*/
-            ['rights'    => [READ => __('Read'), UPDATE => __('Update')],
-                'itemtype'  => 'PluginGlpiinventoryConfig',
+            [
+                'rights'    => [READ => __('Read'), UPDATE => __('Update')],
+                'itemtype'  => PluginGlpiinventoryConfig::class,
                 'label'     => __('Configuration', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_configuration',
             ],
-            ['itemtype'  => 'PluginGlpiinventoryTask',
+            [
+                'itemtype'  => PluginGlpiinventoryTask::class,
                 'label'     => _n('Task', 'Tasks', 2, 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_task',
             ],
-            ['itemtype'  => 'PluginGlpiinventoryDeployGroup',
+            [
+                'itemtype'  => PluginGlpiinventoryDeployGroup::class,
                 'label'     => __('Groups of computers', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_group',
             ],
-            ['itemtype'  => 'PluginGlpiinventoryCollect',
-                'label'     => __('Computer information', 'glpiinventory'),
+            [
+                'itemtype'  => PluginGlpiinventoryCollect::class,
+                'label'     => __('Collect information', 'glpiinventory'),
                 'field'     => 'plugin_glpiinventory_collect',
             ],
         ];
@@ -394,10 +402,10 @@ class PluginGlpiinventoryProfile extends Profile
     /**
      * Add the default profile
      *
-     * @param integer $profiles_id
-     * @param array $rights
+     * @param int $profiles_id
+     * @param array<string,int> $rights
      */
-    public static function addDefaultProfileInfos($profiles_id, $rights)
+    public static function addDefaultProfileInfos($profiles_id, $rights): void
     {
         $profileRight = new ProfileRight();
         foreach ($rights as $right => $value) {
@@ -421,10 +429,8 @@ class PluginGlpiinventoryProfile extends Profile
 
     /**
      * Create first access (so default profile)
-     *
-     * @param integer $profiles_id id of profile
      */
-    public static function createFirstAccess($profiles_id)
+    public static function createFirstAccess(int $profiles_id): void
     {
         include_once(PLUGIN_GLPI_INVENTORY_DIR . "/inc/profile.class.php");
         $profile = new self();
@@ -440,7 +446,7 @@ class PluginGlpiinventoryProfile extends Profile
     /**
      * Delete rights stored in session
      */
-    public static function removeRightsFromSession()
+    public static function removeRightsFromSession(): void
     {
         $profile = new self();
         foreach ($profile->getAllRights() as $right) {
@@ -449,8 +455,8 @@ class PluginGlpiinventoryProfile extends Profile
             }
         }
 
-        if (isset($_SESSION['glpimenu']['plugins']['types']['PluginGlpiinventoryMenu'])) {
-            unset($_SESSION['glpimenu']['plugins']['types']['PluginGlpiinventoryMenu']);
+        if (isset($_SESSION['glpimenu']['plugins']['types'][PluginGlpiinventoryMenu::class])) {
+            unset($_SESSION['glpimenu']['plugins']['types'][PluginGlpiinventoryMenu::class]);
         }
         if (isset($_SESSION['glpimenu']['plugins']['content']['pluginglpiinventorymenu'])) {
             unset($_SESSION['glpimenu']['plugins']['content']['pluginglpiinventorymenu']);
@@ -467,10 +473,10 @@ class PluginGlpiinventoryProfile extends Profile
     /**
      * Migration script for old rights from old version of plugin
      */
-    public static function migrateProfiles()
+    public static function migrateProfiles(): void
     {
         //Get all rights from the old table
-        $profiles = getAllDataFromTable(getTableForItemType(__CLASS__));
+        $profiles = getAllDataFromTable(getTableForItemType(self::class));
 
         //Load mapping of old rights to their new equivalent
         $oldrights = self::getOldRightsMappings();
@@ -516,7 +522,7 @@ class PluginGlpiinventoryProfile extends Profile
      * - add rights in profile table for the current user's profile
      * - current profile has all rights on the plugin
      */
-    public static function initProfile()
+    public static function initProfile(): void
     {
         $pfProfile = new self();
         $profile   = new Profile();

@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,27 +30,26 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
-
-Session::checkRight('plugin_glpiinventory_task', READ);
+Session::checkRight(PluginGlpiinventoryTimeslotEntry::$rightname, READ);
 
 if (!isset($_GET["id"])) {
     $_GET["id"] = "";
 }
 
 $pfTimeslotEntry = new PluginGlpiinventoryTimeslotEntry();
-foreach ($_POST as $key => $value) {
+foreach (array_keys($_POST) as $key) {
     if (strstr($key, 'purge-')) {
         $split = explode('-', $key);
-        $_POST['id'] = $split[1];
+        $_POST['id'] = (int) $split[1];
         $pfTimeslotEntry->check($_POST['id'], PURGE);
-        $pfTimeslotEntry->delete($_POST, 1);
+        $pfTimeslotEntry->delete($_POST, true);
         Html::back();
     }
 }
 
 $pfTimeslotEntry = new PluginGlpiinventoryTimeslotEntry();
 
+Session::checkRight(PluginGlpiinventoryTimeslotEntry::$rightname, CREATE);
 $pfTimeslotEntry->addEntry($_POST);
 
 Html::back();

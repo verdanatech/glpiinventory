@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,11 +30,11 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
+Session::checkLoginUser();
 
 Html::header(
     __('Collect management', 'glpiinventory'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "collect"
@@ -44,13 +43,16 @@ Html::header(
 $pfCollect = new PluginGlpiinventoryCollect();
 
 if (isset($_POST["add"])) {
+    Session::checkRight(PluginGlpiinventoryCollect::$rightname, CREATE);
     $collects_id = $pfCollect->add($_POST);
-    Html::redirect(Toolbox::getItemTypeFormURL('PluginGlpiinventoryCollect') .
-           "?id=" . $collects_id);
+    Html::redirect(Toolbox::getItemTypeFormURL(PluginGlpiinventoryCollect::class)
+           . "?id=" . $collects_id);
 } elseif (isset($_POST["update"])) {
+    Session::checkRight(PluginGlpiinventoryCollect::$rightname, UPDATE);
     $pfCollect->update($_POST);
     Html::back();
 } elseif (isset($_REQUEST["purge"])) {
+    Session::checkRight(PluginGlpiinventoryCollect::$rightname, PURGE);
     $pfCollect->delete($_POST);
     $pfCollect->redirectToList();
 }

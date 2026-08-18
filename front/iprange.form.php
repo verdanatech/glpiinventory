@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,13 +30,11 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
-
 $iprange = new PluginGlpiinventoryIPRange();
 
 Html::header(
     __('GLPI Inventory', 'glpiinventory'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "iprange"
@@ -65,6 +62,7 @@ if (isset($_POST["add"])) {
     }
 } elseif (isset($_POST["update"])) {
     if (isset($_POST['communication'])) {
+        Session::checkRight(PluginGlpiinventoryTask::$rightname, UPDATE);
         //task permanent update
         $task = new PluginGlpiinventoryTask();
         $taskjob = new PluginGlpiinventoryTaskjob();
@@ -79,13 +77,13 @@ if (isset($_POST["add"])) {
         $input_task["periodicity_type"]  = $_POST['periodicity_type'];
         if (!empty($_POST['action'])) {
             $a_actionDB                                 = [];
-            $a_actionDB[]['Agent'] = $_POST['action'];
+            $a_actionDB[][Agent::class] = $_POST['action'];
             $input_taskjob["action"]                    = exportArrayToDB($a_actionDB);
         } else {
             $input_taskjob["action"] = '';
         }
         $a_definition = [];
-        $a_definition[]['PluginGlpiinventoryIPRange'] = $_POST['iprange'];
+        $a_definition[][PluginGlpiinventoryIPRange::class] = $_POST['iprange'];
         $input_taskjob['definition'] = exportArrayToDB($a_definition);
         $input_task["communication"] = $_POST['communication'];
 
@@ -104,15 +102,16 @@ if (isset($_POST["add"])) {
     Html::back();
 } elseif (isset($_POST["purge"])) {
     if (isset($_POST['communication'])) {
+        Session::checkRight(PluginGlpiinventoryTask::$rightname, PURGE);
         $task = new PluginGlpiinventoryTask();
-        $task->delete(['id' => $_POST['task_id']], 1);
+        $task->delete(['id' => $_POST['task_id']], true);
         $_SERVER['HTTP_REFERER'] = str_replace("&allowcreate=1", "", $_SERVER['HTTP_REFERER']);
         Html::back();
     } else {
-        Session::checkRight('plugin_glpiinventory_iprange', PURGE);
+        Session::checkRight(PluginGlpiinventoryIPRange::$rightname, PURGE);
 
         $iprange->delete($_POST);
-        Html::redirect(Toolbox::getItemTypeSearchURL('PluginGlpiinventoryIPRange'));
+        Html::redirect(Toolbox::getItemTypeSearchURL(PluginGlpiinventoryIPRange::class));
     }
 }
 

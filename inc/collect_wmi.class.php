@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,21 +30,17 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
  * Manage the wmi to get in collect module.
  */
 class PluginGlpiinventoryCollect_Wmi extends PluginGlpiinventoryCollectCommon
 {
-    public $collect_type = 'wmi';
+    public string $collect_type = 'wmi';
 
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -53,47 +48,26 @@ class PluginGlpiinventoryCollect_Wmi extends PluginGlpiinventoryCollectCommon
         return _n('Found WMI', 'Found WMIs', $nb, 'glpiinventory');
     }
 
-    public function getListHeaders()
+    public static function getIcon()
+    {
+        return "ti ti-settings-search";
+    }
+
+    public function getListHeaders(): array
     {
         return [
-            __("Name"),
-            "Moniker",
-            __("Class", "glpiinventory"),
-            __("Properties", "glpiinventory"),
-            __("Action"),
+            'moniker' => "Moniker",
+            'class' => __("Class", "glpiinventory"),
+            'properties' => __("Properties", "glpiinventory"),
         ];
     }
 
-    public function displayOneRow($row = [])
+    public function displayOneRow(array $row = []): array
     {
         return [
-            $row['name'],
-            $row['moniker'],
-            $row['class'],
-            $row['properties'],
+            'moniker' => $row['moniker'],
+            'class' => $row['class'],
+            'properties' => $row['properties'],
         ];
-    }
-
-    public function displayNewSpecificities()
-    {
-        echo "<td>moniker</td>";
-        echo "<td>";
-        echo "<input type='text' name='moniker' value='' size='50' />";
-        echo "</td>";
-        echo "</tr>\n";
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>";
-        echo __('Class', 'glpiinventory');
-        echo "</td>";
-        echo "<td>";
-        echo "<input type='text' name='class' value='' />";
-        echo "</td>";
-        echo "<td>";
-        echo __('Properties', 'glpiinventory');
-        echo "</td>";
-        echo "<td>";
-        echo "<input type='text' name='properties' value='' size='50' />";
-        echo "</td>";
     }
 }

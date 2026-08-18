@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,8 +30,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "taskjob_moduleitems.php")) {
-    include("../../../inc/includes.php");
+if (plugin_glpiinventory_script_endswith("taskjob_moduleitems.php")) {
     header("Content-Type: text/html; charset=UTF-8");
     Html::header_nocache();
 }
@@ -42,9 +40,9 @@ Session::checkCentralAccess();
 $pfTaskjob = new PluginGlpiinventoryTaskjob();
 
 $params = [
-    "moduletype" => filter_input(INPUT_GET, "moduletype"),
-    "itemtype"   => filter_input(INPUT_GET, "itemtype"),
-    "method"     => filter_input(INPUT_GET, "method"),
+    "moduletype" => filter_input(INPUT_POST, "moduletype"),
+    "itemtype"   => filter_input(INPUT_POST, "itemtype"),
+    "method"     => filter_input(INPUT_POST, "method"),
 ];
 
 $pfTaskjob->ajaxModuleItemsDropdown($params);

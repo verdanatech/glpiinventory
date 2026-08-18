@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,8 +30,6 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
-
 $pfTask = new PluginGlpiinventoryTask();
 
 //Submit the task form parameters
@@ -40,7 +37,7 @@ $pfTask->submitForm($_REQUEST);
 
 Html::header(
     __('GLPI Inventory', 'glpiinventory'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "task"
@@ -48,7 +45,7 @@ Html::header(
 
 // Manage forcetab : non standard system (file name <> class name)
 if (isset($_GET['forcetab'])) {
-    Session::setActiveTab('PluginGlpiinventoryTask', $_GET['forcetab']);
+    Session::setActiveTab(PluginGlpiinventoryTask::class, $_GET['forcetab']);
     unset($_GET['forcetab']);
 }
 

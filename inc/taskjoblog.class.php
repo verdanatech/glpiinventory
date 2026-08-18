@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,9 +30,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access this file directly");
-}
+use function Safe\preg_match_all;
 
 /**
  * Manage the logs of task job.
@@ -43,35 +40,35 @@ class PluginGlpiinventoryTaskjoblog extends CommonDBTM
     /**
      * Define state task started
      *
-     * @var integer
+     * @var int
      */
     public const TASK_STARTED = 1;
 
     /**
      * Define state task OK / successful
      *
-     * @var integer
+     * @var int
      */
     public const TASK_OK = 2;
 
     /**
      * Define state task in error
      *
-     * @var integer
+     * @var int
      */
     public const TASK_ERROR = 4;
 
     /**
      * Define state task information
      *
-     * @var integer
+     * @var int
      */
     public const TASK_INFO = 5;
 
     /**
      * Define state task running
      *
-     * @var integer
+     * @var int
      */
     public const TASK_RUNNING = 6;
 
@@ -79,7 +76,7 @@ class PluginGlpiinventoryTaskjoblog extends CommonDBTM
      * Define state task prepared, so wait agent contact the server to get
      * this task
      *
-     * @var integer
+     * @var int
      */
     public const TASK_PREPARED = 7;
 
@@ -87,12 +84,11 @@ class PluginGlpiinventoryTaskjoblog extends CommonDBTM
     /**
      * return array with state mapping name
      *
-     * @return array with all elements
+     * @return array<int,string> with all elements
      */
     public static function dropdownStateValues()
     {
-
-        $elements = [
+        return [
             self::TASK_PREPARED           => __('Prepared', 'glpiinventory'),
             self::TASK_STARTED            => __('Started', 'glpiinventory'),
             self::TASK_RUNNING            => __('Running'),
@@ -100,15 +96,13 @@ class PluginGlpiinventoryTaskjoblog extends CommonDBTM
             self::TASK_ERROR              => __('Error'),
             self::TASK_INFO               => __('Info', 'glpiinventory'),
         ];
-
-        return $elements;
     }
 
 
     /**
      * Get state name
      *
-     * @param integer $state
+     * @param int $state
      * @return string
      */
     public static function getStateName($state = -1)
@@ -124,12 +118,12 @@ class PluginGlpiinventoryTaskjoblog extends CommonDBTM
     /**
      * Get itemtype of task job state
      *
-     * @global object $DB
-     * @param integer $taskjoblogs_id
+     * @param int $taskjoblogs_id
      * @return string
      */
     public static function getStateItemtype($taskjoblogs_id)
     {
+        /** @var DBmysql $DB */
         global $DB;
 
         $params = ['FROM'   => 'glpi_plugin_glpiinventory_taskjobstates',
@@ -156,7 +150,7 @@ class PluginGlpiinventoryTaskjoblog extends CommonDBTM
     /**
      * Get search function for the class
      *
-     * @return array
+     * @return array<array<string, mixed>>
      */
     public function rawSearchOptions()
     {
@@ -231,7 +225,7 @@ class PluginGlpiinventoryTaskjoblog extends CommonDBTM
             'id'           => '8',
             'table'        => "glpi_agents",
             'field'        => 'name',
-            'name'         => __('Agent', 'glpiinventory'),
+            'name'         => Agent::getTypeName(1),
             'datatype'     => 'itemlink',
             'forcegroupby' => true,
             'joinparams'   => [
@@ -248,15 +242,15 @@ class PluginGlpiinventoryTaskjoblog extends CommonDBTM
     /**
      * Add a new line of log for a taskjob status
      *
-     * @global object $DB
-     * @param integer $taskjobstates_id id of the taskjobstate
-     * @param integer $items_id id of the item associated with taskjob status
+     * @param int $taskjobstates_id id of the taskjobstate
+     * @param int $items_id id of the item associated with taskjob status
      * @param string $itemtype type name of the item associated with taskjob status
      * @param string $state state of this taskjobstate
      * @param string $comment the comment of this insertion
      */
-    public function addTaskjoblog($taskjobstates_id, $items_id, $itemtype, $state, $comment)
+    public function addTaskjoblog($taskjobstates_id, $items_id, $itemtype, $state, $comment): void
     {
+        /** @var DBmysql $DB */
         global $DB;
         $this->getEmpty();
         unset($this->fields['id']);
@@ -273,7 +267,7 @@ class PluginGlpiinventoryTaskjoblog extends CommonDBTM
     /**
      * Get div with text/color depend on state
      *
-     * @param integer $state state number
+     * @param int $state state number
      * @param string $type div / td
      * @return string complete node (opened and closed)
      */
@@ -284,36 +278,36 @@ class PluginGlpiinventoryTaskjoblog extends CommonDBTM
 
         switch ($state) {
             case self::TASK_PREPARED:
-                return "<" . $type . " align='center' width='" . $width . "'>" .
-                      __('Prepared', 'glpiinventory') . "</" . $type . ">";
+                return "<" . $type . " align='center' width='" . $width . "'>"
+                      . __('Prepared', 'glpiinventory') . "</" . $type . ">";
 
             case self::TASK_STARTED:
-                return "<" . $type . " align='center' width='" . $width . "'>" .
-                       __('Started', 'glpiinventory') . "</" . $type . ">";
+                return "<" . $type . " align='center' width='" . $width . "'>"
+                       . __('Started', 'glpiinventory') . "</" . $type . ">";
 
             case self::TASK_OK:
-                return "<" . $type . " style='background-color: rgb(0, 255, 0);-moz-border-radius: 4px;" .
-                     "-webkit-border-radius: 4px;-o-border-radius: 4px;padding: 2px;' " .
-                     "align='center' width='" . $width . "'>" .
-                     "<strong>" . __('OK') . "</strong></" . $type . ">";
+                return "<" . $type . " style='background-color: rgb(0, 255, 0);-moz-border-radius: 4px;"
+                     . "-webkit-border-radius: 4px;-o-border-radius: 4px;padding: 2px;' "
+                     . "align='center' width='" . $width . "'>"
+                     . "<strong>" . __('OK') . "</strong></" . $type . ">";
 
             case self::TASK_ERROR:
-                return "<" . $type . " style='background-color: rgb(255, 0, 0);-moz-border-radius: 4px;" .
-                 "-webkit-border-radius: 4px;-o-border-radius: 4px;padding: 2px;' align='center' " .
-                 "width='" . $width . "'>" .
-                 "<strong>" . __('Error') . "</strong></" . $type . ">";
+                return "<" . $type . " style='background-color: rgb(255, 0, 0);-moz-border-radius: 4px;"
+                 . "-webkit-border-radius: 4px;-o-border-radius: 4px;padding: 2px;' align='center' "
+                 . "width='" . $width . "'>"
+                 . "<strong>" . __('Error') . "</strong></" . $type . ">";
 
             case self::TASK_INFO:
-                return "<" . $type . " style='background-color: rgb(255, 200, 0);-moz-border-radius: 4px;" .
-                     "-webkit-border-radius: 4px;-o-border-radius: 4px;padding: 2px;' " .
-                     "align='center' width='" . $width . "'>" .
-                     "<strong>" . __('unknown', 'glpiinventory') . "</strong></" . $type . ">";
+                return "<" . $type . " style='background-color: rgb(255, 200, 0);-moz-border-radius: 4px;"
+                     . "-webkit-border-radius: 4px;-o-border-radius: 4px;padding: 2px;' "
+                     . "align='center' width='" . $width . "'>"
+                     . "<strong>" . __('unknown', 'glpiinventory') . "</strong></" . $type . ">";
 
             case self::TASK_RUNNING:
-                return "<" . $type . " style='background-color: rgb(255, 200, 0);-moz-border-radius: 4px;" .
-                     "-webkit-border-radius: 4px;-o-border-radius: 4px;padding: 2px;' " .
-                     "align='center' width='" . $width . "'>" .
-                     "<strong>" . __('Running') . "</strong></" . $type . ">";
+                return "<" . $type . " style='background-color: rgb(255, 200, 0);-moz-border-radius: 4px;"
+                     . "-webkit-border-radius: 4px;-o-border-radius: 4px;padding: 2px;' "
+                     . "align='center' width='" . $width . "'>"
+                     . "<strong>" . __('Running') . "</strong></" . $type . ">";
         }
 
         return '';
@@ -334,12 +328,13 @@ class PluginGlpiinventoryTaskjoblog extends CommonDBTM
         foreach ($matches[0] as $num => $commentvalue) {
             $classname = $matches[1][$num];
             if ($classname != '' && class_exists($classname)) {
-                $Class = new $classname();
-                $Class->getFromDB($matches[2][$num]);
+                /** @var CommonDBTM $Class */
+                $Class = getItemForItemtype($classname);
+                $Class->getFromDB((int) $matches[2][$num]);
                 $comment = str_replace($commentvalue, $Class->getLink(), $comment);
             }
         }
-        if (strstr($comment, "==")) {
+        if (str_contains($comment, "==")) {
             preg_match_all("/==([\w\d]+)==/", $comment, $matches);
             $a_text = [
                 'devicesqueried'  => __('devices queried', 'glpiinventory'),

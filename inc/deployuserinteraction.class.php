@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,18 +30,15 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use function Safe\json_decode;
 
 /**
  * Manage user interactions.
- * @since 9.2
  */
 class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeployPackageItem
 {
-    public $shortname = 'userinteractions';
-    public $json_name = 'userinteractions';
+    public string $shortname = 'userinteractions';
+    public string $json_name = 'userinteractions';
 
     //--------------- Events ---------------------------------------//
 
@@ -71,14 +67,10 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
     //The agent received a malformed or non existing event
     public const RESPONSE_BAD_EVENT       = 'error_bad_event';
 
-    //String to replace a \r\n, to avoid stripcslashes issue
-    public const RN_TRANSFORMATION        = "$#r$#n";
-
-
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -94,12 +86,13 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
 
     /**
      * Get events with name => description
-     * @since 9.2
-     * @return array
+     *
+     * @return array<string,string|array<string,string>>
      */
     public function getTypes()
     {
-        return [self::EVENT_BEFORE_DOWNLOAD  => __("Before download", 'glpiinventory'),
+        return [
+            self::EVENT_BEFORE_DOWNLOAD  => __("Before download", 'glpiinventory'),
             self::EVENT_AFTER_DOWNLOAD   => __("After download", 'glpiinventory'),
             self::EVENT_AFTER_ACTIONS    => __("After actions", 'glpiinventory'),
             self::EVENT_DOWNLOAD_FAILURE => __("On download failure", 'glpiinventory'),
@@ -110,26 +103,17 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
 
     /**
      * Get an event label by its identifier
-     * @since 9.2
+     * @param string $type event identifier
      * @return string
      */
-    public function getLabelForAType($event)
+    public function getLabelForAType(string $type): string
     {
         $events = $this->getTypes();
-        return $events[$event] ?? '';
+        return $events[$type] ?? '';
     }
 
 
-    /**
-     * Display different fields relative the check selected
-     *
-     * @param array $config
-     * @param array $request_data
-     * @param string $rand unique element id used to identify/update an element
-     * @param string $mode mode in use (create, edit...)
-     * @return void
-     */
-    public function displayAjaxValues($config, $request_data, $rand, $mode)
+    public function displayAjaxValues(?array $config, array $request_data, string $rand, string $mode): void
     {
         $pfDeployPackage = new PluginGlpiinventoryDeployPackage();
 
@@ -175,7 +159,7 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
         echo "<th>{$values['template_label']}</th>";
         echo "<td>";
         Dropdown::show(
-            'PluginGlpiinventoryDeployUserinteractionTemplate',
+            PluginGlpiinventoryDeployUserinteractionTemplate::class,
             ['value' => $values['template_value'], 'name' => 'template']
         );
         echo "</td>";
@@ -191,10 +175,10 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
      * Get fields for the check type requested
      *
      * @param string $type the type of check
-     * @param array $data fields yet defined in edit mode
+     * @param array<string,mixed> $data fields yet defined in edit mode
      * @param string $mode mode in use (create, edit...)
      *
-     * @return array
+     * @return array<string,mixed>
      */
     public function getValues($type, $data, $mode)
     {
@@ -222,12 +206,6 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
             $values['template_value']    = $data['template'] ?? "";
         }
 
-        //Trick to add \r\n in the description text area
-        $values['description_value'] = str_replace(
-            self::RN_TRANSFORMATION,
-            "\r\n",
-            $values['description_value']
-        );
         return $values;
     }
 
@@ -236,15 +214,11 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
      * Display list of user interactions
      *
      * @param PluginGlpiinventoryDeployPackage $package PluginGlpiinventoryDeployPackage instance
-     * @param array $data array converted of 'json' field in DB where stored checks
+     * @param array<string,mixed> $data array converted of 'json' field in DB where stored checks
      * @param string $rand unique element id used to identify/update an element
      */
-    public function displayList(PluginGlpiinventoryDeployPackage $package, $data, $rand)
+    public function displayDeployList(PluginGlpiinventoryDeployPackage $package, array $data, string $rand): void
     {
-        /** @var array $CFG_GLPI */
-        global $CFG_GLPI;
-
-        $interaction_types = $this->getTypes();
         $package_id        = $package->getID();
         $canedit           = $package->canUpdateContent();
         $i                 = 0;
@@ -254,7 +228,7 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
             echo Search::showNewLine(Search::HTML_OUTPUT, (bool) ($i % 2));
             if ($canedit) {
                 echo "<td class='control'>";
-                Html::showCheckbox(['name' => 'userinteractions_entries[' . $i . ']']);
+                Html::showCheckbox(['name' => 'userinteractions_entries[' . $i . ']', 'class' => 'massive_action_checkbox']);
                 echo "</td>";
             }
 
@@ -273,8 +247,8 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
 
             echo "</td>";
             if ($canedit) {
-                echo "<td class='rowhandler control' title='" . __('drag', 'glpiinventory') .
-                "'><div class='drag row'></div></td>";
+                echo "<td class='rowhandler control' title='" . __('drag', 'glpiinventory')
+                . "'><div class='drag row ti ti-menu-2'></div></td>";
             }
             echo "</tr>";
             $i++;
@@ -286,8 +260,8 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
         }
         echo "</table>";
         if ($canedit) {
-            echo "<input type='submit' name='delete' value=\"" .
-            __('Delete', 'glpiinventory') . "\" class='submit' />";
+            echo "<input type='submit' name='delete' value=\""
+            . __('Delete', 'glpiinventory') . "\" class='submit' />";
         }
     }
 
@@ -296,7 +270,7 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
     * Get of a short description of a user interaction
     *
     * @since 9.2
-    * @param array $interaction an array representing an interaction
+    * @param array<string,mixed> $interaction an array representing an interaction
     * @return string a short description
     */
     public function getInteractionDescription($interaction)
@@ -323,12 +297,7 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
     }
 
 
-    /**
-     * Add a new item in checks of the package
-     *
-     * @param array $params list of fields with value of the check
-     */
-    public function add_item($params)
+    public function add_item(array $params): bool
     {
         if (!isset($params['text'])) {
             $params['text'] = "";
@@ -348,15 +317,11 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
 
         //Add to package defintion
         $this->addToPackage($params['id'], $entry, 'userinteractions');
+        return true;
     }
 
 
-    /**
-     * Save the item in checks
-     *
-     * @param array $params list of fields with value of the check
-     */
-    public function save_item($params)
+    public function save_item(array $params): bool
     {
         if (!isset($params['value'])) {
             $params['value'] = "";
@@ -378,12 +343,13 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
             $params['id'],
             $this->prepareDataToSave($params, $entry)
         );
+        return true;
     }
 
 
     /**
      * @param PluginGlpiinventoryDeployPackage $package
-     * @return array
+     * @return array<string>
      */
     public function getTypesAlreadyInUse(PluginGlpiinventoryDeployPackage $package)
     {
@@ -412,7 +378,7 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
     * @param string $type the type of event that triggered the user interaction
     * @param string $event the button clicked by the user
     *         (or the what's happened in special cases, as defined in a template)
-    * @param integer $user userid the user who performed the interaction
+    * @param int $user userid the user who performed the interaction
     * @return string the message to be display in a taskjob log
     */
     public function getLogMessage($behavior, $type, $event, $user)
@@ -451,7 +417,7 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
     }
 
 
-    public function getEventMessage($event = '')
+    public function getEventMessage(string $event = ''): string
     {
         $message = __('%1$s button pressed');
         switch ($event) {
@@ -491,5 +457,11 @@ class PluginGlpiinventoryDeployUserinteraction extends PluginGlpiinventoryDeploy
             case 'on_multiusers':
                 return __('Multiple users connected', 'glpiinventory');
         }
+        return '';
+    }
+
+    public static function getIcon()
+    {
+        return "ti ti-hand-finger";
     }
 }

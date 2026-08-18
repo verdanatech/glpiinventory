@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,21 +30,16 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
+Session::checkLoginUser();
 
 $pfCollect_Registry = new PluginGlpiinventoryCollect_Registry();
 
 if (isset($_POST["add"])) {
-    if (!preg_match('/^\/()/', $_POST['path'])) {
-        $_POST['path'] = "/" . $_POST['path'];
-    }
-    if (!preg_match('/\/$/', $_POST['path'])) {
-        $_POST['path'] = $_POST['path'] . "/";
-    }
-
+    Session::checkRight(PluginGlpiinventoryCollect_Registry::$rightname, CREATE);
     $pfCollect_Registry->add($_POST);
     Html::back();
-} elseif (isset($_POST["delete_x"])) {
+} elseif (isset($_POST["delete"])) {
+    Session::checkRight(PluginGlpiinventoryCollect_Registry::$rightname, PURGE);
     $pfCollect_Registry->delete($_POST);
     Html::back();
 }

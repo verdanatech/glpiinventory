@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,12 +30,13 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
+use Glpi\Dashboard\Grid;
+use Glpi\Exception\Http\AccessDeniedHttpException;
 
 if (PluginGlpiinventoryMenu::canView()) {
     Html::header(
         __('GLPI Inventory', 'glpiinventory'),
-        $_SERVER["PHP_SELF"],
+        '',
         "admin",
         "pluginglpiinventorymenu",
         "menu"
@@ -46,12 +46,12 @@ if (PluginGlpiinventoryMenu::canView()) {
 
     PluginGlpiinventoryMenu::displayMenu();
 
-    $dashboard = new Glpi\Dashboard\Grid('plugin_glpiinventory_dashboard');
+    $dashboard = new Grid('plugin_glpiinventory_dashboard');
     echo "<div class='dashboard card p-3'>";
     $dashboard->show();
     echo "</div>";
 } else {
-    Html::displayRightError();
+    throw new AccessDeniedHttpException();
 }
 
 Html::footer();

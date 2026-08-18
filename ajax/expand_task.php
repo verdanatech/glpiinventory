@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,10 +30,9 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 Session::checkCentralAccess();
 
 header("Content-Type: text/json; charset=UTF-8");
 Html::header_nocache();
 
-$_SESSION['plugin_glpiinventory_tasks_expanded'][intval(filter_input(INPUT_GET, "task_id"))] = filter_input(INPUT_GET, "expanded");
+$_SESSION['plugin_glpiinventory_tasks_expanded'][(int) ($_POST['task_id'])] = filter_input(INPUT_POST, "expanded");

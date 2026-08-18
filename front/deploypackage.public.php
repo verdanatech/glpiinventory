@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,7 +30,6 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 Session::checkLoginUser();
 
 if (Session::getCurrentInterface() !== 'helpdesk') {
@@ -40,9 +38,8 @@ if (Session::getCurrentInterface() !== 'helpdesk') {
 
 Html::helpHeader(
     __('GLPI Inventory'),
-    $_SERVER["PHP_SELF"],
+    '',
     "plugins",
-    "pluginglpiinventorymenu",
     "deploypackage"
 );
 $pfDeployPackage = new PluginGlpiinventoryDeployPackage();
@@ -51,8 +48,8 @@ if (isset($_POST['prepareinstall'])) {
     $computers_id = false;
 
     foreach ($_POST as $key => $data) {
-        if (strstr($key, 'deploypackages_')) {
-            $computers_id = str_replace('deploypackages_', '', $key);
+        if (str_contains($key, 'deploypackages_')) {
+            $computers_id = (int) str_replace('deploypackages_', '', $key);
             foreach ($data as $packages_id) {
                 $pfDeployPackage->deployToComputer($computers_id, $packages_id, $_SESSION['glpiID']);
             }
@@ -78,8 +75,7 @@ if (isset($_POST['prepareinstall'])) {
                     window.location='{$_SERVER['HTTP_REFERER']}';
                 }, 500);
             ");
-            exit;
-            break;
+            return;
         case 'remote':
             if ($computers_id) {
                 //Remote call to wakeup the agent, from the server
@@ -96,7 +92,7 @@ if (isset($_POST['prepareinstall'])) {
 } else {
     Html::header(
         __('GLPI Inventory'),
-        $_SERVER["PHP_SELF"],
+        '',
         "plugins",
         "pluginglpiinventorymenu",
         "deploypackage"

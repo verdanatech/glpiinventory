@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,11 +30,12 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
+Session::checkLoginUser();
 
 $pfIPRange_ConfigSecurity = new PluginGlpiinventoryIPRange_SNMPCredential();
 
 if (isset($_POST["add"])) {
+    Session::checkRight(PluginGlpiinventoryIPRange::$rightname, UPDATE);
     $a_data = current(
         getAllDataFromTable(
             PluginGlpiinventoryIPRange_SNMPCredential::getTable(),

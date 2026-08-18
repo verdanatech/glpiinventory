@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,21 +30,32 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use function Safe\preg_match;
 
 /**
  * Manage the windows registry to get in collect module.
  */
 class PluginGlpiinventoryCollect_Registry extends PluginGlpiinventoryCollectCommon
 {
-    public $collect_type = 'registry';
+    public string $collect_type = 'registry';
+
+    public const MODE_DEFAULT = 0;
+
+    public const MODE_PATH_EXISTS = 1;
+
+    public const MODE_KEY_DEFINED = 2;
+
+    /**
+     * Case 3: read all the values found under the path, recursively down to the
+     * configured depth (depth 0 = only the values at the path, depth 1 = also the
+     * sub-keys of first level, etc.).
+     */
+    public const MODE_DEPTH = 3;
 
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -53,62 +63,97 @@ class PluginGlpiinventoryCollect_Registry extends PluginGlpiinventoryCollectComm
         return _n('Found entry', 'Found entries', $nb, 'glpiinventory');
     }
 
+    public static function getIcon()
+    {
+        return "ti ti-settings-search";
+    }
+
     /**
      * Get Hives of the registry
      *
-     * @return array list of hives
+     * @return array<string,string> list of hives
      */
-    public static function getHives()
+    public static function getHives(): array
     {
         return [
             "HKEY_LOCAL_MACHINE"  => "HKEY_LOCAL_MACHINE",
         ];
     }
 
-    public function getListHeaders()
+    /**
+     * Get the available collect modes.
+     *
+     * @return array<int,string> list of modes [value => label]
+     */
+    public static function getModes(): array
     {
         return [
-            __('Name'),
-            __('Hive', 'glpiinventory'),
-            __("Path", "glpiinventory"),
-            __("Key", "glpiinventory"),
-            __("Action"),
+            self::MODE_DEFAULT     => __('Default', 'glpiinventory'),
+            self::MODE_PATH_EXISTS => __('Check path existence', 'glpiinventory'),
+            self::MODE_KEY_DEFINED => __('Check if a key is defined', 'glpiinventory'),
+            self::MODE_DEPTH       => __('All values', 'glpiinventory'),
         ];
     }
 
-    public function displayOneRow($row = [])
+    public function getListHeaders(): array
     {
         return [
-            $row['name'],
-            $row['hive'],
-            $row['path'],
-            $row['key'],
+            'hive' => __('Hive', 'glpiinventory'),
+            'path' => __("Path", "glpiinventory"),
+            'key' => __("Key", "glpiinventory"),
+            'mode' => __("Mode", "glpiinventory"),
+            'depth' => __("Depth", "glpiinventory"),
         ];
     }
 
-    public function displayNewSpecificities()
+    public function displayOneRow(array $row = []): array
     {
-        echo "<td>" . __('Hive', 'glpiinventory') . "</td>";
-        echo "<td>";
-        Dropdown::showFromArray(
-            'hive',
-            PluginGlpiinventoryCollect_Registry::getHives()
-        );
-        echo "</td>";
-        echo "</tr>\n";
+        $modes = self::getModes();
+        $mode  = (int) ($row['mode'] ?? self::MODE_DEFAULT);
+        return [
+            'hive' => $row['hive'],
+            'path' => $row['path'],
+            // the key is not relevant when checking the path existence or reading recursively
+            'key'  => in_array($mode, [self::MODE_PATH_EXISTS, self::MODE_DEPTH], true) ? '' : $row['key'],
+            'mode' => $modes[$mode] ?? $modes[self::MODE_DEFAULT],
+            // the All values only applies to the depth mode
+            'depth' => ($mode === self::MODE_DEPTH) ? (int) ($row['depth'] ?? 0) : '',
+        ];
+    }
 
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>";
-        echo __('Path', 'glpiinventory');
-        echo "</td>";
-        echo "<td>";
-        echo "<input type='text' name='path' value='' size='80' />";
-        echo "</td>";
-        echo "<td>";
-        echo __('Key', 'glpiinventory');
-        echo "</td>";
-        echo "<td>";
-        echo "<input type='text' name='key' value='' />";
-        echo "</td>";
+    public function prepareInputForAdd($input)
+    {
+        if (!preg_match('/^\/()/', $input['path'])) {
+            $input['path'] = "/" . $input['path'];
+        }
+        if (!preg_match('/\/$/', $input['path'])) {
+            $input['path'] .= "/";
+        }
+
+        return parent::prepareInputForAdd($this->normalizeModeInput($input));
+    }
+
+    /**
+     * Normalize the "defined" flag and recursion "depth" according to the selected mode.
+     *
+     * - "defined" is a boolean flag driven by the MODE_KEY_DEFINED mode (case 2).
+     * - "depth" (All values) only applies to the MODE_DEPTH mode (case 3); it is
+     *   forced to 0 for the other modes.
+     *
+     * @param array<string,mixed> $input
+     * @return array<string,mixed>
+     */
+    private function normalizeModeInput(array $input): array
+    {
+        $mode = (int) ($input['mode'] ?? self::MODE_DEFAULT);
+        $input['mode'] = $mode;
+
+        // case 2: the "key is defined" check is requested through the mode
+        $input['defined'] = ($mode === self::MODE_KEY_DEFINED) ? 1 : 0;
+
+        // All value is only meaningful in the depth mode (case 3)
+        $input['depth'] = ($mode === self::MODE_DEPTH) ? max(0, (int) ($input['depth'] ?? 0)) : 0;
+
+        return $input;
     }
 }

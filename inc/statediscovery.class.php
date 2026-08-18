@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,9 +30,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access this file directly");
-}
+use Safe\DateTime;
 
 /**
  * Manage the network discovery state.
@@ -51,11 +48,11 @@ class PluginGlpiinventoryStateDiscovery extends CommonDBTM
     /**
      * Update state of discovery
      *
-     * @param integer $p_number
-     * @param array $a_input
-     * @param integer $agent_id
+     * @param int $p_number
+     * @param array<string,mixed> $a_input
+     * @param int $agent_id
      */
-    public function updateState($p_number, $a_input, $agent_id)
+    public function updateState($p_number, $a_input, $agent_id): void
     {
         $data = $this->find(
             ['plugin_glpiinventory_taskjob_id' => $p_number,
@@ -107,11 +104,11 @@ class PluginGlpiinventoryStateDiscovery extends CommonDBTM
     /**
      * End the state process
      *
-     * @param integer $p_number
+     * @param int $p_number
      * @param string $date_end
-     * @param integer $agent_id
+     * @param int $agent_id
      */
-    public function endState($p_number, $date_end, $agent_id)
+    public function endState($p_number, $date_end, $agent_id): void
     {
         $data = $this->find(
             ['plugin_glpiinventory_taskjob_id' => $p_number,
@@ -128,18 +125,18 @@ class PluginGlpiinventoryStateDiscovery extends CommonDBTM
     /**
      * Display the discovery state
      *
-     * @global object $DB
-     * @global array $CFG_GLPI
-     * @param array $options
+     * @param array<string,mixed> $options
+     *
+     * @return void
      */
-    public function display($options = [])
+    public function display($options = []) // @phpstan-ignore method.parentMethodFinalByPhpDoc
     {
         global $DB, $CFG_GLPI;
 
         $agent = new Agent();
         $pfTaskjobstate = new PluginGlpiinventoryTaskjobstate();
         $pfTaskjoblog = new PluginGlpiinventoryTaskjoblog();
-        $pfStateInventory = new PluginGlpiinventoryStateInventory();
+        new PluginGlpiinventoryStateInventory();
         $pfTaskjob = new PluginGlpiinventoryTaskjob();
         $pfTask = new PluginGlpiinventoryTask();
 
@@ -169,7 +166,7 @@ class PluginGlpiinventoryStateDiscovery extends CommonDBTM
         $number = count($iterator);
 
         // Display the pager
-        Html::printPager($start, $number, Plugin::getWebDir('glpiinventory') . "/front/statediscovery.php", '');
+        Html::printPager($start, $number, $CFG_GLPI['root_doc'] . "/plugins/glpiinventory/front/statediscovery.php", '');
 
         echo "<div class='card'>";
         echo "<table class='table table-hover card-table'>";
@@ -178,7 +175,7 @@ class PluginGlpiinventoryStateDiscovery extends CommonDBTM
         echo "<tr class='tab_bg_1'>";
         echo "<th>" . __('Unique id', 'glpiinventory') . "</th>";
         echo "<th>" . _n('Task', 'Tasks', 1, 'glpiinventory') . "</th>";
-        echo "<th>" . __('Agent', 'glpiinventory') . "</th>";
+        echo "<th>" . Agent::getTypeName(1) . "</th>";
         echo "<th>" . __('Status') . "</th>";
         echo "<th>" . __('Starting date', 'glpiinventory') . "</th>";
         echo "<th>" . __('Ending date', 'glpiinventory') . "</th>";
@@ -249,10 +246,7 @@ class PluginGlpiinventoryStateDiscovery extends CommonDBTM
                     }
 
                     if (
-                        ($taskjoblog['state'] == "2")
-                        or ($taskjoblog['state'] == "3")
-                        or ($taskjoblog['state'] == "4")
-                        or ($taskjoblog['state'] == "5")
+                        $taskjoblog['state'] == "2" || $taskjoblog['state'] == "3" || $taskjoblog['state'] == "4" || $taskjoblog['state'] == "5"
                     ) {
                         if (!strstr($taskjoblog['comment'], 'Merged with ')) {
                             $end_date = $taskjoblog['date'];
@@ -287,21 +281,16 @@ class PluginGlpiinventoryStateDiscovery extends CommonDBTM
             if ($start_date == '') {
                 echo "<td>-</td>";
             } else {
-                $interval = '';
-                if (phpversion() >= 5.3) {
-                    $date1 = new DateTime($start_date);
-                    $date2 = new DateTime($end_date);
-                    $interval = $date1->diff($date2);
-                    $display_date = '';
-                    if ($interval->h > 0) {
-                        $display_date .= $interval->h . "h ";
-                    } elseif ($interval->i > 0) {
-                        $display_date .= $interval->i . "min ";
-                    }
-                    echo "<td>" . $display_date . $interval->s . "s</td>";
-                } else {
-                    $interval = $pfStateInventory->dateDiff($start_date, $end_date);
+                $date1 = new DateTime($start_date);
+                $date2 = new DateTime($end_date);
+                $interval = $date1->diff($date2);
+                $display_date = '';
+                if ($interval->h > 0) {
+                    $display_date .= $interval->h . "h ";
+                } elseif ($interval->i > 0) {
+                    $display_date .= $interval->i . "min ";
                 }
+                echo "<td>" . $display_date . $interval->s . "s</td>";
             }
             echo "<td>" . $nb_threads . "</td>";
             echo "<td>" . $nb_found . "</td>";

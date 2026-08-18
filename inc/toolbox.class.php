@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,9 +30,12 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use Glpi\Agent\Communication\AbstractRequest;
+use Glpi\Inventory\Request;
+
+use function Safe\json_decode;
+use function Safe\json_encode;
+use function Safe\preg_match;
 
 /**
  * Manage the functions used in many classes.
@@ -44,11 +46,10 @@ class PluginGlpiinventoryToolbox
      * Log if extra debug enabled
      *
      * @param string $file
-     * @param string|array $message
+     * @param string|array $message //@phpstan-ignore missingType.iterableValue
      */
-    public static function logIfExtradebug($file, $message)
+    public static function logIfExtradebug(string $file, string|array $message): void
     {
-        $config = new PluginGlpiinventoryConfig();
         if (PluginGlpiinventoryConfig::isExtradebugActive()) {
             if (is_array($message)) {
                 $message = print_r($message, true);
@@ -60,11 +61,8 @@ class PluginGlpiinventoryToolbox
 
     /**
      * Format XML, ie indent it for pretty printing
-     *
-     * @param object $xml simplexml instance
-     * @return string
      */
-    public static function formatXML($xml)
+    public static function formatXML(SimpleXMLElement $xml): string
     {
         $string     = str_replace("><", ">\n<", $xml->asXML());
         $token      = strtok($string, "\n");
@@ -79,7 +77,7 @@ class PluginGlpiinventoryToolbox
                 $indent = 0;
                 // 2. closing tag - outdent now
             } elseif (preg_match('/^<\/\w/', $token, $matches)) {
-                $pad = $pad - 3;
+                $pad -= 3;
                 // 3. opening tag - don't pad this one, only subsequent tags
             } elseif (preg_match('/^<\w[^>]*[^\/]>.*$/', $token, $matches)) {
                 $indent = 3;
@@ -101,9 +99,11 @@ class PluginGlpiinventoryToolbox
     /**
      * Add AUTHENTICATION string to XML node
      *
-     * @param integer $p_id Authenticate id
+     * @param int $p_id Authenticate id
+     *
+     * @return array<string,array<string,mixed>>
      **/
-    public function addAuth($p_id)
+    public function addAuth(int $p_id): array
     {
         $node = [];
         $credentials = new SNMPCredential();
@@ -137,11 +137,11 @@ class PluginGlpiinventoryToolbox
     /**
      * Get IP for device
      *
-     * @param string $itemtype
-     * @param integer $items_id
-     * @return array
+     * @param class-string<CommonDBTM> $itemtype
+     * @param int $items_id
+     * @return array<string,string>
      */
-    public static function getIPforDevice($itemtype, $items_id)
+    public static function getIPforDevice(string $itemtype, int $items_id): array
     {
         $NetworkPort = new NetworkPort();
         $networkName = new NetworkName();
@@ -220,7 +220,7 @@ class PluginGlpiinventoryToolbox
      *     )
      *
      * @param DBmysqlIterator $iterator
-     * @return array
+     * @return array<int,array<string,array<string,mixed>>>
      */
     public static function fetchAssocByTableIterator(DBmysqlIterator $iterator): array
     {
@@ -251,12 +251,9 @@ class PluginGlpiinventoryToolbox
 
 
     /**
-    * Format a json in a pretty json
-    *
-    * @param string $json
-    * @return string
+    * Format a JSON in a pretty JSON
     */
-    public static function formatJson($json)
+    public static function formatJson(string $json): string
     {
         return json_encode(
             json_decode($json, true),
@@ -266,48 +263,9 @@ class PluginGlpiinventoryToolbox
 
 
     /**
-     * Dropdown for display hours
-     *
-     * @param string $name
-     * @param array $options
-     * @return string unique html element id
-     */
-    public static function showHours(string $name, array $options = [])
-    {
-
-        $p['value']          = '';
-        $p['display']        = true;
-        $p['width']          = '80%';
-        $p['step']           = 5;
-        $p['begin']          = 0;
-        $p['end']            = (24 * 3600);
-
-        if (count($options)) {
-            foreach ($options as $key => $val) {
-                $p[$key] = $val;
-            }
-        }
-        if ($p['step'] <= 0) {
-            $p['step'] = 5;
-        }
-
-        $values   = [];
-
-        $p['step'] = $p['step'] * 60; // to have in seconds
-        for ($s = $p['begin']; $s <= $p['end']; $s += $p['step']) {
-            $values[$s] = PluginGlpiinventoryToolbox::getHourMinute($s);
-        }
-        return Dropdown::showFromArray($name, $values, $p);
-    }
-
-
-    /**
      * Get hour:minute from number of seconds
-     *
-     * @param integer $seconds
-     * @return string
      */
-    public static function getHourMinute($seconds)
+    public static function getHourMinute(int $seconds): string
     {
         $hour = floor($seconds / 3600);
         $minute = (($seconds - ((floor($seconds / 3600)) * 3600)) / 60);
@@ -318,11 +276,11 @@ class PluginGlpiinventoryToolbox
     /**
      * Execute a function as plugin user
      *
-     * @param string|array $function
-     * @param array $args
-     * @return array the normally returned value from executed callable
+     * @param string|array<string> $function
+     * @param array<string|int,mixed> $args
+     * @return array the normally returned value from executed callable //@phpstan-ignore missingType.iterableValue
      */
-    public function executeAsGlpiinventoryUser($function, array $args = [])
+    public function executeAsGlpiinventoryUser(string|array $function, array $args = []): array
     {
 
         $config = new PluginGlpiinventoryConfig();
@@ -348,9 +306,14 @@ class PluginGlpiinventoryToolbox
         $_SESSION['glpiID']   = $users_id;
         $_SESSION['glpiname'] = $user->getField('name');
         $_SESSION['glpiactiveentities'] = getSonsOf('glpi_entities', 0);
-        $_SESSION['glpiactiveentities_string'] =
-         "'" . implode("', '", $_SESSION['glpiactiveentities']) . "'";
+        $_SESSION['glpiactiveentities_string']
+         = "'" . implode("', '", $_SESSION['glpiactiveentities']) . "'";
         $_SESSION['glpiparententities'] = [];
+
+        $_SESSION['glpiactiveprofile']['interface'] = 'central';
+
+        $_SESSION["glpiactiveprofile"]["computer"] = 1;
+        $_SESSION["glpiactiveprofile"]["domain"] = 1;
 
         // Execute function with impersonated SESSION
         $result = call_user_func_array($function, $args);
@@ -366,26 +329,55 @@ class PluginGlpiinventoryToolbox
 
     /**
     * Check if an item is inventoried by plugin
-    *
-    * @since 9.2
-    *
-    * @param CommonDBTM $item the item to check
-    *
-    * @return boolean
     */
-    public static function isAnInventoryDevice($item)
+    public static function isAnInventoryDevice(CommonDBTM $item): bool
     {
-        switch ($item->getType()) {
-            case 'Computer':
-            case 'NetworkEquipment':
-            case 'Printer':
+        switch ($item::class) {
+            case Computer::class:
+            case NetworkEquipment::class:
+            case Printer::class:
                 return $item->isDynamic();
         }
 
         return $item->isDynamic()
          && countElementsInTable(
              RuleMatchedLog::getTable(),
-             ['itemtype' => $item->getType(), 'items_id' => $item->fields['id']]
+             ['itemtype' => $item::class, 'items_id' => $item->fields['id']]
          );
+    }
+
+    public static function authInventory(Request $request): bool
+    {
+        // GLPI >= 11.0.8: the method is provided natively
+        if (method_exists($request, 'authenticateRequest')) { //@phpstan-ignore function.alreadyNarrowedType
+            return $request->authenticateRequest();
+        }
+
+        // TODO: remove v12 — backport for GLPI < 11.0.8
+        // The endpoints instantiate a core \Glpi\Inventory\Request; since a method
+        // cannot be added to an already built object, we run authenticateRequest()
+        // on a Backport\Request carrying the real request state (transferred by
+        // reflection), then copy the mutated state back to the original request.
+        $backport = new GlpiPlugin\Glpiinventory\Backport\Request();
+        $abstract = AbstractRequest::class;
+
+        // Input state: 'headers' is an object, so it is shared by reference and
+        // setHeader('www-authenticate') propagates back to $request automatically.
+        // 'mode' + 'response' are required for addError()/addToResponse() to work.
+        foreach (['headers', 'local', 'mode', 'response'] as $prop) {
+            $rp = new ReflectionProperty($abstract, $prop);
+            $rp->setValue($backport, $rp->getValue($request));
+        }
+
+        $result = $backport->authenticateRequest();
+
+        // Copy the state mutated by addError() back to the request the endpoint
+        // reads from (these are scalars/array, hence not shared by reference).
+        foreach (['response', 'http_response_code', 'error'] as $prop) {
+            $rp = new ReflectionProperty($abstract, $prop);
+            $rp->setValue($request, $rp->getValue($backport));
+        }
+
+        return $result;
     }
 }

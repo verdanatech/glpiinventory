@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,12 +30,11 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 Session::checkLoginUser();
 
 Html::header(
     __('Mirror servers'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "deploymirror"
@@ -47,6 +45,7 @@ PluginGlpiinventoryMenu::displayMenu("mini");
 $mirror = new PluginGlpiinventoryDeployMirror();
 
 if (isset($_POST["add"])) {
+    Session::checkRight(PluginGlpiinventoryDeployMirror::$rightname, CREATE);
     $newID = $mirror->add($_POST);
     if ($_SESSION['glpibackcreated']) {
         Html::redirect($mirror->getLinkURL());
@@ -54,11 +53,13 @@ if (isset($_POST["add"])) {
         Html::back();
     }
 } elseif (isset($_POST["update"])) {
+    Session::checkRight(PluginGlpiinventoryDeployMirror::$rightname, UPDATE);
     $mirror->update($_POST);
     Html::back();
 } elseif (isset($_POST["delete"])) {
+    Session::checkRight(PluginGlpiinventoryDeployMirror::$rightname, PURGE);
     $mirror->delete($_POST);
-    Html::redirect(Toolbox::getItemTypeFormURL('PluginGlpiinventoryDeployMirror'));
+    Html::redirect(Toolbox::getItemTypeFormURL(PluginGlpiinventoryDeployMirror::class));
 }
 
 $id = "";

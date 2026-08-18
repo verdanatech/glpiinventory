@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,9 +30,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use Glpi\Application\View\TemplateRenderer;
 
 /**
  * Manage the windows registry to get in collect module.
@@ -47,12 +44,12 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
      */
     public static $rightname = 'plugin_glpiinventory_collect';
 
-    public $collect_type = '';
+    public string $collect_type = '';
 
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -66,7 +63,7 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
      * Get the tab name used for item
      *
      * @param CommonGLPI $item the item object
-     * @param integer $withtemplate 1 if is a template form
+     * @param int $withtemplate 1 if is a template form
      * @return string name of the tab
      */
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
@@ -74,7 +71,7 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
         /** @var CommonDBTM $item */
         if ($item->fields['id'] > 0) {
             if ($item->fields['type'] == $this->collect_type) {
-                return __('Collect configuration');
+                return  self::createTabEntry(__('Collect configuration', 'glpiinventory'), 0, icon: 'ti ti-settings');
             }
         }
         return '';
@@ -85,16 +82,19 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
      * Display the content of the tab
      *
      * @param CommonGLPI $item
-     * @param integer $tabnum number of the tab to display
-     * @param integer $withtemplate 1 if is a template form
-     * @return boolean
+     * @param int $tabnum number of the tab to display
+     * @param int $withtemplate 1 if is a template form
+     * @return bool
      */
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
-        $class     = get_called_class();
+        if (!$item instanceof PluginGlpiinventoryCollect) {
+            return false;
+        }
+
+        $class     = static::class;
         $pfCollect = new $class();
-        /** @var CommonDBTM $item */
-        $pfCollect->showForm($item->fields['id']);
+        $pfCollect->showAddForm($item);
         $pfCollect->showList($item->fields['id']);
 
         return true;
@@ -102,11 +102,10 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
 
     /**
     * Get headers to be displayed, as an array
-    * @since 9.2+2.0
-    *
-    * @return array a list of header labels to be displayed
+     *
+    * @return array<int|string,string> a list of header labels to be displayed
     */
-    public function getListHeaders()
+    public function getListHeaders(): array
     {
         return [
             __('Name'),
@@ -115,12 +114,11 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
 
     /**
     * Get values for a row to display in the list
-    * @since 9.2+2.0
     *
-    * @param array $row the row data to be displayed
-    * @return array values to be display
+    * @param array<string,mixed> $row the row data to be displayed
+    * @return array<string> values to be display
     */
-    public function displayOneRow($row = [])
+    public function displayOneRow(array $row = []): array
     {
         return [
             $row['name'],
@@ -130,7 +128,9 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
     /**
      * Display registries defined in collect
      *
-     * @param integer $collects_id id of collect
+     * @param int $collects_id id of collect
+     *
+     * @return void
      */
     public function showList($collects_id)
     {
@@ -141,72 +141,50 @@ class PluginGlpiinventoryCollectCommon extends CommonDBTM
         ];
         $iterator = $DB->request($params);
 
-        $class = get_called_class();
-
-        $headers = $this->getListHeaders();
-
-        echo "<div class='spaced'>";
-        echo "<table class='tab_cadre_fixe'>";
-        echo "<tr>";
-        echo "<tr>";
-        foreach ($headers as $label) {
-            echo "<th>" . $label . "</th>";
+        $entries = [];
+        foreach ($iterator as $row) {
+            $entry = ['name' => $row['name']] + $this->displayOneRow($row);
+            $entry['action'] = "<form action='" . static::getFormURL() . "' method='post'>"
+                . Html::hidden('id', ['value' => $row['id']])
+                . '<button type="submit" name="delete" class="btn btn-icon btn-ghost-danger"><i class="ti ti-trash"></i></button>'
+                . Html::closeForm(false);
+            $entries[] = $entry;
         }
-        echo "</tr>";
-        foreach ($iterator as $data) {
-            echo "<tr>";
-            $row_data = $this->displayOneRow($data);
-            foreach ($row_data as $value) {
-                echo "<td align='center'>$value</td>";
-            }
-            echo "<td align='center'>";
-            echo "<form name='form_bundle_item' action='" . $class::getFormURL() .
-                   "' method='post'>";
-            echo Html::hidden('id', ['value' => $data['id']]);
-            echo "<input type='image' name='delete' src='" . Plugin::getWebDir('glpiinventory') . "/pics/drop.png'>";
-            Html::closeForm();
-            echo "</td>";
-            echo "</tr>";
-        }
-        echo "</table>";
-        echo "</div>";
+        TemplateRenderer::getInstance()->display('components/datatable.html.twig', [
+            'is_tab' => true,
+            'nofilter' => true,
+            'columns' => ['name' => __('Name')] + $this->getListHeaders() + ['action' => __("Action")],
+            'formatters' => [
+                'action' => 'raw_html',
+            ],
+            'entries' => $entries,
+            'total_number' => count($entries),
+            'filtered_number' => count($entries),
+        ]);
     }
 
 
-    public function displayNewSpecificities() {}
+    public function displayNewSpecificities(): void {}
 
     /**
-     * Display form to add registry
+     * Display add form
      *
-     * @param integer $collects_id id of collect
-     * @param array $options
-     * @return true
+     * @param PluginGlpiinventoryCollect $collect
+     *
+     * @return void
      */
-    public function showForm($collects_id, array $options = [])
+    public function showAddForm(PluginGlpiinventoryCollect $collect)
     {
-        $this->initForm(0, $options);
-        $this->showFormHeader($options);
-
-        echo "<tr class='tab_bg_1'>";
-        echo "<td>";
-        echo __('Name');
-        echo "</td>";
-        echo "<td>";
-        echo Html::hidden(
-            'plugin_glpiinventory_collects_id',
-            ['value' => $collects_id]
-        );
-        echo Html::input('name', ['value' => $this->fields['name']]);
-        echo "</td>";
-        $this->displayNewSpecificities();
-
-        echo "</tr>\n";
-
-        $this->showFormButtons($options);
-
-        return true;
+        TemplateRenderer::getInstance()->display('@glpiinventory/forms/collect/add.html.twig', [
+            'item' => $this,
+            'collect' => $collect,
+            'collects_id' => $collect->getID(),
+        ]);
     }
 
+    /**
+     * @return array<array<string,mixed>>
+     */
     public function rawSearchOptions()
     {
 

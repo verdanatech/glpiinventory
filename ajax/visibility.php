@@ -3,7 +3,7 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @copyright 2021-2026 Teclib' and contributors.
  *
  * http://glpi-project.org
  *
@@ -28,16 +28,10 @@
  * ---------------------------------------------------------------------
  */
 
-/** @var array $CFG_GLPI */
 global $CFG_GLPI;
 
-// Direct access to file
-if (strpos($_SERVER['PHP_SELF'], "visibility.php")) {
-    $AJAX_INCLUDE = 1;
-    include('../../../inc/includes.php');
-    header("Content-Type: text/html; charset=UTF-8");
-    Html::header_nocache();
-}
+header("Content-Type: text/html; charset=UTF-8");
+Html::header_nocache();
 
 Session::checkCentralAccess();
 
@@ -56,28 +50,25 @@ if (
         $_POST['prefix'] = '';
     }
 
-    echo "<table class='tab_format'><tr>";
+    echo "<div class='d-flex'>";
     switch ($_POST['type']) {
         case User::class:
-            echo "<td>";
             $params = [
                 'right' => isset($_POST['allusers']) ? 'all' : $_POST['right'],
                 'name' => $prefix . 'users_id' . $suffix,
             ];
             User::dropdown($params);
-            echo "</td>";
             $display = true;
             break;
 
         case Group::class:
-            echo "<td>";
             $params             = ['rand' => $rand,
                 'name' => $prefix . 'groups_id' . $suffix,
             ];
             $params['toupdate'] = ['value_fieldname'
                                                   => 'value',
                 'to_update'  => "subvisibility$rand",
-                'url'        => $CFG_GLPI["root_doc"] . "/ajax/subvisibility.php",
+                'url'        => $CFG_GLPI["root_doc"] . "/plugins/glpiinventory/ajax/subvisibility.php",
                 'moreparams' => ['items_id' => '__VALUE__',
                     'type'     => $_POST['type'],
                     'prefix'   => $_POST['prefix'],
@@ -85,28 +76,23 @@ if (
             ];
 
             Group::dropdown($params);
-            echo "</td><td>";
             echo "<span id='subvisibility$rand'></span>";
-            echo "</td>";
             $display = true;
             break;
 
         case Entity::class:
-            echo "<td>";
-            Entity::dropdown(['entity' => $_SESSION['glpiactiveentities'],
-                'value'  => $_SESSION['glpiactive_entity'],
-                'name'   => $prefix . 'entities_id' . $suffix,
+            Entity::dropdown([
+                'value'       => $_SESSION['glpiactive_entity'],
+                'name'        => $prefix . 'entities_id' . $suffix,
+                'entity'      => $_POST['entity'] ?? -1,
+                'entity_sons' => $_POST['is_recursive'] ?? false,
             ]);
-            echo "</td><td>";
-            echo __('Child entities');
-            echo "</td><td>";
+            echo '<div class="ms-3">' . __s('Child entities') . '</div>';
             Dropdown::showYesNo($prefix . 'is_recursive' . $suffix);
-            echo "</td>";
             $display = true;
             break;
 
         case Profile::class:
-            echo "<td>";
             $checkright   = (READ | CREATE | UPDATE | PURGE);
             $righttocheck = $_POST['right'];
             if ($_POST['right'] == 'faq') {
@@ -124,7 +110,7 @@ if (
             $params['toupdate'] = ['value_fieldname'
                                                   => 'value',
                 'to_update'  => "subvisibility$rand",
-                'url'        => Plugin::getWebDir('glpiinventory') . "/ajax/subvisibility.php",
+                'url'        => $CFG_GLPI["root_doc"] . "/ajax/subvisibility.php",
                 'moreparams' => ['items_id' => '__VALUE__',
                     'type'     => $_POST['type'],
                     'prefix'   => $_POST['prefix'],
@@ -132,19 +118,14 @@ if (
             ];
 
             Profile::dropdown($params);
-            echo "</td><td>";
             echo "<span id='subvisibility$rand'></span>";
-            echo "</td>";
             $display = true;
             break;
     }
 
     if ($display && (!isset($_POST['nobutton']) || !$_POST['nobutton'])) {
-        echo "<td><input type='submit' name='addvisibility' value=\"" . _sx('button', 'Add') . "\"
-                   class='btn btn-primary'></td>";
-    } else {
-        // For table w3c
-        echo "<td>&nbsp;</td>";
+        echo "<input type='submit' name='addvisibility' value=\"" . _sx('button', 'Add') . "\"
+                   class='btn btn-primary ms-3'>";
     }
-    echo "</tr></table>";
+    echo "</div>";
 }

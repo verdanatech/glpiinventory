@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,14 +30,12 @@
  * ---------------------------------------------------------------------
  */
 
+use Glpi\DBAL\QueryParam;
+
 /**
  * Manage update the task system
- *
- * @global object $DB
- * @param object $migration
- * @param integer $plugin_id
  */
-function pluginGlpiinventoryUpdateTasks($migration, $plugin_id)
+function pluginGlpiinventoryUpdateTasks(Migration $migration, int $plugin_id): void
 {
     global $DB;
 
@@ -311,10 +308,10 @@ function pluginGlpiinventoryUpdateTasks($migration, $plugin_id)
         $update = $DB->buildUpdate(
             $table['name'],
             [
-                'comment'   => new \QueryParam(),
+                'comment'   => new QueryParam(),
             ],
             [
-                'id'        => new \QueryParam(),
+                'id'        => new QueryParam(),
             ]
         );
         $stmt = $DB->prepare($update);

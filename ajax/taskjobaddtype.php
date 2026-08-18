@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,18 +30,29 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "taskjobaddtype.php")) {
-    include("../../../inc/includes.php");
+use Glpi\Exception\Http\AccessDeniedHttpException;
+use Glpi\Exception\Http\BadRequestHttpException;
+
+if (plugin_glpiinventory_script_endswith("taskjobaddtype.php")) {
     header("Content-Type: text/html; charset=UTF-8");
     Html::header_nocache();
 }
 
-Session::checkCentralAccess();
+Session::checkRight('plugin_glpiinventory_task', UPDATE);
+
+$taskjobs_id = (int) filter_input(INPUT_POST, "taskjobs_id");
+if ($taskjobs_id <= 0) {
+    throw new BadRequestHttpException();
+}
 
 $pfTaskjob = new PluginGlpiinventoryTaskjob();
+if (!$pfTaskjob->can($taskjobs_id, UPDATE)) {
+    throw new AccessDeniedHttpException();
+}
+
 $pfTaskjob->additemtodefatc(
     filter_input(INPUT_POST, "type"),
     filter_input(INPUT_POST, "itemtype"),
-    filter_input(INPUT_POST, "items_id"),
-    filter_input(INPUT_POST, "taskjobs_id")
+    (int) filter_input(INPUT_POST, "items_id"),
+    $taskjobs_id
 );

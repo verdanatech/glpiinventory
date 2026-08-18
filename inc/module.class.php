@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,10 +30,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
  * Manage the agent modules.
  */
@@ -43,8 +38,8 @@ class PluginGlpiinventoryModule extends CommonDBTM
     /**
      * Get all installed modules
      *
-     * @param boolean $p_inactive Show inactive modules
-     * @return array
+     * @param bool $p_inactive Show inactive modules
+     * @return array<array<string,mixed>>
      */
     public static function getAll($p_inactive = false)
     {
@@ -61,7 +56,7 @@ class PluginGlpiinventoryModule extends CommonDBTM
      * Get module id or plugin id
      *
      * @param string $p_name the module name
-     * @return integer|false plugin id or FALSE if module is not active or not a module
+     * @return int|false plugin id or FALSE if module is not active or not a module
      */
     public static function getModuleId($p_name)
     {
@@ -87,15 +82,14 @@ class PluginGlpiinventoryModule extends CommonDBTM
     /**
      * Get module name
      *
-     * @param integer $p_id the module id
+     * @param int $p_id the module id
      * @return string|false false if module is not active or not a module
      */
     public static function getModuleName($p_id)
     {
         if (isset($_SESSION['glpi_plugins'][$p_id])) {
             if (
-                (substr($_SESSION['glpi_plugins'][$p_id], 0, 6) == 'fusinv')
-                or ($_SESSION['glpi_plugins'][$p_id] == 'glpiinventory')
+                str_starts_with($_SESSION['glpi_plugins'][$p_id], 'fusinv') || $_SESSION['glpi_plugins'][$p_id] == 'glpiinventory'
             ) {
                 return $_SESSION['glpi_plugins'][$p_id];
             } else {

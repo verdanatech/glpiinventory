@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,9 +30,7 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use Glpi\DBAL\QueryParam;
 
 /**
  * Manage the computer inventory stats (number of inventories arrived in
@@ -52,7 +49,7 @@ class PluginGlpiinventoryInventoryComputerStat extends CommonDBTM
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -63,18 +60,17 @@ class PluginGlpiinventoryInventoryComputerStat extends CommonDBTM
 
     /**
      * Init stats
-     *
-     * @global object $DB
      */
-    public static function init()
+    public static function init(): void
     {
+        /** @var DBmysql $DB */
         global $DB;
 
         $insert = $DB->buildInsert(
             'glpi_plugin_glpiinventory_inventorycomputerstats',
             [
-                'day'    => new \QueryParam(),
-                'hour'   => new \QueryParam(),
+                'day'    => new QueryParam(),
+                'hour'   => new QueryParam(),
             ]
         );
         $stmt = $DB->prepare($insert);

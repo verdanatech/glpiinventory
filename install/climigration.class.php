@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -37,6 +36,8 @@
  */
 class CliMigration extends Migration
 {
+    private int $deb;
+
     /**
      * __contruct function where initialize variables
      *
@@ -66,7 +67,7 @@ class CliMigration extends Migration
      *
      * @param string $title
      */
-    public function displayTitle($title)
+    public function displayTitle($title): void
     {
         echo "\n" . str_pad(" $title ", 100, '=', STR_PAD_BOTH) . "\n";
     }
@@ -76,9 +77,9 @@ class CliMigration extends Migration
      * Display a warning message
      *
      * @param string $msg
-     * @param boolean $red
+     * @param bool $red
      */
-    public function displayWarning($msg, $red = false)
+    public function displayWarning($msg, $red = false): void
     {
         if ($red) {
             $msg = "** $msg";

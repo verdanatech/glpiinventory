@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,10 +30,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
  * Manage the general display in plugin.
  */
@@ -43,17 +38,19 @@ class PluginGlpiinventoryDisplay extends CommonDBTM
     /**
      * Display static progress bar (used for SNMP cartridge state)
      *
-     * @param integer $percentage
+     * @param int $percentage
      * @param string $message
      * @param string $order
-     * @param integer $width
-     * @param integer $height
+     * @param int $width
+     * @param int $height
+     *
+     * @return void
      */
     public static function bar($percentage, $message = '', $order = '', $width = 400, $height = 20)
     {
-        if ((!empty($percentage)) and ($percentage < 0)) {
+        if (!empty($percentage) && $percentage < 0) {
             $percentage = 0;
-        } elseif ((!empty($percentage)) and ($percentage > 100)) {
+        } elseif (!empty($percentage) && $percentage > 100) {
             $percentage = 100;
         }
         echo "<div>
@@ -100,8 +97,8 @@ class PluginGlpiinventoryDisplay extends CommonDBTM
         if ($percentage == 0) {
             echo "                           <td height='" . $height . "' width='1'></td>";
         } else {
-            echo "                           <td height='" . $height . "' width='" .
-                 ($width - (($width * $percentage) / 100)) . "'></td>";
+            echo "                           <td height='" . $height . "' width='"
+                 . ($width - (($width * $percentage) / 100)) . "'></td>";
         }
         echo "                        </tr>
                            </table>
@@ -113,42 +110,20 @@ class PluginGlpiinventoryDisplay extends CommonDBTM
 
 
     /**
-     * Disable debug mode to not see php errors
-     */
-    public static function disableDebug()
-    {
-        error_reporting(0);
-        set_error_handler(['PluginGlpiinventoryDisplay', 'error_handler']);
-    }
-
-
-    /**
     * Enable debug mode if user is in debug mode
     **/
-    public static function reenableusemode()
+    public static function reenableusemode(): void
     {
         Toolbox::setDebugMode();
     }
 
 
     /**
-     * When debug is disabled, we transfer every errors in this emtpy function.
-     *
-     * @param integer $errno
-     * @param string $errstr
-     * @param string $errfile
-     * @param integer $errline
-     */
-    public static function error_handler($errno, $errstr, $errfile, $errline) {}
-
-
-    /**
      * Display progress bar
      *
-     * @global array $CFG_GLPI
-     * @param integer $width
-     * @param integer|float $percent
-     * @param array $options
+     * @param int $width
+     * @param int|float $percent
+     * @param array<string,mixed> $options
      * @return string
      */
     public static function getProgressBar($width, $percent, array $options = [])
@@ -158,7 +133,6 @@ class PluginGlpiinventoryDisplay extends CommonDBTM
         $param = [];
         $param['title'] = __('Progress', 'glpiinventory');
         $param['simple'] = false;
-        $param['forcepadding'] = false;
 
         if (count($options)) {
             foreach ($options as $key => $val) {
@@ -172,8 +146,8 @@ class PluginGlpiinventoryDisplay extends CommonDBTM
             $output .= "<tr><th class='center'>" . $param['title'] . "&nbsp;" . $percent . "%</th></tr>";
         }
         $output .= "<tr><td>
-                <table><tr><td class='center' style='background:url(" . $CFG_GLPI["root_doc"] .
-                "/pics/loader.png) repeat-x;' width='.$percentwidth' height='12'>";
+                <table><tr><td class='center' style='background:url(" . $CFG_GLPI["root_doc"]
+                . "/pics/loader.png) repeat-x;' width='.$percentwidth' height='12'>";
         if ($param['simple']) {
             $output .= $percent . "%";
         } else {

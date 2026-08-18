@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,21 +30,29 @@
  * ---------------------------------------------------------------------
  */
 
+use Glpi\Error\ErrorHandler;
+use Safe\Exceptions\InfoException;
+
+use function Safe\glob;
+use function Safe\ini_set;
+use function Safe\mkdir;
+
 /**
  * This function manage the installation of the plugin.
- *
- * @global object $DB
- * @param string $version
- * @param string $migrationname class name related to Migration class of GLPI
  */
-function pluginGlpiinventoryInstall($version, $migrationname = 'Migration')
+function pluginGlpiinventoryInstall(string $version): void
 {
     global $CFG_GLPI, $DB;
 
-    ini_set("memory_limit", "-1");
-    ini_set("max_execution_time", "0");
+    try {
+        ini_set("memory_limit", "-1");
+        ini_set("max_execution_time", "0");
+    } catch (InfoException $e) {
+        //empty catch -- but keep trace of issue
+        ErrorHandler::logCaughtException($e);
+    }
 
-    $migration = new $migrationname($version);
+    $migration = new Migration($version);
 
     /*
      * Load classes
@@ -122,7 +129,7 @@ function pluginGlpiinventoryInstall($version, $migrationname = 'Migration')
         'WHERE'  => ['itemtype' => '5153'],
     ]);
     foreach ($iterator as $data) {
-        $networkPort->delete(['id' => $data['id']], 1);
+        $networkPort->delete(['id' => $data['id']], true);
     }
 
     /*
@@ -248,7 +255,7 @@ function pluginGlpiinventoryInstall($version, $migrationname = 'Migration')
     CronTask::Register(
         'PluginGlpiinventoryTask',
         'taskscheduler',
-        '60',
+        60,
         ['mode' => 2, 'allowmode' => 3, 'logs_lifetime' => 30]
     );
     CronTask::Register(
@@ -285,36 +292,4 @@ function pluginGlpiinventoryInstall($version, $migrationname = 'Migration')
     PluginGlpiinventoryInventoryComputerStat::init();
 
     installDashboard();
-
-    /*
-     * Define when install agent_base_url in entity, unless:
-     *  - it is already defined,
-     *  - it matches the GLPI base URL.
-     */
-    $agent_base_url = Entity::getUsedConfig('agent_base_url', 0, 'agent_base_url', '');
-
-    if (empty($agent_base_url)) {
-        $full_url = $_SERVER['PHP_SELF'] ?? null;
-        $https = filter_input(INPUT_SERVER, "HTTPS");
-        $http_host = filter_input(INPUT_SERVER, "HTTP_HOST");
-
-        if ($full_url && (strpos($full_url, '/ajax/marketplace.php') !== false || strpos($full_url, '/front/plugin.form.php') !== false)) {
-            $agent_base_url = str_replace(
-                ['/ajax/marketplace.php', '/front/plugin.form.php'],
-                '',
-                (!empty($https) ? 'https://' : 'http://') . $http_host . $full_url
-            );
-            if ($agent_base_url !== $CFG_GLPI['url_base']) {
-                $DB->update(
-                    'glpi_entities',
-                    [
-                        'agent_base_url' => $agent_base_url,
-                    ],
-                    [
-                        'id'             => 0,
-                    ]
-                );
-            }
-        }
-    }
 }

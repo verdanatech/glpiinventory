@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -30,10 +29,6 @@
  * along with GLPI Inventory Plugin. If not, see <https://www.gnu.org/licenses/>.
  * ---------------------------------------------------------------------
  */
-
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
 
 /**
  * Manage the IP of VMWARE ESX and link to credentials to be able to inventory
@@ -73,7 +68,7 @@ class PluginGlpiinventoryCredentialIp extends CommonDropdown
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -85,15 +80,18 @@ class PluginGlpiinventoryCredentialIp extends CommonDropdown
     /**
      * Add more fields
      *
-     * @return array
+     * @return array<array<string,string>>
      */
-    public function getAdditionalFields()
+    public function getAdditionalFields(): array
     {
-        return [['name'  => 'itemtype',
-            'label' => __('Type'),
-            'type'  => 'credentials',
-        ],
-            ['name'  => 'ip',
+        return [
+            [
+                'name'  => 'itemtype',
+                'label' => __('Type'),
+                'type'  => 'credentials',
+            ],
+            [
+                'name'  => 'ip',
                 'label' => __('IP'),
                 'type'  => 'text',
             ],
@@ -104,17 +102,17 @@ class PluginGlpiinventoryCredentialIp extends CommonDropdown
     /**
      * Display specific fields
      *
-     * @param integer $ID
-     * @param array $field
+     * @param int $ID
+     * @param array<string,mixed> $field
+     * @param array<string,mixed> $options
+     * @return void
      */
     public function displaySpecificTypeField($ID, $field = [], array $options = [])
     {
 
-        switch ($field['type']) {
-            case 'credentials':
-                $field['id'] = $this->fields['plugin_glpiinventory_credentials_id'];
-                PluginGlpiinventoryCredential::dropdownCredentials($field);
-                break;
+        if ($field['type'] == 'credentials') {
+            $field['id'] = $this->fields['plugin_glpiinventory_credentials_id'];
+            PluginGlpiinventoryCredential::dropdownCredentials($field);
         }
     }
 
@@ -122,7 +120,7 @@ class PluginGlpiinventoryCredentialIp extends CommonDropdown
     /**
      * Get search function for the class
      *
-     * @return array
+     * @return array<array<string,mixed>>
      */
     public function rawSearchOptions()
     {
@@ -156,7 +154,7 @@ class PluginGlpiinventoryCredentialIp extends CommonDropdown
             'field'         => 'name',
             'name'          => __('Authentication for remote devices (VMware)', 'glpiinventory'),
             'datatype'      => 'itemlink',
-            'itemlink_type' => 'PluginGlpiinventoryCredential',
+            'itemlink_type' => PluginGlpiinventoryCredential::class,
         ];
 
         $tab[] = [
@@ -173,11 +171,20 @@ class PluginGlpiinventoryCredentialIp extends CommonDropdown
 
     /**
      * Display a specific header
+     *
+     * @param ?string $title
+     * @param ?array<string> $menus
      */
-    public function displayHeader()
+    public static function displayCentralHeader(?string $title = null, ?array $menus = null): void
     {
         //Common dropdown header
-        parent::displayHeader();
+        parent::displayCentralHeader($title, $menus);
+
         PluginGlpiinventoryMenu::displayMenu("mini");
+    }
+
+    public static function getIcon()
+    {
+        return "ti ti-devices-pc";
     }
 }

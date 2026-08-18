@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,58 +30,43 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
+use function Safe\json_decode;
+
 Session::checkLoginUser();
 
 $package = new PluginGlpiinventoryDeployPackage();
 if (isset($_POST['update_json'])) {
-    $json_clean = stripcslashes($_POST['json']);
-
-    $json = json_decode($json_clean, true);
-
+    $json = json_decode($_POST['json'], true);
     $ret = PluginGlpiinventoryDeployPackage::updateOrderJson($_POST['packages_id'], $json);
     Html::back();
-    exit;
 } elseif (isset($_POST['add_item'])) {
-    $data = array_map(
-        ['Toolbox', 'stripslashes_deep'],
-        $package->escapeText($_POST)
-    );
-    PluginGlpiinventoryDeployPackage::alterJSON('add_item', $data);
+    PluginGlpiinventoryDeployPackage::alterJSON('add_item', $_POST);
     Html::back();
 } elseif (isset($_POST['save_item'])) {
-    $data = array_map(
-        ['Toolbox', 'stripslashes_deep'],
-        $package->escapeText($_POST)
-    );
-    PluginGlpiinventoryDeployPackage::alterJSON('save_item', $data);
+    PluginGlpiinventoryDeployPackage::alterJSON('save_item', $_POST);
     Html::back();
 } elseif (isset($_POST['remove_item'])) {
-    $data = array_map(
-        ['Toolbox', 'stripslashes_deep'],
-        $package->escapeText($_POST)
-    );
-    PluginGlpiinventoryDeployPackage::alterJSON('remove_item', $data);
+    PluginGlpiinventoryDeployPackage::alterJSON('remove_item', $_POST);
     Html::back();
 }
 
-//$data = Toolbox::stripslashes_deep($_POST);
 $data = $_POST;
 
 //general form
 if (isset($data["add"])) {
-    Session::checkRight('plugin_glpiinventory_package', CREATE);
+    Session::checkRight(PluginGlpiinventoryDeployPackage::$rightname, CREATE);
     $newID = $package->add($data);
-    Html::redirect(Toolbox::getItemTypeFormURL('PluginGlpiinventoryDeployPackage') . "?id=" . $newID);
+    Html::redirect(Toolbox::getItemTypeFormURL(PluginGlpiinventoryDeployPackage::class) . "?id=" . $newID);
 } elseif (isset($data["update"])) {
-    Session::checkRight('plugin_glpiinventory_package', UPDATE);
+    Session::checkRight(PluginGlpiinventoryDeployPackage::$rightname, UPDATE);
     $package->update($data);
     Html::back();
 } elseif (isset($data["purge"])) {
-    Session::checkRight('plugin_glpiinventory_package', PURGE);
-    $package->delete($data, 1);
+    Session::checkRight(PluginGlpiinventoryDeployPackage::$rightname, PURGE);
+    $package->delete($data, true);
     $package->redirectToList();
 } elseif (isset($_POST["addvisibility"])) {
+    Session::checkRight(PluginGlpiinventoryDeployPackage::$rightname, UPDATE);
     if (
         isset($_POST["_type"]) && !empty($_POST["_type"])
            && isset($_POST["plugin_glpiinventory_deploypackages_id"])
@@ -121,7 +105,7 @@ if (isset($data["add"])) {
 
 Html::header(
     __('GLPI Inventory DEPLOY'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "deploypackage"

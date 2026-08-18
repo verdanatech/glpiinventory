@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,7 +30,11 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
+use Glpi\Exception\Http\BadRequestHttpException;
+use Glpi\Exception\Http\NotFoundHttpException;
+
+use function Safe\json_encode;
+
 header("Content-Type: text/html; charset=UTF-8");
 Html::header_nocache();
 Session::checkCentralAccess();
@@ -47,12 +50,17 @@ if (!empty($fi_move_item)) { //ajax request
             'id'        => filter_input(INPUT_POST, "id"),
         ];
         $itemtype = filter_input(INPUT_POST, "itemtype");
-        if (class_exists($itemtype)) {
-            $item = new $itemtype();
+
+        /** @var PluginGlpiinventoryDeployPackageItem $item */
+        if ($item = getItemForItemtype($itemtype)) {
             $item->move_item($params);
         } else {
-            Toolbox::logDebug("package subtype not found : " . $params['itemtype']);
-            Html::displayErrorAndDie("package subtype not found");
+            throw new NotFoundHttpException(
+                sprintf(
+                    __('Package subtype %s not found'),
+                    $itemtype
+                )
+            );
         }
     } else {
         $json_response['success'] = false;
@@ -69,13 +77,13 @@ if (!empty($fi_move_item)) { //ajax request
         empty($packages_id) && empty($rand)
            && empty($fi_subtype)
     ) {
-        exit;
+        throw new BadRequestHttpException();
     }
 
     if (!is_numeric($packages_id)) {
         Toolbox::logDebug("Error: orders_id in request is not an integer");
         Toolbox::logDebug(print_r($packages_id, true));
-        exit;
+        throw new BadRequestHttpException("Error: orders_id in request is not an integer");
     }
 
     $pfDeployPackage = new PluginGlpiinventoryDeployPackage();
@@ -92,16 +100,14 @@ if (!empty($fi_move_item)) { //ajax request
     $itemtype = filter_input(INPUT_POST, "subtype");
     switch (filter_input(INPUT_POST, "subtype")) {
         case 'package_json_debug':
-            if (isset($order->fields['json'])) {
-                $pfDeployPackage->displayJSONDebug();
-            } else {
-                echo "{}";
-            }
+            echo "{}";
             break;
         default:
             $classname = 'PluginGlpiinventoryDeploy' . ucfirst($itemtype);
-            $class     = new $classname();
-            $class->displayForm($pfDeployPackage, $input, $rand, $mode);
+            /** @var PluginGlpiinventoryDeployPackageItem|PluginGlpiinventoryDeployAction $class */
+            if ($class = getItemForItemtype($classname)) {
+                $class->displayForm($pfDeployPackage, $input, $rand, $mode);
+            }
             break;
     }
 }

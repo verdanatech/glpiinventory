@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -33,10 +32,6 @@
 
 use Glpi\Application\View\TemplateRenderer;
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 /**
  * Manage plugin menu
  */
@@ -45,7 +40,7 @@ class PluginGlpiinventoryMenu extends CommonGLPI
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -57,9 +52,9 @@ class PluginGlpiinventoryMenu extends CommonGLPI
     /**
      * Check if can view item
      *
-     * @return boolean
+     * @return bool
      */
-    public static function canView()
+    public static function canView(): bool
     {
         $can_display = false;
         $profile = new PluginGlpiinventoryProfile();
@@ -77,9 +72,9 @@ class PluginGlpiinventoryMenu extends CommonGLPI
     /**
      * Check if can create an item
      *
-     * @return boolean
+     * @return bool
      */
-    public static function canCreate()
+    public static function canCreate(): bool
     {
         return false;
     }
@@ -99,29 +94,29 @@ class PluginGlpiinventoryMenu extends CommonGLPI
     /**
      * Get additional menu options and breadcrumb
      *
-     * @global array $CFG_GLPI
-     * @return array
+     * @return array<string,mixed>
      */
     public static function getAdditionalMenuOptions()
     {
-        $fi_full_path = Plugin::getWebDir('glpiinventory');
-        $fi_rel_path  = Plugin::getWebDir('glpiinventory', false);
+        global $CFG_GLPI;
+
+        $fi_path  = $CFG_GLPI['root_doc'] . '/plugins/glpiinventory';
 
         $elements = [
-            'iprange'                    => 'PluginGlpiinventoryIPRange',
-            'config'                     => 'PluginGlpiinventoryConfig',
-            'task'                       => 'PluginGlpiinventoryTask',
-            'timeslot'                   => 'PluginGlpiinventoryTimeslot',
-            'unmanaged'                  => 'Unmanaged',
-            'configsecurity'             => 'SNMPCredential',
-            'credential'                 => 'PluginGlpiinventoryCredential',
-            'credentialip'               => 'PluginGlpiinventoryCredentialIp',
-            'collect'                    => 'PluginGlpiinventoryCollect',
-            'deploypackage'              => 'PluginGlpiinventoryDeployPackage',
-            'deploymirror'               => 'PluginGlpiinventoryDeployMirror',
-            'deploygroup'                => 'PluginGlpiinventoryDeployGroup',
-            'deployuserinteractiontemplate' => 'PluginGlpiinventoryDeployUserinteractionTemplate',
-            'ignoredimportdevice'        => 'RefusedEquipment',
+            'iprange'                    => PluginGlpiinventoryIPRange::class,
+            'config'                     => PluginGlpiinventoryConfig::class,
+            'task'                       => PluginGlpiinventoryTask::class,
+            'timeslot'                   => PluginGlpiinventoryTimeslot::class,
+            'unmanaged'                  => Unmanaged::class,
+            'configsecurity'             => SNMPCredential::class,
+            'credential'                 => PluginGlpiinventoryCredential::class,
+            'credentialip'               => PluginGlpiinventoryCredentialIp::class,
+            'collect'                    => PluginGlpiinventoryCollect::class,
+            'deploypackage'              => PluginGlpiinventoryDeployPackage::class,
+            'deploymirror'               => PluginGlpiinventoryDeployMirror::class,
+            'deploygroup'                => PluginGlpiinventoryDeployGroup::class,
+            'deployuserinteractiontemplate' => PluginGlpiinventoryDeployUserinteractionTemplate::class,
+            'ignoredimportdevice'        => RefusedEquipment::class,
         ];
         $options = [];
 
@@ -134,6 +129,7 @@ class PluginGlpiinventoryMenu extends CommonGLPI
             $options[$type] = [
                 'title' => $itemtype::getTypeName(),
                 'page'  => $itemtype::getSearchURL(false),
+                'icon'  => $itemtype::getIcon(),
             ];
             $options[$type]['links']['search'] = $itemtype::getSearchURL(false);
             if ($itemtype::canCreate()) {
@@ -150,15 +146,15 @@ class PluginGlpiinventoryMenu extends CommonGLPI
 
         // Add icon for import package
         $label = __('Import', 'glpiinventory');
-        $link = "<i class=\"ti ti-download\" title=\"$label\"" .
-            "></i><span class='d-none d-xxl-block'>$label</span>";
-        $options['deploypackage']['links'][$link] = '/' . $fi_rel_path . '/front/deploypackage.import.php';
+        $link = "<i class=\"ti ti-download\" title=\"$label\""
+            . "></i><span class='d-none d-xxl-block'>$label</span>";
+        $options['deploypackage']['links'][$link] = $fi_path . '/front/deploypackage.import.php';
 
         // Add icon for clean unused deploy files
         $label = __('Clean unused files', 'glpiinventory');
-        $link = "<i class=\"ti ti-box-off\" title=\"$label\"" .
-            "></i><span class='d-none d-xxl-block'>$label</span>";
-        $options['deploypackage']['links'][$link] = '/' . $fi_rel_path . '/front/deployfile.clean.php';
+        $link = "<i class=\"ti ti-box-off\" title=\"$label\""
+            . "></i><span class='d-none d-xxl-block'>$label</span>";
+        $options['deploypackage']['links'][$link] = $fi_path . '/front/deployfile.clean.php';
 
         $options['agent'] = [
             'title' => Agent::getTypeName(),
@@ -177,14 +173,13 @@ class PluginGlpiinventoryMenu extends CommonGLPI
     /**
      * Display the menu of plugin
      *
-     * @global array $CFG_GLPI
      * @param string $type
      */
-    public static function displayMenu($type = "big")
+    public static function displayMenu($type = "big"): void
     {
         global $CFG_GLPI;
 
-        $fi_path = Plugin::getWebDir('glpiinventory');
+        $fi_path = $CFG_GLPI['root_doc'] . '/plugins/glpiinventory';
 
         $menu = [];
 
@@ -226,7 +221,7 @@ class PluginGlpiinventoryMenu extends CommonGLPI
             $general_menu[3]['link'] = $fi_path . "/front/config.form.php";
         }
 
-        if (!empty($general_menu)) {
+        if ($general_menu !== []) {
             $menu['general'] = [
                 'name'     => __('General', 'glpiinventory'),
                 'pic'     => "ti ti-settings",
@@ -241,11 +236,11 @@ class PluginGlpiinventoryMenu extends CommonGLPI
         if (Session::haveRight('plugin_glpiinventory_task', READ)) {
             $tasks_menu[2]['name'] = __('Task management', 'glpiinventory');
             $tasks_menu[2]['pic']  = "ti ti-list-check";
-            $tasks_menu[2]['link'] = Toolbox::getItemTypeSearchURL('PluginGlpiinventoryTask');
+            $tasks_menu[2]['link'] = Toolbox::getItemTypeSearchURL(PluginGlpiinventoryTask::class);
 
             $tasks_menu[3]['name'] = __('Monitoring / Logs', 'glpiinventory');
             $tasks_menu[3]['pic']  = "ti ti-activity";
-            $tasks_menu[3]['link'] = Toolbox::getItemTypeSearchURL('PluginGlpiinventoryTaskJob');
+            $tasks_menu[3]['link'] = Toolbox::getItemTypeSearchURL(PluginGlpiinventoryTaskjob::class);
         }
 
         if (Session::haveRight('config', READ)) {
@@ -255,18 +250,18 @@ class PluginGlpiinventoryMenu extends CommonGLPI
         }
 
         if (Session::haveRight("plugin_glpiinventory_collect", READ)) {
-            $tasks_menu[11]['name'] = __('Computer information', 'glpiinventory');
-            $tasks_menu[11]['pic']  = "ti ti-devices-pc";
-            $tasks_menu[11]['link'] = Toolbox::getItemTypeSearchURL('PluginGlpiinventoryCollect');
+            $tasks_menu[11]['name'] = __('Collect information', 'glpiinventory');
+            $tasks_menu[11]['pic']  = "ti ti-device-desktop-down";
+            $tasks_menu[11]['link'] = Toolbox::getItemTypeSearchURL(PluginGlpiinventoryCollect::class);
         }
 
         if (Session::haveRight('plugin_glpiinventory_task', READ)) {
             $tasks_menu[12]['name'] = __('Time slot', 'glpiinventory');
             $tasks_menu[12]['pic']  = "ti ti-calendar-time";
-            $tasks_menu[12]['link'] = Toolbox::getItemTypeSearchURL('PluginGlpiinventoryTimeslot');
+            $tasks_menu[12]['link'] = Toolbox::getItemTypeSearchURL(PluginGlpiinventoryTimeslot::class);
         }
 
-        if (!empty($tasks_menu)) {
+        if ($tasks_menu !== []) {
             $menu['tasks'] = [
                 'name'     => __('Tasks', 'glpiinventory'),
                 'pic'     => "ti ti-list-check",
@@ -305,7 +300,7 @@ class PluginGlpiinventoryMenu extends CommonGLPI
             $rules_menu[6]['link'] = Blacklist::getSearchURL();
         }
 
-        if (!empty($rules_menu)) {
+        if ($rules_menu !== []) {
             $menu['rules'] = [
                 'name'     => __('Rules', 'glpiinventory'),
                 'pic'     => "ti ti-book",
@@ -322,7 +317,7 @@ class PluginGlpiinventoryMenu extends CommonGLPI
             $network_menu[] = [
                 'name' => __('IP Ranges', 'glpiinventory'),
                 'pic'  => "ti ti-viewfinder",
-                'link' => Toolbox::getItemTypeSearchURL('PluginGlpiinventoryIPRange'),
+                'link' => Toolbox::getItemTypeSearchURL(PluginGlpiinventoryIPRange::class),
             ];
         }
 
@@ -330,7 +325,7 @@ class PluginGlpiinventoryMenu extends CommonGLPI
             $network_menu[] = [
                 'name' => __('Remote devices to inventory (VMware)', 'glpiinventory'),
                 'pic'  => "ti ti-devices-pc",
-                'link' => Toolbox::getItemTypeSearchURL('PluginGlpiinventoryCredentialip'),
+                'link' => Toolbox::getItemTypeSearchURL(PluginGlpiinventoryCredentialIp::class),
             ];
         }
 
@@ -346,7 +341,7 @@ class PluginGlpiinventoryMenu extends CommonGLPI
             $network_menu[] = [
                 'name' => __('Authentication for remote devices (VMware)', 'glpiinventory'),
                 'pic'  => "ti ti-lock",
-                'link' => Toolbox::getItemTypeSearchURL('PluginGlpiinventoryCredential'),
+                'link' => Toolbox::getItemTypeSearchURL(PluginGlpiinventoryCredential::class),
             ];
         }
 
@@ -372,7 +367,7 @@ class PluginGlpiinventoryMenu extends CommonGLPI
             ];
         }
 
-        if (!empty($network_menu)) {
+        if ($network_menu !== []) {
             $menu['network'] = [
                 'name'     => __('Networking', 'glpiinventory'),
                 'pic'     => "ti ti-network",
@@ -410,7 +405,7 @@ class PluginGlpiinventoryMenu extends CommonGLPI
             $deploy_menu[2]['link'] = $fi_path . "/front/deployuserinteractiontemplate.php";
         }
 
-        if (!empty($deploy_menu)) {
+        if ($deploy_menu !== []) {
             $menu['deploy'] = [
                 'name'     => __('Deploy', 'glpiinventory'),
                 'pic'     => "ti ti-share",
@@ -443,12 +438,12 @@ class PluginGlpiinventoryMenu extends CommonGLPI
 
     /**
      * Menu for SNMP inventory
-     *
-     * @global array $CFG_GLPI
      */
-    public static function displayMenuSNMPInventory()
+    public static function displayMenuSNMPInventory(): void
     {
-        $fi_path = Plugin::getWebDir('glpiinventory');
+        global $CFG_GLPI;
+
+        $fi_path = $CFG_GLPI['root_doc'] . '/plugins/glpiinventory';
 
         echo "<table class='tab_cadre_fixe'>";
 
@@ -530,43 +525,8 @@ class PluginGlpiinventoryMenu extends CommonGLPI
 
 
     /**
-     * Display chart
-     *
-     * @param string $name
-     * @param array $data list of data for the chart
-     * @param string $title
+     * @return string
      */
-    public static function showChart($name, $data, $title = '&nbsp;')
-    {
-        echo "<div class='fi_chart donut'>";
-        echo "<h2 class='fi_chart_title'>$title</h2>";
-        echo '<svg id="' . $name . '"></svg>';
-        echo Html::scriptBlock("$(function() {
-         statHalfDonut('" . $name . "', '" . json_encode($data) . "');
-      });");
-        echo "</div>";
-    }
-
-
-    /**
-     * Display chart bar
-     *
-     * @param string $name
-     * @param array $data list of data for the chart
-     * @param string $title
-     * @param integer $width
-     */
-    public static function showChartBar($name, $data, $title = '', $width = 370)
-    {
-        echo "<div class='fi_chart bar'>";
-        echo "<h2 class='fi_chart_title'>$title</h2>";
-        echo '<svg id="' . $name . '"></svg>';
-        echo Html::scriptBlock("$(function() {
-         statBar('" . $name . "', '" . json_encode($data) . "');
-      });");
-        echo "</div>";
-    }
-
     public static function getIcon()
     {
         return "ti ti-settings";

@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,9 +30,14 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access this file directly");
-}
+use Glpi\DBAL\QueryExpression;
+use Glpi\Search\Output\SpreadsheetValueBinder;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Csv as CsvWriter;
+use Safe\DateTime;
+
+use function Safe\json_decode;
+use function Safe\json_encode;
 
 /**
  * Manage the display part of tasks.
@@ -41,7 +45,7 @@ if (!defined('GLPI_ROOT')) {
 class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
 {
     /**
-     * __contruct function where initialize base URLs
+     * __construct function where initialize base URLs
      */
     public function __construct()
     {
@@ -55,7 +59,7 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
     /**
      * Show job logs
      */
-    public function showJobLogs()
+    public function showJobLogs(): void
     {
         $task_id = $this->fields['id'] ?? null;
         echo "<div class='card fusinv_panel'>";
@@ -119,8 +123,8 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
                      action='" . self::getFormURLWithID($task_id) . "'>";
 
         // states checkboxes
-        echo "<label for='include_old_jobs'>" . __("Task execution states", 'glpiinventory') .
-            "</label>";
+        echo "<label for='include_old_jobs'>" . __("Task execution states", 'glpiinventory')
+            . "</label>";
         echo "<div class='state_checkboxes'>";
         // set options checked by default
         $agent_state_types = [
@@ -138,8 +142,8 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
                 $checked = "checked='checked'";
             }
             echo "<div class='agent_state_type_checkbox'>";
-            echo "<input type='checkbox' $checked name='agent_state_types[]' " .
-                "value='$agent_state_type' id='agent_state_types_$agent_state_type' />";
+            echo "<input type='checkbox' $checked name='agent_state_types[]' "
+                . "value='$agent_state_type' id='agent_state_types_$agent_state_type' />";
             echo "<label for='agent_state_types_$agent_state_type'>&nbsp;$locale</label>";
             echo "</div>";
         }
@@ -235,8 +239,8 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
             'agents_cancelled': '" . __('Cancelled', 'glpiinventory') . "',
          };
 
-         taskjobs.logstatuses_names = " .
-           json_encode(PluginGlpiinventoryTaskjoblog::dropdownStateValues()) . ";
+         taskjobs.logstatuses_names = "
+           . json_encode(PluginGlpiinventoryTaskjoblog::dropdownStateValues()) . ";
       });");
 
         // Template for agents' blocks
@@ -284,9 +288,9 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
     /**
      * Display form for task configuration
      *
-     * @param integer $id ID of the task
-     * @param $options array
-     * @return boolean TRUE if form is ok
+     * @param int $id ID of the task
+     * @param array<string,mixed> $options
+     * @return bool
      *
      **/
     public function showForm($id, $options = [])
@@ -388,6 +392,10 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
     }
 
 
+    /**
+     * @param array<string,mixed> $options
+     * @return void
+     */
     public function showFormButtons($options = [])
     {
         $ID = 0;
@@ -398,18 +406,26 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
         echo "<tr class='border-top'>";
         echo "<td class='right pt-3' colspan='4'>";
         if (!$this->isNewID($ID) && $this->can($ID, PURGE)) {
-            echo Html::submit("<i class='fas fa-trash me-1'></i>" . _x('button', 'Delete permanently'), [
-                'name'    => 'purge',
-                'confirm' => __('Confirm the final deletion?'),
-                'class '  => 'btn btn-outline-danger me-2',
-            ]);
+            echo Html::submit(
+                _x('button', 'Delete permanently'),
+                [
+                    'icon' => 'fas fa-trash me-1',
+                    'name'    => 'purge',
+                    'confirm' => __('Confirm the final deletion?'),
+                    'class '  => 'btn btn-outline-danger me-2',
+                ]
+            );
         }
 
         if ($this->fields['is_active']) {
-            echo Html::submit("<i class='fas fa-bolt me-1'></i>" . __('Force start', 'glpiinventory'), [
-                'name' => 'forcestart',
-                'class' => 'btn btn-outline-warning me-2',
-            ]);
+            echo Html::submit(
+                __('Force start', 'glpiinventory'),
+                [
+                    'icon' => 'fas fa-bolt me-1',
+                    'name' => 'forcestart',
+                    'class' => 'btn btn-outline-warning me-2',
+                ]
+            );
         }
 
         if ($this->isNewID($ID)) {
@@ -419,10 +435,14 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
             ]);
         } else {
             echo Html::hidden('id', ['value' => $ID]);
-            echo Html::submit("<i class='far fa-save me-1'></i>" . _x('button', 'Save'), [
-                'name'  => 'update',
-                'class' => 'btn btn-primary me-2',
-            ]);
+            echo Html::submit(
+                _x('button', 'Save'),
+                [
+                    'icon' => 'far fa-save me-1',
+                    'name'  => 'update',
+                    'class' => 'btn btn-primary me-2',
+                ]
+            );
         }
         echo "</td>";
         echo "</tr>";
@@ -436,9 +456,9 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
     /**
      * Manage the different actions in when submit form (add, update,purge...)
      *
-     * @param array $postvars
+     * @param array<string,mixed> $postvars
      */
-    public function submitForm($postvars)
+    public function submitForm($postvars): void
     {
 
         if (isset($postvars['forcestart'])) {
@@ -495,6 +515,9 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
     }
 
 
+    /**
+     * @return array<array<string,mixed>>
+     */
     public function rawSearchOptions()
     {
 
@@ -519,13 +542,9 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
     /**
      * Export a list of jobs in CSV format, and download file
      *
-     * @param  array  $params these possible entries:
+     * @param  array<string,mixed> $params these possible entries:
      *                        - agent_state_types: array of agent states to filter output
      *                          (prepared, cancelled, running, success, error)
-     *                        - debug_csv, possible values:
-     *                           - 0 : no debug (really export to csv,
-     *                           - 1 : display params AND html table,
-     *                           - 2: like 1 + display also json of jobs logs
      *
      * @return void
      */
@@ -535,7 +554,6 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
 
         $default_params = [
             'agent_state_types' => [],
-            'debug_csv'         => 0,
         ];
         $params = array_merge($default_params, $params);
 
@@ -545,16 +563,11 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
             $agent_state_types = $params['agent_state_types'];
         }
 
-        if (!$params['debug_csv']) {
-            header("Expires: Mon, 26 Nov 1962 00:00:00 GMT");
-            header('Pragma: private'); /// IE BUG + SSL
-            header('Cache-control: private, must-revalidate'); /// IE BUG + SSL
-            header("Content-disposition: attachment; filename=export.csv");
-            header("Content-type: text/csv");
-        } else {
-            Html::printCleanArray($params);
-            Html::printCleanArray($agent_state_types);
-        }
+        header("Expires: Mon, 26 Nov 1962 00:00:00 GMT");
+        header('Pragma: private'); /// IE BUG + SSL
+        header('Cache-control: private, must-revalidate'); /// IE BUG + SSL
+        header("Content-disposition: attachment; filename=export.csv");
+        header("Content-type: text/csv");
 
         $params['display'] = false;
         $pfTask            = new PluginGlpiinventoryTask();
@@ -581,118 +594,123 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
         // clean old temporary variables
         unset($task, $job, $target, $agent);
 
-        if (!$params['debug_csv']) {
-            define('SEP', $CFG_GLPI['csv_delimiter']);
-            define('NL', "\r\n");
-        } else {
-            define('SEP', '</td><td>');
-            define('NL', '</tr><tr><td>');
-            echo "<table border=1><tr><td>";
-        }
+        define('SEP', $CFG_GLPI['csv_delimiter']); // @phpstan-ignore theCodingMachineSafe.function
+        define('NL', "\r\n"); // @phpstan-ignore theCodingMachineSafe.function
 
-        // cols titles
-        echo "Task_name" . SEP;
-        echo "Job_name" . SEP;
-        echo "Method" . SEP;
-        echo "Target" . SEP;
-        echo "Agent" . SEP;
-        echo "Computer name" . SEP;
-        echo "Date" . SEP;
-        echo "Status" . SEP;
-        echo "Last Message" . NL;
+        $writer = new CsvWriter($this->buildSpreadsheet($data, $includeoldjobs));
+        $writer
+            ->setDelimiter(SEP)
+            ->setEnclosure('"')
+            ->setUseBOM(true)
+            ->setLineEnding(NL)
+            ->setSheetIndex(0);
+        $writer->save('php://output');
+
+        // force exit to prevent further display
+        exit; //@phpstan-ignore-line (whole method needs to be refactored)
+    }
+
+
+    /**
+     * @param array<string, mixed> $data
+     * @param int $includeoldjobs
+     * @return Spreadsheet
+     */
+    public function buildSpreadsheet(array $data, int $includeoldjobs): Spreadsheet
+    {
+        $spread = new Spreadsheet();
+        // Prevent values starting with "=" from being interpreted as formulas (excel)
+        $spread->setValueBinder(new SpreadsheetValueBinder());
+        $sheet = $spread->getActiveSheet();
+
+        $headers = [
+            'Task_name',
+            'Job_name',
+            'Method',
+            'Target',
+            'Agent',
+            'Computer name',
+            'Date',
+            'Status',
+            'Log status',
+            'Last Message',
+        ];
+        $sheet->fromArray($headers);
 
         $agent_obj = new Agent();
         $computer  = new Computer();
+        $row       = 2;
 
-        // prepare an anonymous (and temporory) function
-        // for test if an element is the last of an array
-        $last = function (&$array, $key) {
-            end($array);
-            return $key === key($array);
-        };
+        foreach ($data['tasks'] ?? [] as $task) {
+            $task_name = $task['task_name'] ?? '';
+            if (empty($task['jobs'])) {
+                $sheet->fromArray([$task_name, '', '', '', '', '', '', '', '', ''], null, 'A' . $row++);
+                continue;
+            }
 
-        // display lines
-        $csv_array = [];
-        $tab = 0;
-        foreach ($data['tasks'] as $task_id => $task) {
-            echo $task['task_name'] . SEP;
+            $log_cpt = 0;
+            foreach ($task['jobs'] as $job) {
+                $job_name = $job['name']   ?? '';
+                $method   = $job['method'] ?? '';
 
-            if (count($task['jobs']) == 0) {
-                echo NL;
-            } else {
-                $log_cpt = 0;
-                foreach ($task['jobs'] as $job_id => $job) {
-                    echo $job['name'] . SEP;
-                    echo $job['method'] . SEP;
-                    if (count($job['targets']) == 0) {
-                        echo NL;
-                    } else {
-                        foreach ($job['targets'] as $target_id => $target) {
-                            echo $target['name'] . SEP;
+                if (empty($job['targets'])) {
+                    $sheet->fromArray([$task_name, $job_name, $method, '', '', '', '', '', '', ''], null, 'A' . $row++);
+                } else {
+                    foreach ($job['targets'] as $target) {
+                        $target_name = $target['name'] ?? '';
 
-                            if (count($target['agents']) == 0) {
-                                echo NL;
-                            } else {
-                                foreach ($target['agents'] as $agent_id => $agent) {
-                                    $agent_obj->getFromDB($agent_id);
-                                    echo $agent_obj->getName() . SEP;
-                                    $computer->getFromDB($agent_obj->fields['items_id']);
-                                    echo $computer->getname() . SEP;
+                        if (empty($target['agents'])) {
+                            $sheet->fromArray([$task_name, $job_name, $method, $target_name, '', '', '', '', '', ''], null, 'A' . $row++);
+                            continue;
+                        }
 
-                                    if (count($agent) == 0) {
-                                        echo NL;
-                                    } else {
-                                        foreach ($agent as $exec_id => $exec) {
-                                            echo $exec['last_log_date'] . SEP;
-                                            echo $exec['state'] . SEP;
-                                            echo $exec['last_log'] . NL;
-
-                                            if (!$last($agent, $exec_id)) {
-                                                echo SEP . SEP . SEP . SEP . SEP . SEP;
-                                            }
-                                        }
-                                    }
-
-                                    if (!$last($target['agents'], $agent_id)) {
-                                        echo SEP . SEP . SEP . SEP;
-                                    }
+                        foreach ($target['agents'] as $agent_id => $agent) {
+                            $agent_name = '';
+                            $computer_name = '';
+                            if ($agent_obj->getFromDB($agent_id)) {
+                                $agent_name = $agent_obj->getName();
+                                if (isset($agent_obj->fields['items_id']) && $computer->getFromDB($agent_obj->fields['items_id'])) {
+                                    $computer_name = $computer->getName();
                                 }
                             }
 
-                            if (!$last($job['targets'], $target_id)) {
-                                echo SEP . SEP . SEP;
+                            if (empty($agent)) {
+                                $sheet->fromArray([$task_name, $job_name, $method, $target_name, $agent_name, $computer_name, '', '', '', ''], null, 'A' . $row++);
+                                continue;
+                            }
+
+                            foreach ($agent as $exec) {
+                                $sheet->fromArray([
+                                    $task_name,
+                                    $job_name,
+                                    $method,
+                                    $target_name,
+                                    $agent_name,
+                                    $computer_name,
+                                    $exec['last_log_date'] ?? '',
+                                    $exec['state'] ?? '',
+                                    PluginGlpiinventoryTaskjoblog::getStateName($exec['last_log_state'] ?? -1),
+                                    $exec['last_log'] ?? '',
+                                ], null, 'A' . $row++);
                             }
                         }
                     }
+                }
 
-                    if (!$last($task['jobs'], $job_id)) {
-                        echo SEP;
-                    }
-
-                    $log_cpt++;
-
-                    if ($includeoldjobs != -1 and $log_cpt >= $includeoldjobs) {
-                        break;
-                    }
+                $log_cpt++;
+                if ($includeoldjobs != -1 && $log_cpt >= $includeoldjobs) {
+                    break;
                 }
             }
         }
-        if ($params['debug_csv'] === 2) {
-            echo "</td></tr></table>";
-
-            //echo original datas
-            echo "<pre>" . json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) . "</pre>";
-        }
-
-        // force exit to prevent further display
-        exit;
+        return $spread;
     }
 
 
     /**
      * Force running the current task
      **/
-    public function forceRunning()
+    public function forceRunning(): void
     {
         $methods = [];
         foreach (PluginGlpiinventoryStaticmisc::getmethods() as $method) {
@@ -705,8 +723,9 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
     /**
      * Prepare task jobs
      *
-     * @param array $methods
-     * @param false|integer $tasks_id the concerned task
+     * @param array<string> $methods
+     * @param false|int $tasks_id the concerned task
+     * @param ?CronTask $crontask
      * @return true
      */
     public function prepareTaskjobs($methods = [], $tasks_id = false, $crontask = null)
@@ -783,9 +802,9 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
                             ['NOT' => ['task.datetime_start' => null]],
                             ['NOT' => ['task.datetime_end' => null]],
                             new QueryExpression(
-                                $DB->quoteValue($now->format("Y-m-d H:i:s")) . ' BETWEEN ' .
-                                $DB->quoteName('task.datetime_start') . ' AND ' .
-                                $DB->quoteName('task.datetime_end')
+                                $DB->quoteValue($now->format("Y-m-d H:i:s")) . ' BETWEEN '
+                                . $DB->quoteName('task.datetime_start') . ' AND '
+                                . $DB->quoteName('task.datetime_end')
                             ),
                         ],
                         [
@@ -842,7 +861,7 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
                 foreach ($targets as $keyt => $target) {
                     $item_type = key($target);
                     $items_id = current($target);
-                    if ($item_type == 'PluginGlpiinventoryIPRange') {
+                    if ($item_type == PluginGlpiinventoryIPRange::class) {
                         unset($targets[$keyt]);
                         // In this case get devices of this iprange
                         $deviceList = $pfNetworkinventory->getDevicesOfIPRange($items_id, $result['job']['restrict_to_task_entity']);
@@ -937,7 +956,7 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
                                 'items_id'                           => $item_id,
                                 'plugin_glpiinventory_taskjobs_id' => $job_id,
                                 'agents_id'   => $agent_id,
-                                'uniqid'                             => uniqid(),
+                                'uniqid'                             => bin2hex(random_bytes(16)),
                             ]
                         );
 
@@ -971,9 +990,9 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
      * TODO: this method should be rewritten to call directly a getAgents() method in the
      * corresponding itemtype classes.
      *
-     * @param array $actors
+     * @param array<int,array<string,mixed>> $actors
      * @param bool  $use_cache retrieve agents from cache or not
-     * @return array list of agents
+     * @return array<int> list of agents
      */
     public function getAgentsFromActors($actors = [], $use_cache = false)
     {
@@ -1004,11 +1023,11 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
             }
 
             switch ($itemtype) {
-                case 'Computer':
+                case Computer::class:
                     $computers[$itemid] = 1;
                     break;
 
-                case 'PluginGlpiinventoryDeployGroup':
+                case PluginGlpiinventoryDeployGroup::class:
                     $group_targets = $pfToolbox->executeAsGlpiinventoryUser(
                         'PluginGlpiinventoryDeployGroup::getTargetsForGroup',
                         [$itemid, $use_cache]
@@ -1018,7 +1037,7 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
                     }
                     break;
 
-                case 'Group':
+                case Group::class:
                     //find computers by user associated with this group
                     $group_users   = new Group_User();
                     $members       = [];
@@ -1032,9 +1051,10 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
                     }
 
                     //find computers directly associated with this group
-                    $computer_from_group = $computer->find(['groups_id' => $itemid]);
+                    $group_item = new Group_Item();
+                    $computer_from_group = $group_item->getItemsAssociatedTo(Group::class, $itemid);
                     foreach ($computer_from_group as $computer_entry) {
-                        $computers[$computer_entry['id']] = 1;
+                        $computers[$computer_entry->fields['id']] = 1;
                     }
                     break;
 
@@ -1063,7 +1083,7 @@ class PluginGlpiinventoryTaskView extends PluginGlpiinventoryCommonView
 
         //Get agents from the computer's ids list
         if (count($computers)) {
-            $agents_entries = $agent->find(['itemtype' => 'Computer', 'items_id' => array_keys($computers)]);
+            $agents_entries = $agent->find(['itemtype' => Computer::class, 'items_id' => array_keys($computers)]);
             foreach ($agents_entries as $agent_entry) {
                 $agents[$agent_entry['id']] = 1;
             }

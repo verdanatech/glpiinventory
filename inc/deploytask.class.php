@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,10 +30,6 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
-
 include_once(PLUGIN_GLPI_INVENTORY_DIR . "/inc/taskjobview.class.php");
 include_once(PLUGIN_GLPI_INVENTORY_DIR . "/inc/taskview.class.php");
 include_once(PLUGIN_GLPI_INVENTORY_DIR . "/inc/task.class.php");
@@ -47,7 +42,7 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
     /**
      * Get name of this type by language of the user connected
      *
-     * @param integer $nb number of elements
+     * @param int $nb number of elements
      * @return string name of this type
      */
     public static function getTypeName($nb = 0)
@@ -62,9 +57,9 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
     /**
      * Is this use can create a deploy task
      *
-     * @return boolean
+     * @return bool
      */
-    public static function canCreate()
+    public static function canCreate(): bool
     {
         return true;
     }
@@ -73,9 +68,9 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
     /**
      * Is this use can view a deploy task
      *
-     * @return boolean
+     * @return bool
      */
-    public static function canView()
+    public static function canView(): bool
     {
         return true;
     }
@@ -84,8 +79,8 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
     /**
      * Define tabs to display on form page
      *
-     * @param array $options
-     * @return array containing the tabs name
+     * @param array<string,mixed> $options
+     * @return array<string,mixed> containing the tabs name
      */
     public function defineTabs($options = [])
     {
@@ -93,7 +88,7 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
         $ong = [];
 
         if ($this->fields['id'] > 0) {
-            $this->addStandardTab(__CLASS__, $ong, $options);
+            $this->addStandardTab(self::class, $ong, $options);
         }
         return $ong;
     }
@@ -103,14 +98,14 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
      * Get the tab name used for item
      *
      * @param CommonGLPI $item the item object
-     * @param integer $withtemplate 1 if is a template form
+     * @param int $withtemplate 1 if is a template form
      * @return string name of the tab
      */
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
 
         switch (get_class($item)) {
-            case __CLASS__:
+            case self::class:
                 return __('Order list', 'glpiinventory');
         }
         return '';
@@ -121,14 +116,14 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
      * Display the content of the tab
      *
      * @param CommonGLPI $item
-     * @param integer $tabnum number of the tab to display
-     * @param integer $withtemplate 1 if is a template form
-     * @return boolean
+     * @param int $tabnum number of the tab to display
+     * @param int $withtemplate 1 if is a template form
+     * @return bool
      */
     public static function displayTabContentForItem(CommonGLPI $item, $tabnum = 1, $withtemplate = 0)
     {
         switch (get_class($item)) {
-            case __CLASS__:
+            case self::class:
                 $obj = new self();
                 $obj->showActions($_POST["id"]);
                 return true;
@@ -140,31 +135,29 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
     /**
      * Show list of deploy tasks
      */
-    public function showList()
+    public function showList(): void
     {
         self::title();
-        Search::show('PluginGlpiinventoryDeployTask');
+        Search::show(PluginGlpiinventoryDeployTask::class);
     }
 
 
     /**
      * Display the title of the page
-     *
-     * @global array $CFG_GLPI
      */
-    public function title()
+    public function title(): void
     {
-        global  $CFG_GLPI;
+        global $CFG_GLPI;
 
         $buttons = [];
         $title = _n('Task', 'Tasks', 1, 'glpiinventory');
 
-        if ($this->canCreate()) {
+        if (static::canCreate()) {
             $buttons["task.form.php?new=1"] = __('Add task', 'glpiinventory');
             $title = "";
         }
         Html::displayTitle(
-            Plugin::getWebDir('glpiinventory') . "/pics/task.png",
+            $CFG_GLPI['root_doc'] . "/plugins/glpiinventory/pics/task.png",
             $title,
             $title,
             $buttons
@@ -175,9 +168,9 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
     /**
      * Show actions of the deploy task
      *
-     * @param integer $id
+     * @param int $id
      */
-    public function showActions($id)
+    public function showActions($id): void
     {
         $this->getFromDB($id);
         if ($this->getField('is_active') == 1) {
@@ -207,8 +200,7 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
     /**
      * Do this before delete a deploy task
      *
-     * @global array $CFG_GLPI
-     * @return boolean
+     * @return bool
      */
     public function pre_deleteItem()
     {
@@ -220,9 +212,7 @@ class PluginGlpiinventoryDeployTask extends PluginGlpiinventoryTask
                 __('This task is active. delete denied', 'glpiinventory')
             );
 
-            Html::redirect($CFG_GLPI["root_doc"] . "/plugins/fusinvdeploy/front/task.form.php?id=" .
-             $this->getField('id'));
-            return false;
+            Html::redirect($CFG_GLPI["root_doc"] . "/plugins/fusinvdeploy/front/task.form.php?id=" . $this->getField('id'));
         }
 
         $task_id = $this->getField('id');

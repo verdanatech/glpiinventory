@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,11 +30,11 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
-
 header("Content-Type: text/html; charset=UTF-8");
 Html::header_nocache();
 Session::checkCentralAccess();
+
+global $CFG_GLPI;
 
 // Make a select box
 $type = filter_input(INPUT_POST, "type");
@@ -52,9 +51,6 @@ if (!empty($type) && !empty($actortype)) {
             // Only steal or own ticket whit empty assign
             if ($actortype == 'assign') {
                 $right = "own_ticket";
-                if (!$item->canAssign()) {
-                    $right = 'id';
-                }
             }
 
             $options = ['name'        => '_itil_' . $actortype . '[users_id]',

@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,7 +30,6 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 Session::checkLoginUser();
 
 $group = new PluginGlpiinventoryDeployGroup();
@@ -41,6 +39,8 @@ if (isset($_GET['plugin_glpiinventory_deploygroups_id'])) {
 }
 
 if (isset($_GET['save'])) {
+    $group->check($_GET['id'], UPDATE);
+
     $group_item = new PluginGlpiinventoryDeployGroup_Dynamicdata();
     $criteria = ['criteria'     =>  $_GET['criteria'] ?? [],
         'metacriteria' => $_GET['metacriteria'] ?? [],
@@ -66,6 +66,7 @@ if (isset($_GET['save'])) {
 
     Html::redirect(Toolbox::getItemTypeFormURL("PluginGlpiinventoryDeployGroup") . "?id=" . $_GET['id']);
 } elseif (isset($_FILES['importcsvfile'])) {
+    $group->check($_POST['groups_id'], UPDATE);
     PluginGlpiinventoryDeployGroup_Staticdata::csvImport($_POST, $_FILES);
     Html::back();
 } elseif (isset($_POST["add"])) {
@@ -73,13 +74,13 @@ if (isset($_GET['save'])) {
     $newID = $group->add($_POST);
     Html::redirect(Toolbox::getItemTypeFormURL("PluginGlpiinventoryDeployGroup") . "?id=" . $newID);
 } elseif (isset($_POST["delete"])) {
-    //   $group->check($_POST['id'], DELETE);
+    $group->check($_POST['id'], DELETE);
     $ok = $group->delete($_POST);
 
     $group->redirectToList();
 } elseif (isset($_POST["purge"])) {
-    //   $group->check($_POST['id'], DELETE);
-    $ok = $group->delete($_REQUEST, 1);
+    $group->check($_POST['id'], PURGE);
+    $ok = $group->delete($_REQUEST, true);
 
     $group->redirectToList();
 } elseif (isset($_POST["update"])) {
@@ -90,7 +91,7 @@ if (isset($_GET['save'])) {
 } else {
     Html::header(
         __('GLPI Inventory DEPLOY'),
-        $_SERVER["PHP_SELF"],
+        '',
         "admin",
         "pluginglpiinventorymenu",
         "deploygroup"
@@ -102,7 +103,7 @@ if (isset($_GET['save'])) {
         $id = '';
     } else {
         $id = $_GET['id'];
-        if (isset($_GET['sort']) and isset($_GET['order'])) {
+        if (isset($_GET['sort']) && isset($_GET['order'])) {
             $group->getFromDB($id);
             PluginGlpiinventoryDeployGroup::getSearchParamsAsAnArray($group, true);
         }

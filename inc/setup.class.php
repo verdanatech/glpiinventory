@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,9 +30,10 @@
  * ---------------------------------------------------------------------
  */
 
-if (!defined('GLPI_ROOT')) {
-    die("Sorry. You can't access directly to this file");
-}
+use function Safe\filetype;
+use function Safe\rmdir;
+use function Safe\scandir;
+use function Safe\unlink;
 
 /**
  * Manage the installation and uninstallation of the plugin.
@@ -43,11 +43,11 @@ class PluginGlpiinventorySetup
     /**
      * Uninstall process when uninstall the plugin
      *
-     * @global object $DB
      * @return true
      */
     public static function uninstall()
     {
+        /** @var DBmysql $DB */
         global $DB;
 
         CronTask::Unregister('glpiinventory');
@@ -69,18 +69,13 @@ class PluginGlpiinventorySetup
         $result = $DB->doQuery("SHOW TABLES;");
         while ($data = $DB->fetchArray($result)) {
             if (
-                (strstr($data[0], "glpi_plugin_glpiinventory_"))
-                 or (strstr($data[0], "glpi_plugin_fusinvsnmp_"))
-                 or (strstr($data[0], "glpi_plugin_fusinvinventory_"))
-                or (strstr($data[0], "glpi_dropdown_plugin_fusioninventory"))
-                or (strstr($data[0], "glpi_plugin_tracker"))
-                or (strstr($data[0], "glpi_dropdown_plugin_tracker"))
+                strstr($data[0], "glpi_plugin_glpiinventory_") || strstr($data[0], "glpi_plugin_fusinvsnmp_") || strstr($data[0], "glpi_plugin_fusinvinventory_") || strstr($data[0], "glpi_dropdown_plugin_fusioninventory") || strstr($data[0], "glpi_plugin_tracker") || strstr($data[0], "glpi_dropdown_plugin_tracker")
             ) {
-                $DB->dropTable($data[0]) or die($DB->error());
+                $DB->dropTable($data[0]);
             }
         }
 
-        $DB->deleteOrDie(
+        $DB->delete(
             'glpi_displaypreferences',
             [
                 'itemtype' => ['LIKE', 'PluginGlpiinventory%'],
@@ -94,11 +89,9 @@ class PluginGlpiinventorySetup
 
 
     /**
-     * Remove a directory and subdirectory
-     *
-     * @param string $dir name of the directory
+     * Remove a directory and subdirectories
      */
-    public function rrmdir($dir)
+    public function rrmdir(string $dir): void
     {
         $pfSetup = new PluginGlpiinventorySetup();
 
@@ -122,7 +115,7 @@ class PluginGlpiinventorySetup
     /**
      * Creation of user
      *
-     * @return integer id of the user "Plugin GLPI Inventory"
+     * @return int id of the user "Plugin GLPI Inventory"
      */
     public function createGlpiInventoryUser()
     {

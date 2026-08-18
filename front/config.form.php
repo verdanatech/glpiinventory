@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,13 +30,11 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
-
 Session::checkRight('plugin_glpiinventory_configuration', READ);
 
 Html::header(
     __('Features', 'glpiinventory'),
-    $_SERVER["PHP_SELF"],
+    '',
     "admin",
     "pluginglpiinventorymenu",
     "menu"
@@ -49,6 +46,7 @@ PluginGlpiinventoryMenu::displayMenu("mini");
 $pfConfig = new PluginGlpiinventoryConfig();
 
 if (isset($_POST['update'])) {
+    Session::checkRight(PluginGlpiinventoryConfig::$rightname, UPDATE);
     $data = $_POST;
     unset($data['update']);
     unset($data['id']);

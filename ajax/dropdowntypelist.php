@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,13 +30,9 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "dropdowntypelist.php")) {
-    include("../../../inc/includes.php");
+if (plugin_glpiinventory_script_endswith("dropdowntypelist.php")) {
     header("Content-Type: text/html; charset=UTF-8");
     Html::header_nocache();
-}
-if (!defined('GLPI_ROOT')) {
-    die("Can not acces directly to this file");
 }
 
 Session::checkCentralAccess();
@@ -50,6 +45,6 @@ if ($myamemore != '') {
         $myamemore,
         filter_input(INPUT_POST, "method"),
         filter_input(INPUT_POST, filter_input(INPUT_POST, "name") . 'typeid'),
-        filter_input(INPUT_POST, "taskjobs_id")
+        (int) filter_input(INPUT_POST, "taskjobs_id")
     );
 }

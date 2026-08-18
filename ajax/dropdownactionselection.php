@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,20 +30,21 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "dropdownactionselection.php")) {
-    include("../../../inc/includes.php");
+use function Safe\json_encode;
+
+if (plugin_glpiinventory_script_endswith("dropdownactionselection.php")) {
     header("Content-Type: text/html; charset=UTF-8");
     Html::header_nocache();
 }
-if (!defined('GLPI_ROOT')) {
-    die("Can not acces directly to this file");
-}
+
+global $CFG_GLPI;
+
 Session::checkCentralAccess();
 
 echo "<script type='text/javascript'>
 var select = document.getElementById('actionlist');
-var obj = document.getElementById('" . filter_input(INPUT_POST, "actionselectadd") . "');
-var actiontype = document.getElementById('" . filter_input(INPUT_POST, "actiontypeid") . "');
+var obj = document.getElementById(" . json_encode(filter_input(INPUT_POST, "actionselectadd")) . ");
+var actiontype = document.getElementById(" . json_encode(filter_input(INPUT_POST, "actiontypeid")) . ");
 
 var list = document.getElementById('actionselection').innerHTML;
 

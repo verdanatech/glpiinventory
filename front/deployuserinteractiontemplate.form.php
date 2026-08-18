@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,7 +30,6 @@
  * ---------------------------------------------------------------------
  */
 
-include("../../../inc/includes.php");
 Session::checkLoginUser();
 
 if (!isset($_GET["id"])) {
@@ -50,16 +48,16 @@ if (isset($_POST["add"])) {
     Html::back();
 } elseif (isset($_POST["purge"])) {
     Session::checkRight('plugin_glpiinventory_userinteractiontemplate', PURGE);
-    $template->delete($_POST, 1);
+    $template->delete($_POST, true);
     $template->redirectToList();
 }
 
 if (isset($_GET['_in_modal']) && $_GET['_in_modal']) {
-    Html::nullHeader(__('GLPI Inventory DEPLOY'), $_SERVER["PHP_SELF"]);
+    Html::nullHeader(__('GLPI Inventory DEPLOY'));
 } else {
     Html::header(
         __('GLPI Inventory DEPLOY'),
-        $_SERVER["PHP_SELF"],
+        '',
         "admin",
         "pluginglpiinventorymenu",
         "deployuserinteractiontemplate"

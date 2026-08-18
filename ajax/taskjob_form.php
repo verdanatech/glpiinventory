@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,22 +30,34 @@
  * ---------------------------------------------------------------------
  */
 
-if (strpos($_SERVER['PHP_SELF'], "taskjob_form.php")) {
-    include("../../../inc/includes.php");
+use Glpi\Exception\Http\AccessDeniedHttpException;
+
+if (plugin_glpiinventory_script_endswith("taskjob_form.php")) {
     header("Content-Type: text/html; charset=UTF-8");
     Html::header_nocache();
 }
 
-Session::checkCentralAccess();
-
-// $_GET['taskjobs_id'] => update taskjob
-// $_GET['tasks_id'] => add new taskjob
+Session::checkRight('plugin_glpiinventory_task', READ);
 
 $pfTaskjob = new PluginGlpiinventoryTaskjob();
 
+$id = (int) ($_POST['id'] ?? 0);
+$task_id = (int) ($_POST['task_id'] ?? 0);
+
+if ($id > 0) {
+    if (!$pfTaskjob->can($id, READ)) {
+        throw new AccessDeniedHttpException();
+    }
+} elseif ($task_id > 0) {
+    $pfTask = new PluginGlpiinventoryTask();
+    if (!$pfTask->can($task_id, UPDATE)) {
+        throw new AccessDeniedHttpException();
+    }
+}
+
 $params = [
-    "id" => filter_input(INPUT_GET, "id"),
-    "task_id" => filter_input(INPUT_GET, "task_id"),
+    "id" => $id,
+    "task_id" => $task_id,
 ];
 
 $pfTaskjob->ajaxGetForm($params);

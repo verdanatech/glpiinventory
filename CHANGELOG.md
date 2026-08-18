@@ -5,17 +5,73 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
-## [1.5.8] - 2026-06-24
+## [1.6.10] - 2026-08-17
 
-- Fix escaping
+- Fix issues on Safe usage
 
-## [1.5.7] - 2026-02-18
+## [1.6.9] - 2026-08-12
 
+- Restore agent modules left join in computer search
+- Harmonize rights check when editing a deploy package's actions, files or checks
+- Harden value encoding in action/definition dropdown selection scripts
+- Remove unused XML message setter in communication class
+- Harmonize rights checks across collect, deploy, task, IP range and agent module management entry points
+- Fix duplicate key error during update by removing dead blacklist migration
+- Stop adding FusionInventory attribution header to new files
+- Fix task execution results CSV export
+- Add column log status in CSV export
+- Allow `domain` READ right for dynamic group criterion
+- Remove NVD3 charting library and dead showChart/showChartBar methods
+- Switch timeslot views to Twig, minor UI changes
+- Removed dead `PluginGlpiinventoryToolbox::showHours()` method
+- Fix SQL query syntax on agent status search option
+
+## [1.6.8] - 2026-06-24
+
+- Add registry collect modes: `Check path existence` and `Check if key is defined`
+- Add a `All values` option to the registry collect to read sub-keys recursively.
+- Fix module / exception handling during updates from the agent or general settings.
+- Fix display of rights for deploy on demand
+- Fix MySQL query error: Unknown column 'groups_id'
+- Fix warning : `file pics/extensions/... is not within the allowed path(s)`
+- Fix warning : `open_basedir restriction in effect`
+- Fix ESX job status incorrectly showing all hosts as 'In Error' when only one host fails and the others complete successfully.
+- Fix plugin instanciation on some cases
+- Add checks on tasks URLs
+
+## [1.6.7] - 2026-02-25
+
+- Fix plugin initialization
+- Revert "Drop methods that seems unused"
+
+## [1.6.6] - 2026-02-18
+
+- Fix PHP exception on empty task job agent dropdown
 - Remove the `Cancel Job` button for 'self-deploy' users, as they do not have the necessary permissions.
 
-## [1.5.6] - 2025-11-28
+## [1.6.5] - 2026-01-08
 
-- Fix ajax scripts inclusion paths
+- Switch configuration forms to Twig templates
+- Use a modal to add collect configurations
+- Switch collect configuration UI to Twig
+- Fix missing "burger" icon to reoder on package management
+- Fix import of missing minified files
+
+## [1.6.4] - 2025-12-03
+
+- Rework the whole agents module configuration page
+- Fix URL for ressource (ajax/ front/ pics/ etc .. )
+- Fix several wrong URLs (still using PHP_SELF)
+
+## [1.6.3] - 2025-11-25
+
+### Fixed
+
+- Fix SQL error when deploy target option used is 'No restriction' defined with `-1`
+- Fix PHP warning about "Usage of the `$withcomment` parameter is deprecated"
+- Fix retrieval of agents from a dynamic group
+- Migrate dynamic group search from serialized to JSON format
+- Fix static groups search limit to 20 entries
 
 ## [1.5.5] - 2025-11-25
 
@@ -23,6 +79,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 - Fix SQL error when deploy target option used is 'No restriction' defined with `-1`
 - Migrate dynamic group search from serialized to JSON format
+
+## [1.6.2] - 2025-11-14
+
+- Fix agent wakeup when no last_agent_wakeup has been set yet
+- Prevent fatal error when a task references an item that no longer exist
+- Fix for adding `targets` and `actors` to a task
+- FIx extra menu entries links
+
+## [1.6.1] - 2025-11-05
+
+- Fix visibility issue on deploy dynamic groups with GLPI v11.0.2
+- Fix deploy ajax action path
+- Prevent fatal errors when ini_set is not allowed
+
+## [1.6.0] - 2025-09-30
+
+- GLPI v11 compatibility
 
 ## [1.5.4] - 2025-09-19
 

@@ -3,12 +3,11 @@
 /**
  * ---------------------------------------------------------------------
  * GLPI Inventory Plugin
- * Copyright (C) 2021 Teclib' and contributors.
+ * @basedon   FusionInventory for GLPI
+ * @copyright 2021-2026 Teclib' and contributors.
+ * @copyright 2010-2021 by the FusionInventory Development Team.
  *
  * http://glpi-project.org
- *
- * based on FusionInventory for GLPI
- * Copyright (C) 2010-2021 by the FusionInventory Development Team.
  *
  * ---------------------------------------------------------------------
  *
@@ -31,8 +30,7 @@
  * ---------------------------------------------------------------------
  */
 
-include('../../../inc/includes.php');
-$dropdown = new PluginGlpiinventoryCredentialIP();
+$dropdown = new PluginGlpiinventoryCredentialIp();
 
 if (!empty($_POST) || isset($_GET['_in_modal'])) {
     if (empty($_POST['plugin_glpiinventory_credentials_id'])) {
@@ -42,7 +40,7 @@ if (!empty($_POST) || isset($_GET['_in_modal'])) {
 } else {
     Html::header(
         __('GLPI Inventory', 'glpiinventory'),
-        $_SERVER["PHP_SELF"],
+        '',
         "admin",
         "pluginglpiinventorymenu",
         "credentialip"
